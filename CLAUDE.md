@@ -3,8 +3,8 @@
 ## Current Status
 <!-- Update this after each session -->
 Phase: 1 (Single Agent Pipeline)
-Last completed session: 0 (project setup only)
-Implemented components: None yet
+Last completed session: 1 (Foundation Schemas)
+Implemented components: MarketStateFragment, BeliefObject, all enums, shared test fixtures
 
 ## Quick Reference
 - Spec: Technical Spec v2.3 (available in Claude Project "Providence")
