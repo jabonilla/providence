@@ -1,0 +1,69 @@
+# Agent configuration for CONTEXT-SVC
+# Defines what data each Research Agent consumes and its context constraints.
+
+agents:
+  COGNIT-FUNDAMENTAL:
+    consumes:
+      - FILING_10K
+      - FILING_10Q
+      - FILING_8K
+      - PRICE_OHLCV
+      - MACRO_YIELD_CURVE
+    max_token_budget: 100000
+    entity_scope: []  # empty = all entities
+    peer_count: 3
+    peer_group: sector_peers
+    priority_window_hours: 24
+
+  COGNIT-TECHNICAL:
+    consumes:
+      - PRICE_OHLCV
+      - OPTIONS_CHAIN
+    max_token_budget: 50000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  COGNIT-NARRATIVE:
+    consumes:
+      - EARNINGS_CALL
+      - SENTIMENT_NEWS
+      - FILING_8K
+    max_token_budget: 120000
+    entity_scope: []
+    peer_count: 5
+    peer_group: sector_peers
+    priority_window_hours: 48
+
+  COGNIT-MACRO:
+    consumes:
+      - MACRO_YIELD_CURVE
+      - MACRO_CDS
+      - MACRO_ECONOMIC
+      - PRICE_OHLCV
+    max_token_budget: 80000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 72
+
+  COGNIT-EVENT:
+    consumes:
+      - FILING_8K
+      - SENTIMENT_NEWS
+      - PRICE_OHLCV
+      - OPTIONS_CHAIN
+    max_token_budget: 60000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 12
+
+  COGNIT-CROSSSEC:
+    consumes:
+      - FILING_10Q
+      - PRICE_OHLCV
+      - EARNINGS_CALL
+    max_token_budget: 100000
+    entity_scope: []
+    peer_count: 5
+    peer_group: sector_peers
+    priority_window_hours: 48
