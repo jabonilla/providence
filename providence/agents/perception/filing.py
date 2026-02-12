@@ -23,6 +23,7 @@ from providence.infra.edgar_client import EdgarClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.payloads import FilingType
+from providence.utils.redaction import redact_error_message
 
 logger = structlog.get_logger()
 
@@ -98,8 +99,9 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
                         filing_type=filing_type_str,
                         error=str(e),
                     )
+                    safe_error = redact_error_message(str(e))
                     fragment = self._create_quarantined_fragment(
-                        ticker, filing_type_str, str(e)
+                        ticker, filing_type_str, safe_error
                     )
                     fragments.append(fragment)
 

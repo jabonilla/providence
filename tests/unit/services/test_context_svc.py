@@ -606,3 +606,127 @@ agents:
         assert len(registry.agent_ids) == 2
         assert "AGENT-A" in registry.agent_ids
         assert "AGENT-B" in registry.agent_ids
+
+
+# ---------------------------------------------------------------------------
+# QUARANTINED fragment filtering (review fix)
+# ---------------------------------------------------------------------------
+class TestContextServiceQuarantineFiltering:
+    """Test that QUARANTINED fragments are excluded from context."""
+
+    def test_quarantined_fragments_excluded(self):
+        """QUARANTINED fragments should not be passed to agents."""
+        registry = _make_registry()
+        svc = ContextService(registry)
+
+        valid = _make_fragment(hours_ago=1, payload={"data": "good"})
+        quarantined = MarketStateFragment(
+            fragment_id=uuid4(),
+            agent_id="PERCEPT-TEST",
+            timestamp=NOW,
+            source_timestamp=NOW,
+            entity="AAPL",
+            data_type=DataType.PRICE_OHLCV,
+            schema_version="1.0.0",
+            source_hash="hash",
+            validation_status=ValidationStatus.QUARANTINED,
+            payload={"error": "API failed"},
+        )
+
+        ctx = svc.assemble_context(
+            agent_id="TEST-AGENT",
+            trigger="schedule",
+            available_fragments=[valid, quarantined],
+        )
+
+        assert len(ctx.fragments) == 1
+        assert ctx.fragments[0].validation_status == ValidationStatus.VALID
+
+    def test_partial_fragments_not_excluded(self):
+        """PARTIAL fragments should still be included."""
+        registry = _make_registry()
+        svc = ContextService(registry)
+
+        partial = MarketStateFragment(
+            fragment_id=uuid4(),
+            agent_id="PERCEPT-TEST",
+            timestamp=NOW,
+            source_timestamp=NOW,
+            entity="AAPL",
+            data_type=DataType.PRICE_OHLCV,
+            schema_version="1.0.0",
+            source_hash="hash",
+            validation_status=ValidationStatus.PARTIAL,
+            payload={"close": 186.0},
+        )
+
+        ctx = svc.assemble_context(
+            agent_id="TEST-AGENT",
+            trigger="schedule",
+            available_fragments=[partial],
+        )
+
+        assert len(ctx.fragments) == 1
+
+
+# ---------------------------------------------------------------------------
+# Peer dedup per (entity, data_type) — review fix
+# ---------------------------------------------------------------------------
+class TestContextServicePeerMultiDataType:
+    """Test that peer dedup preserves multiple data types per entity."""
+
+    def test_peer_keeps_multiple_data_types(self):
+        """Peer with PRICE + FILING should have both included."""
+        registry = _make_registry({"peer_count": 2})
+        svc = ContextService(registry)
+
+        aapl = _make_fragment(entity="AAPL", hours_ago=1)
+        msft_price = _make_fragment(
+            entity="MSFT", data_type=DataType.PRICE_OHLCV,
+            hours_ago=2, payload={"type": "price"},
+        )
+        msft_filing = _make_fragment(
+            entity="MSFT", data_type=DataType.FILING_10Q,
+            hours_ago=3, payload={"type": "filing"},
+        )
+
+        ctx = svc.assemble_context(
+            agent_id="TEST-AGENT",
+            trigger="schedule",
+            available_fragments=[aapl],
+            peer_fragments=[msft_price, msft_filing],
+        )
+
+        msft_frags = [f for f in ctx.fragments if f.entity == "MSFT"]
+        msft_types = {f.data_type for f in msft_frags}
+        # Both data types for MSFT peer should be included
+        assert DataType.PRICE_OHLCV in msft_types
+        assert DataType.FILING_10Q in msft_types
+
+
+# ---------------------------------------------------------------------------
+# Redaction utility tests
+# ---------------------------------------------------------------------------
+class TestRedaction:
+    """Tests for the redaction utility."""
+
+    def test_redact_url_strips_api_key(self):
+        from providence.utils.redaction import redact_url
+        url = "https://api.polygon.io/v2/aggs?apiKey=SECRET123&ticker=AAPL"
+        result = redact_url(url)
+        assert "SECRET123" not in result
+        assert "[REDACTED]" in result
+        assert "AAPL" in result
+
+    def test_redact_error_message_strips_key(self):
+        from providence.utils.redaction import redact_error_message
+        msg = "Failed: https://api.polygon.io/v2?apiKey=my_secret_key&other=ok"
+        result = redact_error_message(msg)
+        assert "my_secret_key" not in result
+        assert "[REDACTED]" in result
+
+    def test_redact_preserves_safe_message(self):
+        from providence.utils.redaction import redact_error_message
+        msg = "Connection timeout after 30 seconds"
+        result = redact_error_message(msg)
+        assert result == msg

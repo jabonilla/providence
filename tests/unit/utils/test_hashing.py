@@ -75,7 +75,9 @@ class TestComputeContextWindowHash:
             agent_id="PERCEPT-PRICE",
             timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
             source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload=payload,
         )
 

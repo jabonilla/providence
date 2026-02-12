@@ -12,6 +12,7 @@ Usage:
 
 import asyncio
 import os
+import time
 from typing import Any
 
 import httpx
@@ -29,6 +30,7 @@ class PolygonClient:
     DEFAULT_TIMEOUT = 30.0
     MAX_RETRIES = 3
     RETRY_BACKOFF_BASE = 1.0  # seconds
+    MIN_REQUEST_INTERVAL = 12.0  # 5 req/min free tier = 1 req per 12 seconds
 
     def __init__(
         self,
@@ -51,6 +53,7 @@ class PolygonClient:
         self._base_url = base_url or self.BASE_URL
         self._timeout = timeout
         self._client: httpx.AsyncClient | None = None
+        self._last_request_time: float = 0.0
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create the HTTP client."""
@@ -68,8 +71,16 @@ class PolygonClient:
             await self._client.aclose()
             self._client = None
 
+    async def _rate_limit(self) -> None:
+        """Enforce Polygon.io rate limit (free tier: 5 req/min)."""
+        now = time.monotonic()
+        elapsed = now - self._last_request_time
+        if elapsed < self.MIN_REQUEST_INTERVAL:
+            await asyncio.sleep(self.MIN_REQUEST_INTERVAL - elapsed)
+        self._last_request_time = time.monotonic()
+
     async def _request(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Make a GET request with retry logic.
+        """Make a GET request with rate limiting and retry logic.
 
         Args:
             path: API endpoint path (e.g., /v2/aggs/ticker/AAPL/range/1/day/...).
@@ -87,6 +98,7 @@ class PolygonClient:
 
         for attempt in range(self.MAX_RETRIES):
             try:
+                await self._rate_limit()
                 response = await client.get(path, params=params or {})
 
                 if response.status_code == 429:

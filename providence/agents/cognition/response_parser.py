@@ -59,6 +59,14 @@ def parse_llm_response(
         for b in beliefs_raw:
             belief = _parse_belief(b, available_fragment_ids)
             if belief is not None:
+                # Spec requires at least 2 machine-evaluable invalidation conditions
+                if len(belief.invalidation_conditions) < 2:
+                    logger.warning(
+                        "Dropping belief with fewer than 2 invalidation conditions",
+                        thesis_id=belief.thesis_id,
+                        condition_count=len(belief.invalidation_conditions),
+                    )
+                    continue
                 beliefs.append(belief)
 
         if not beliefs:

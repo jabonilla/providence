@@ -26,7 +26,7 @@ import structlog
 from providence.agents.base import AgentContext
 from providence.config.agent_config import AgentConfig, AgentConfigRegistry
 from providence.exceptions import ContextAssemblyError
-from providence.schemas.enums import DataType
+from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 from providence.utils.hashing import compute_context_window_hash
 from providence.utils.tokens import estimate_fragment_tokens
@@ -116,6 +116,10 @@ class ContextService:
         result: list[MarketStateFragment] = []
 
         for frag in fragments:
+            # Exclude QUARANTINED fragments — don't send error data to LLM
+            if frag.validation_status == ValidationStatus.QUARANTINED:
+                continue
+
             # Must match one of the agent's consumed data types
             if frag.data_type not in target_data_types:
                 continue
@@ -167,21 +171,42 @@ class ContextService:
     ) -> list[MarketStateFragment]:
         """Step 4: Select peer entity fragments.
 
-        Picks the most recent fragment per peer entity, up to peer_count.
+        Picks the most recent fragment per (entity, data_type) pair,
+        then selects up to peer_count distinct peer entities.
         """
         # Filter by data type
         matching = [f for f in peer_fragments if f.data_type in target_data_types]
 
-        # Group by entity, pick most recent per entity
-        entity_latest: dict[str | None, MarketStateFragment] = {}
+        # Group by (entity, data_type), pick most recent per pair
+        pair_latest: dict[tuple[str | None, DataType], MarketStateFragment] = {}
         for frag in matching:
-            existing = entity_latest.get(frag.entity)
+            key = (frag.entity, frag.data_type)
+            existing = pair_latest.get(key)
             if existing is None or frag.timestamp > existing.timestamp:
-                entity_latest[frag.entity] = frag
+                pair_latest[key] = frag
 
-        # Sort by timestamp (newest first) and take up to peer_count
-        peers = sorted(entity_latest.values(), key=lambda f: f.timestamp, reverse=True)
-        return peers[: config.peer_count]
+        # Find the most recent timestamp per entity (for ranking peers)
+        entity_max_ts: dict[str | None, datetime] = {}
+        for (entity, _), frag in pair_latest.items():
+            existing_ts = entity_max_ts.get(entity)
+            if existing_ts is None or frag.timestamp > existing_ts:
+                entity_max_ts[entity] = frag.timestamp
+
+        # Rank entities by recency and take top peer_count
+        ranked_entities = sorted(
+            entity_max_ts.keys(),
+            key=lambda e: entity_max_ts[e],
+            reverse=True,
+        )
+        selected_entities = set(ranked_entities[: config.peer_count])
+
+        # Return all (entity, data_type) fragments for selected peers
+        result = [
+            frag for (entity, _), frag in pair_latest.items()
+            if entity in selected_entities
+        ]
+        result.sort(key=lambda f: f.timestamp, reverse=True)
+        return result
 
     def _apply_token_budget(
         self,

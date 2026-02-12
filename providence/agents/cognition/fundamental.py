@@ -40,7 +40,7 @@ import yaml
 from providence.agents.base import AgentContext, BaseAgent, HealthStatus, AgentStatus
 from providence.agents.cognition.response_parser import parse_llm_response
 from providence.exceptions import AgentProcessingError
-from providence.infra.llm_client import AnthropicClient
+from providence.infra.llm_client import AnthropicClient, LLMClient
 from providence.schemas.belief import BeliefObject
 from providence.schemas.enums import DataType
 
@@ -70,7 +70,7 @@ class CognitFundamental(BaseAgent[BeliefObject]):
 
     def __init__(
         self,
-        llm_client: AnthropicClient | None = None,
+        llm_client: LLMClient | None = None,
         prompt_version: str = DEFAULT_PROMPT_VERSION,
     ) -> None:
         super().__init__(

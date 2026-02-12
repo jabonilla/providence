@@ -193,19 +193,16 @@ class TestResponseParser:
         )
         assert result is None
 
-    def test_vague_invalidation_conditions_filtered(self):
-        """Vague/incomplete invalidation conditions are filtered out."""
+    def test_vague_invalidation_conditions_drops_belief(self):
+        """Beliefs with fewer than 2 valid invalidation conditions are dropped."""
         result = parse_llm_response(
             raw=VAGUE_INVALIDATION_RESPONSE,
             agent_id="COGNIT-FUNDAMENTAL",
             context_window_hash="test_hash",
         )
-        assert result is not None
-        conditions = result.beliefs[0].invalidation_conditions
-        # Only the valid one (with metric + operator + threshold) should survive
-        assert len(conditions) == 1
-        assert conditions[0].metric == "revenue_growth_yoy"
-        assert conditions[0].operator == ComparisonOperator.GT
+        # The belief only has 1 valid condition after filtering vague ones,
+        # which is below the spec minimum of 2, so the entire belief is dropped
+        assert result is None
 
     def test_bad_evidence_refs_filtered(self):
         """Non-UUID evidence refs are filtered out."""

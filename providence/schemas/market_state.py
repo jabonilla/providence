@@ -36,10 +36,10 @@ class MarketStateFragment(BaseModel):
     timestamp: datetime = Field(..., description="Ingestion time (must include timezone)")
     source_timestamp: datetime = Field(..., description="Original data publication time")
     version: str = Field(default="", description="SHA-256 content hash, computed automatically")
-    entity: Optional[str] = Field(default=None, description="Ticker, index, or null for macro data")
+    entity: Optional[str] = Field(..., description="Ticker, index, or null for macro data")
     data_type: DataType = Field(..., description="Data type from the Data Type Registry")
     schema_version: str = Field(default="1.0.0", description="SemVer of the payload schema")
-    source_hash: str = Field(default="", description="SHA-256 hash of raw source data for provenance")
+    source_hash: str = Field(..., description="SHA-256 hash of raw source data for provenance")
     validation_status: ValidationStatus = Field(
         default=ValidationStatus.VALID,
         description="Validation status: VALID, QUARANTINED, or PARTIAL",

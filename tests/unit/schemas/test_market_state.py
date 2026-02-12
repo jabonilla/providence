@@ -32,18 +32,22 @@ class TestMarketStateFragmentCreation:
                 agent_id=f"PERCEPT-{dt.value}",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
                 data_type=dt,
+                source_hash="test-hash",
                 payload=sample_price_payload,
             )
             assert fragment.data_type == dt
 
     def test_fragment_entity_nullable(self, sample_price_payload: dict) -> None:
-        """Entity can be None for macro data types."""
+        """Entity can be explicitly None for macro data types."""
         fragment = MarketStateFragment(
             agent_id="PERCEPT-MACRO",
             timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
             source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+            entity=None,
             data_type=DataType.MACRO_YIELD_CURVE,
+            source_hash="macro-hash",
             payload=sample_price_payload,
         )
         assert fragment.entity is None
@@ -54,12 +58,38 @@ class TestMarketStateFragmentCreation:
             agent_id="PERCEPT-PRICE",
             timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
             source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload=sample_price_payload,
         )
         assert fragment.validation_status == ValidationStatus.VALID
         assert fragment.schema_version == "1.0.0"
         assert fragment.fragment_id is not None
+
+    def test_entity_required(self, sample_price_payload: dict) -> None:
+        """Entity must be explicitly provided (no default)."""
+        with pytest.raises(ValidationError):
+            MarketStateFragment(
+                agent_id="PERCEPT-PRICE",
+                timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
+                source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                data_type=DataType.PRICE_OHLCV,
+                source_hash="test-hash",
+                payload=sample_price_payload,
+            )
+
+    def test_source_hash_required(self, sample_price_payload: dict) -> None:
+        """Source hash must be explicitly provided (no default)."""
+        with pytest.raises(ValidationError):
+            MarketStateFragment(
+                agent_id="PERCEPT-PRICE",
+                timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
+                source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
+                data_type=DataType.PRICE_OHLCV,
+                payload=sample_price_payload,
+            )
 
 
 class TestMarketStateFragmentValidation:
@@ -72,7 +102,9 @@ class TestMarketStateFragmentValidation:
                 agent_id="PERCEPT-PRICE",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0),  # no tzinfo
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
                 data_type=DataType.PRICE_OHLCV,
+                source_hash="test-hash",
                 payload=sample_price_payload,
             )
 
@@ -83,7 +115,9 @@ class TestMarketStateFragmentValidation:
                 agent_id="PERCEPT-PRICE",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0),  # no tzinfo
+                entity="AAPL",
                 data_type=DataType.PRICE_OHLCV,
+                source_hash="test-hash",
                 payload=sample_price_payload,
             )
 
@@ -94,7 +128,9 @@ class TestMarketStateFragmentValidation:
                 agent_id="PERCEPT-PRICE",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
                 data_type="INVALID_TYPE",  # type: ignore[arg-type]
+                source_hash="test-hash",
                 payload=sample_price_payload,
             )
 
@@ -105,7 +141,9 @@ class TestMarketStateFragmentValidation:
                 agent_id="PERCEPT-PRICE",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
                 data_type=DataType.PRICE_OHLCV,
+                source_hash="test-hash",
                 validation_status="UNKNOWN",  # type: ignore[arg-type]
                 payload=sample_price_payload,
             )
@@ -117,7 +155,9 @@ class TestMarketStateFragmentValidation:
                 agent_id="PERCEPT-PRICE",
                 timestamp=datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc),
                 source_timestamp=datetime(2026, 2, 9, 11, 0, 0, tzinfo=timezone.utc),
+                entity="AAPL",
                 data_type=DataType.PRICE_OHLCV,
+                source_hash="test-hash",
                 schema_version="1.0",  # missing patch version
                 payload=sample_price_payload,
             )
@@ -145,14 +185,18 @@ class TestMarketStateFragmentContentHash:
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload=sample_price_payload,
         )
         f2 = MarketStateFragment(
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload=sample_price_payload,
         )
         assert f1.version == f2.version
@@ -166,14 +210,18 @@ class TestMarketStateFragmentContentHash:
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload={"close": 185.0},
         )
         f2 = MarketStateFragment(
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload={"close": 186.0},
         )
         assert f1.version != f2.version
@@ -187,14 +235,18 @@ class TestMarketStateFragmentContentHash:
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload={"a": 1, "b": 2, "c": 3},
         )
         f2 = MarketStateFragment(
             agent_id="PERCEPT-PRICE",
             timestamp=ts,
             source_timestamp=src_ts,
+            entity="AAPL",
             data_type=DataType.PRICE_OHLCV,
+            source_hash="test-hash",
             payload={"c": 3, "a": 1, "b": 2},
         )
         assert f1.version == f2.version

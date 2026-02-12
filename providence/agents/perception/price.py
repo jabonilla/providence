@@ -28,6 +28,7 @@ from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthS
 from providence.exceptions import AgentProcessingError, DataIngestionError
 from providence.infra.polygon_client import PolygonClient
 from providence.schemas.enums import DataType, ValidationStatus
+from providence.utils.redaction import redact_error_message
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.payloads import PricePayload
 
@@ -93,7 +94,8 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
                     error=str(e),
                 )
                 # Produce a quarantined fragment so the failure is tracked
-                fragment = self._create_quarantined_fragment(ticker, date, timeframe, str(e))
+                safe_error = redact_error_message(str(e))
+                fragment = self._create_quarantined_fragment(ticker, date, timeframe, safe_error)
                 fragments.append(fragment)
 
         if any(f.validation_status == ValidationStatus.VALID for f in fragments):

@@ -6,9 +6,10 @@ Handles retry logic, rate limiting, timeout, and structured JSON output.
 Spec Reference: Technical Spec v2.3, Section 4.2
 """
 
+import asyncio
 import json
 import os
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import httpx
 import structlog
@@ -22,6 +23,24 @@ DEFAULT_MAX_RETRIES = 3
 DEFAULT_TIMEOUT_SECONDS = 120
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_MAX_TOKENS = 4096
+
+
+@runtime_checkable
+class LLMClient(Protocol):
+    """Protocol defining the LLM client interface.
+
+    All LLM clients (Anthropic, OpenAI, etc.) must implement this
+    interface so agents can accept any provider interchangeably.
+    """
+
+    async def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.3,
+    ) -> dict[str, Any]:
+        """Send a prompt and return parsed JSON response."""
+        ...
 
 
 class AnthropicClient:
@@ -100,7 +119,6 @@ class AnthropicClient:
                         attempt=attempt,
                         wait_seconds=wait,
                     )
-                    import asyncio
                     await asyncio.sleep(wait)
                     continue
 
@@ -111,7 +129,6 @@ class AnthropicClient:
                         status_code=response.status_code,
                         attempt=attempt,
                     )
-                    import asyncio
                     await asyncio.sleep(2 ** attempt)
                     continue
 
@@ -151,13 +168,41 @@ class AnthropicClient:
         )
 
     def _extract_text(self, response_data: dict[str, Any]) -> str:
-        """Extract text content from Anthropic Messages API response."""
+        """Extract text content from Anthropic Messages API response.
+
+        Handles empty content arrays and refusal/error responses.
+        """
+        # Check for stop reason indicating refusal
+        stop_reason = response_data.get("stop_reason")
+        if stop_reason == "end_turn" and not response_data.get("content"):
+            raise ExternalAPIError(
+                message="Anthropic API returned empty content (possible refusal)",
+                service="anthropic",
+                status_code=200,
+            )
+
         content = response_data.get("content", [])
+        if not content:
+            raise ExternalAPIError(
+                message="Anthropic API returned empty content array",
+                service="anthropic",
+                status_code=200,
+            )
+
         text_parts = []
         for block in content:
             if block.get("type") == "text":
                 text_parts.append(block.get("text", ""))
-        return "\n".join(text_parts)
+
+        result = "\n".join(text_parts)
+        if not result.strip():
+            raise ExternalAPIError(
+                message="Anthropic API returned no text content in response blocks",
+                service="anthropic",
+                status_code=200,
+            )
+
+        return result
 
     def _parse_json_response(self, text: str) -> dict[str, Any]:
         """Parse JSON from model response text.
