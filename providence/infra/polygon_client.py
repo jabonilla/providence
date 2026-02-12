@@ -186,3 +186,60 @@ class PolygonClient:
                 message=f"Expected list of results, got {type(results).__name__}"
             )
         return results
+
+    async def get_ticker_news(self, ticker: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Fetch news articles for a ticker.
+
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL").
+            limit: Maximum number of articles to return (default 10).
+
+        Returns:
+            List of article dicts from the 'results' field.
+        """
+        path = "/v2/reference/news"
+        params = {
+            "ticker": ticker,
+            "limit": limit,
+            "order": "desc",
+            "sort": "published_utc",
+        }
+        data = await self._request(path, params)
+        results = data.get("results", [])
+        if not isinstance(results, list):
+            raise DataIngestionError(
+                message=f"Expected list of results, got {type(results).__name__}"
+            )
+        return results
+
+    async def get_options_chain(
+        self,
+        ticker: str,
+        expiration_date: str | None = None,
+        contract_type: str | None = None,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Fetch options chain data for a ticker.
+
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL").
+            expiration_date: Optional expiration date filter (YYYY-MM-DD format).
+            contract_type: Optional contract type filter (e.g., "call", "put").
+            limit: Maximum number of contracts to return (default 50).
+
+        Returns:
+            List of option contract dicts from the 'results' field.
+        """
+        path = f"/v3/snapshot/options/{ticker}"
+        params = {"limit": limit}
+        if expiration_date is not None:
+            params["expiration_date"] = expiration_date
+        if contract_type is not None:
+            params["contract_type"] = contract_type
+        data = await self._request(path, params)
+        results = data.get("results", [])
+        if not isinstance(results, list):
+            raise DataIngestionError(
+                message=f"Expected list of results, got {type(results).__name__}"
+            )
+        return results
