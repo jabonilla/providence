@@ -67,3 +67,125 @@ agents:
     peer_count: 5
     peer_group: sector_peers
     priority_window_hours: 48
+
+  REGIME-STAT:
+    consumes:
+      - PRICE_OHLCV
+      - MACRO_YIELD_CURVE
+      - MACRO_CDS
+      - MACRO_ECONOMIC
+      - OPTIONS_CHAIN
+    max_token_budget: 50000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 72
+
+  REGIME-SECTOR:
+    consumes:
+      - PRICE_OHLCV
+      - MACRO_YIELD_CURVE
+      - MACRO_CDS
+      - MACRO_ECONOMIC
+      - OPTIONS_CHAIN
+    max_token_budget: 50000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 72
+
+  REGIME-NARR:
+    consumes:
+      - SENTIMENT_NEWS
+      - EARNINGS_CALL
+      - MACRO_YIELD_CURVE
+      - MACRO_CDS
+      - MACRO_ECONOMIC
+      - PRICE_OHLCV
+    max_token_budget: 80000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 48
+
+  REGIME-MISMATCH:
+    consumes: []  # Reads upstream regime outputs from metadata, not raw fragments
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 72
+
+  DECIDE-SYNTH:
+    consumes: []  # Reads beliefs and regime from metadata, not raw fragments
+    max_token_budget: 120000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  DECIDE-OPTIM:
+    consumes: []  # Reads position intents and regime from metadata, not raw fragments
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  EXEC-VALIDATE:
+    consumes: []  # Reads proposals from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  EXEC-ROUTER:
+    consumes: []  # Reads validated proposals from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  EXEC-GUARDIAN:
+    consumes: []  # Reads routing plan from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  EXEC-CAPTURE:
+    consumes: []  # Reads active positions from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  COGNIT-EXIT:
+    consumes:
+      - PRICE_OHLCV
+    max_token_budget: 80000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  INVALID-MON:
+    consumes: []  # Reads beliefs and current values from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 12
+
+  THESIS-RENEW:
+    consumes: []  # Reads beliefs and invalidation state from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  SHADOW-EXIT:
+    consumes: []  # Reads exit assessments and capture decisions from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  RENEW-MON:
+    consumes: []  # Reads beliefs and invalidation results from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 12

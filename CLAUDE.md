@@ -2,9 +2,9 @@
 
 ## Current Status
 <!-- Update this after each session -->
-Phase: 2 (Multi-Agent + Synthesis)
-Last completed session: 8 (Remaining Perception Agents)
-Implemented components: MarketStateFragment, BeliefObject, all enums, BaseAgent ABC, AgentContext, HealthStatus, exception hierarchy, hashing utils, structured logging, PricePayload, PolygonClient, PERCEPT-PRICE, FilingPayload, EdgarClient, filing parser, PERCEPT-FILING, AgentConfig, AgentConfigRegistry, token estimation, ContextService (7-step assembly), agents.yaml config, AnthropicClient, LLMClient Protocol, response_parser, CognitFundamental agent, prompt templates v1.0 + v1.1, sample fixtures (5 stocks), integration tests, health check script, API key redaction utility, NewsPayload, OptionsPayload, CdsPayload, MacroYieldPayload, MacroEconomicPayload, FredClient, PERCEPT-NEWS, PERCEPT-OPTIONS, PERCEPT-CDS, PERCEPT-MACRO
+Phase: 3 (Exit System)
+Last completed session: 21 (Exit subsystem — all 5 agents complete)
+Implemented components: MarketStateFragment, BeliefObject, all enums, BaseAgent ABC, AgentContext, HealthStatus, exception hierarchy, hashing utils, structured logging, PricePayload, PolygonClient, PERCEPT-PRICE, FilingPayload, EdgarClient, filing parser, PERCEPT-FILING, AgentConfig, AgentConfigRegistry, token estimation, ContextService (7-step assembly), agents.yaml config, AnthropicClient, LLMClient Protocol, response_parser, CognitFundamental agent, prompt templates v1.0 + v1.1, sample fixtures (5 stocks), integration tests, health check script, API key redaction utility, NewsPayload, OptionsPayload, CdsPayload, MacroYieldPayload, MacroEconomicPayload, FredClient, PERCEPT-NEWS, PERCEPT-OPTIONS, PERCEPT-CDS, PERCEPT-MACRO, TechnicalSignals dataclass, technical indicator functions (SMA/EMA/RSI/MACD/Bollinger/momentum), compute_all_signals aggregator, CognitTechnical agent (FROZEN — zero LLM), signal-to-belief generation, technical invalidation conditions, CognitMacro agent (ADAPTIVE — Claude Sonnet 4), cognit_macro_v1.0 prompt template, macro test fixtures, CognitEvent agent (ADAPTIVE — Claude Sonnet 4), cognit_event_v1.0 prompt template, event test fixtures, CognitNarrative agent (ADAPTIVE — Claude Sonnet 4, peer comparison), cognit_narrative_v1.0 prompt template, narrative test fixtures, CognitCrossSec agent (ADAPTIVE — Claude Sonnet 4, peer comparison), cognit_crosssec_v1.0 prompt template, crosssec test fixtures, cognition __init__.py exports (6 agents), StatisticalRegime enum (4 states), SystemRiskMode enum (4 modes), RegimeStateObject schema, SectorRegimeOverlay schema, NarrativeRegimeOverlay schema, RegimeFeatures dataclass, regime feature extraction (realized vol, drawdown, macro), HMM model (pure Python, 4-state, forward algorithm), RegimeStat agent (FROZEN — zero LLM, HMM regime classification), sector_features module (ticker→GICS mapping, per-sector feature extraction, relative stress), RegimeSector agent (FROZEN — zero LLM, per-sector HMM classification), RegimeNarr agent (ADAPTIVE — Claude Sonnet 4, narrative regime classification), regime_narr_v1.0 prompt template, narrative regime test fixtures, parse_narrative_response parser, RegimeMismatch agent (FROZEN — zero LLM, stat-narrative-sector divergence detection, risk mode escalation), regime __init__.py exports (4 agents), Decision schemas (ContributingThesis, ConflictResolution, ActiveInvalidation, SynthesizedPositionIntent, SynthesisOutput, PortfolioMetadata, ProposedPosition, PositionProposal), Action enum, DecideSynth agent (ADAPTIVE — Claude Sonnet 4, belief synthesis with conflict resolution), decide_synth_v1.0 prompt template, parse_synthesis_response parser, synthesis test fixtures, DecideOptim agent (FROZEN — zero LLM, Black-Litterman portfolio optimization with regime-aware constraints), decision __init__.py exports (2 agents), Execution schemas (ValidationResult, ValidatedProposal, RoutedOrder, RoutingPlan, GuardianCheck, GuardianVerdict, TrailingStopState, CaptureDecision, CaptureOutput), ExecValidate agent (FROZEN — pre-trade validation with risk-mode constraints), ExecRouter agent (FROZEN — order routing with strategy/urgency/slippage), ExecGuardian agent (FROZEN — kill switch and circuit breakers), ExecCapture agent (FROZEN — trailing stop management with supremacy, 3-stage trim, hard giveback), execution __init__.py exports (4 agents), Exit schemas (ExitAssessment, ExitOutput, MonitoredCondition, InvalidationMonitorOutput, RenewalCandidate, ThesisRenewalOutput, ShadowExitSignal, ShadowExitOutput, BeliefHealthReport, RenewalMonitorOutput), CognitExit agent (ADAPTIVE — Claude Sonnet 4, exit assessment with renewal deferral), parse_exit_response parser, exit test fixtures, InvalidMon agent (FROZEN — invalidation condition monitoring with breach magnitude/velocity/confidence impact), ThesisRenew agent (FROZEN — thesis renewal with confidence decay, asymmetry scoring, regime alignment), ShadowExit agent (FROZEN — shadow exit tracking, COGNIT-EXIT vs EXEC-CAPTURE divergence detection), RenewMon agent (FROZEN — renewal monitoring with belief health scoring, urgency classification), exit __init__.py exports (5 agents)
 
 ## Quick Reference
 - Spec: Technical Spec v2.3 (available in Claude Project "Providence")
@@ -84,6 +84,7 @@ Providence is an autonomous hedge fund system that uses multiple AI agents to id
 - REGIME-STAT, REGIME-SECTOR, REGIME-MISMATCH
 - DECIDE-OPTIM
 - EXEC-VALIDATE, EXEC-ROUTER, EXEC-GUARDIAN, EXEC-CAPTURE
+- INVALID-MON, THESIS-RENEW, SHADOW-EXIT, RENEW-MON
 
 ### Adaptive (uses LLM — subject to offline retraining):
 - COGNIT-FUNDAMENTAL (Claude Sonnet 4)
@@ -103,8 +104,8 @@ PERCEPT-PRICE -> MarketStateFragment -> CONTEXT-SVC -> COGNIT-FUNDAMENTAL -> Bel
 ### Phase 2: Multi-Agent + Synthesis (Sessions 8-16)
 All research agents, regime system, decision system, execution system
 
-### Phase 3: Exit System (Session 17)
-COGNIT-EXIT + INVALID-MON + THESIS-RENEW + SHADOW-EXIT + RENEW-MON
+### Phase 3: Exit System (Sessions 17-21)
+COGNIT-EXIT + INVALID-MON + THESIS-RENEW + SHADOW-EXIT + RENEW-MON — COMPLETE
 
 ### Phase 4: Learning + Production (Future)
 Attribution, calibration, retraining, backtesting, governance

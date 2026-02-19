@@ -62,6 +62,29 @@ class DataType(str, Enum):
     MACRO_ECONOMIC = "MACRO_ECONOMIC"
 
 
+class StatisticalRegime(str, Enum):
+    """HMM-classified market regime state.
+
+    Produced by REGIME-STAT (frozen agent) from price volatility,
+    yield curve, credit spreads, and macro data.
+    """
+    LOW_VOL_TRENDING = "LOW_VOL_TRENDING"
+    HIGH_VOL_MEAN_REVERTING = "HIGH_VOL_MEAN_REVERTING"
+    CRISIS_DISLOCATION = "CRISIS_DISLOCATION"
+    TRANSITION_UNCERTAIN = "TRANSITION_UNCERTAIN"
+
+
+class SystemRiskMode(str, Enum):
+    """System-wide risk mode derived from regime classification.
+
+    Governs position sizing, exposure limits, and execution guardrails.
+    """
+    NORMAL = "NORMAL"
+    CAUTIOUS = "CAUTIOUS"
+    DEFENSIVE = "DEFENSIVE"
+    HALTED = "HALTED"
+
+
 class MarketCapBucket(str, Enum):
     """Market capitalization classification."""
     MEGA = "MEGA"
@@ -76,3 +99,14 @@ class CatalystType(str, Enum):
     MACRO = "MACRO"
     EVENT = "EVENT"
     NONE = "NONE"
+
+
+class Action(str, Enum):
+    """Position action for a ProposedPosition.
+
+    Produced by DECIDE-OPTIM. Consumed by EXEC-VALIDATE.
+    """
+    OPEN_LONG = "OPEN_LONG"
+    OPEN_SHORT = "OPEN_SHORT"
+    CLOSE = "CLOSE"
+    ADJUST = "ADJUST"
