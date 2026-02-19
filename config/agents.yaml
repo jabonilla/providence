@@ -217,3 +217,31 @@ agents:
     entity_scope: []
     peer_count: 0
     priority_window_hours: 168  # Weekly offline runs
+
+  GOVERN-CAPITAL:
+    consumes: []  # Reads AUM from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 24
+
+  GOVERN-MATURITY:
+    consumes: []  # Reads agent maturity state and learning outputs from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 168  # Weekly evaluations
+
+  GOVERN-OVERSIGHT:
+    consumes: []  # Reads agent health reports and system state from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 1  # Near real-time monitoring
+
+  GOVERN-POLICY:
+    consumes: []  # Reads system state, positions, maturity from metadata
+    max_token_budget: 5000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 1  # Near real-time enforcement

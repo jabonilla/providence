@@ -9,13 +9,16 @@ from providence.schemas.belief import (
 )
 from providence.schemas.enums import (
     Action,
+    CapitalTier,
     CatalystType,
     ComparisonOperator,
     ConditionStatus,
     DataType,
     Direction,
+    IncidentSeverity,
     Magnitude,
     MarketCapBucket,
+    MaturityStage,
     StatisticalRegime,
     SystemRiskMode,
     ValidationStatus,
@@ -54,6 +57,17 @@ from providence.schemas.exit import (
     ShadowExitSignal,
     ThesisRenewalOutput,
 )
+from providence.schemas.governance import (
+    AgentMaturityRecord,
+    CapitalTierOutput,
+    GovernanceIncident,
+    MaturityGateOutput,
+    OversightOutput,
+    PolicyOutput,
+    PolicyViolation,
+    SystemHealthSummary,
+    TierConstraints,
+)
 from providence.schemas.learning import (
     AgentAttribution,
     AgentCalibration,
@@ -75,13 +89,16 @@ from providence.schemas.regime import (
 __all__ = [
     # Enums
     "Action",
+    "CapitalTier",
     "CatalystType",
     "ComparisonOperator",
     "ConditionStatus",
     "DataType",
     "Direction",
+    "IncidentSeverity",
     "Magnitude",
     "MarketCapBucket",
+    "MaturityStage",
     "StatisticalRegime",
     "SystemRiskMode",
     "ValidationStatus",
@@ -123,6 +140,16 @@ __all__ = [
     "ShadowExitOutput",
     "ShadowExitSignal",
     "ThesisRenewalOutput",
+    # Governance
+    "AgentMaturityRecord",
+    "CapitalTierOutput",
+    "GovernanceIncident",
+    "MaturityGateOutput",
+    "OversightOutput",
+    "PolicyOutput",
+    "PolicyViolation",
+    "SystemHealthSummary",
+    "TierConstraints",
     # Learning
     "AgentAttribution",
     "AgentCalibration",

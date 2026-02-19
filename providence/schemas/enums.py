@@ -110,3 +110,36 @@ class Action(str, Enum):
     OPEN_SHORT = "OPEN_SHORT"
     CLOSE = "CLOSE"
     ADJUST = "ADJUST"
+
+
+class CapitalTier(str, Enum):
+    """Capital tier based on AUM thresholds.
+
+    Controls system autonomy level, position sizing, and oversight requirements.
+    Produced by GOVERN-CAPITAL. Consumed by EXEC-VALIDATE and GOVERN-OVERSIGHT.
+    """
+    SEED = "SEED"          # < $10M — shadow mode only, no live execution
+    GROWTH = "GROWTH"      # $10M–$100M — limited execution, tighter guardrails
+    SCALE = "SCALE"        # $100M–$500M — full execution, standard limits
+    INSTITUTIONAL = "INSTITUTIONAL"  # > $500M — full execution, enhanced monitoring
+
+
+class MaturityStage(str, Enum):
+    """Agent maturity deployment stage.
+
+    Controls whether an agent's outputs are used for live trading.
+    Produced by GOVERN-MATURITY. Consumed by DECIDE-SYNTH and EXEC-VALIDATE.
+    """
+    SHADOW = "SHADOW"      # Outputs logged but NOT used in live trading
+    LIMITED = "LIMITED"     # Outputs used with reduced confidence weighting (50%)
+    FULL = "FULL"          # Outputs used at full confidence weighting
+
+
+class IncidentSeverity(str, Enum):
+    """Severity level for governance incidents.
+
+    Produced by GOVERN-OVERSIGHT. Consumed by human operators.
+    """
+    INFO = "INFO"          # Informational — no action required
+    WARNING = "WARNING"    # Attention needed — degradation detected
+    CRITICAL = "CRITICAL"  # Immediate action required — system risk
