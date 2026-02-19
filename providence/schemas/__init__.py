@@ -54,6 +54,18 @@ from providence.schemas.exit import (
     ShadowExitSignal,
     ThesisRenewalOutput,
 )
+from providence.schemas.learning import (
+    AgentAttribution,
+    AgentCalibration,
+    AttributionOutput,
+    BacktestOutput,
+    BacktestPeriod,
+    CalibrationBucket,
+    CalibrationOutput,
+    RetrainOutput,
+    RetrainRecommendation,
+    TickerAttribution,
+)
 from providence.schemas.regime import (
     NarrativeRegimeOverlay,
     RegimeStateObject,
@@ -111,6 +123,17 @@ __all__ = [
     "ShadowExitOutput",
     "ShadowExitSignal",
     "ThesisRenewalOutput",
+    # Learning
+    "AgentAttribution",
+    "AgentCalibration",
+    "AttributionOutput",
+    "BacktestOutput",
+    "BacktestPeriod",
+    "CalibrationBucket",
+    "CalibrationOutput",
+    "RetrainOutput",
+    "RetrainRecommendation",
+    "TickerAttribution",
     # Regime
     "NarrativeRegimeOverlay",
     "RegimeStateObject",

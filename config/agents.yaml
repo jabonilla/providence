@@ -189,3 +189,31 @@ agents:
     entity_scope: []
     peer_count: 0
     priority_window_hours: 12
+
+  LEARN-ATTRIB:
+    consumes: []  # Reads closed positions and belief history from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 168  # Weekly offline runs
+
+  LEARN-CALIB:
+    consumes: []  # Reads belief outcomes from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 168  # Weekly offline runs
+
+  LEARN-RETRAIN:
+    consumes: []  # Reads attribution and calibration results from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 168  # Weekly offline runs
+
+  LEARN-BACKTEST:
+    consumes: []  # Reads trade and regime history from metadata
+    max_token_budget: 10000
+    entity_scope: []
+    peer_count: 0
+    priority_window_hours: 168  # Weekly offline runs
