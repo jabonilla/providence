@@ -11,12 +11,13 @@ from providence.orchestration.models import (
     StageResult,
     StageStatus,
 )
-from providence.schemas.belief import Belief, BeliefObject, EvidenceRef, InvalidationCondition
+from providence.schemas.belief import Belief, BeliefMetadata, BeliefObject, EvidenceRef, InvalidationCondition
 from providence.schemas.enums import (
     ComparisonOperator,
     ConditionStatus,
     Direction,
     Magnitude,
+    MarketCapBucket,
 )
 from providence.storage.belief_store import BeliefStore
 from providence.storage.run_store import RunStore
@@ -70,6 +71,10 @@ def _make_belief(
                     )
                 ],
                 correlated_beliefs=[],
+                metadata=BeliefMetadata(
+                    sector="Technology",
+                    market_cap_bucket=MarketCapBucket.MEGA,
+                ),
             )
         ],
     )
