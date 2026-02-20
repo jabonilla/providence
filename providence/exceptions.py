@@ -82,3 +82,22 @@ class ConstraintViolationError(ProvidenceError):
         self.current_value = current_value
         self.limit_value = limit_value
         super().__init__(message, agent_id)
+
+
+class OrchestrationError(ProvidenceError):
+    """Raised when the orchestration layer encounters a pipeline error.
+
+    Examples: all stages in a critical group failed, pipeline timeout,
+    invalid loop configuration, runner scheduling failure.
+    """
+
+    def __init__(
+        self,
+        message: str = "",
+        agent_id: str | None = None,
+        loop_type: str | None = None,
+        run_id: str | None = None,
+    ) -> None:
+        self.loop_type = loop_type
+        self.run_id = run_id
+        super().__init__(message, agent_id)
