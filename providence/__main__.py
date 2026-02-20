@@ -23,10 +23,12 @@ from providence.factory import ALL_AGENT_IDS, build_agent_registry
 from providence.orchestration.orchestrator import Orchestrator
 from providence.orchestration.runner import ProvidenceRunner
 from providence.services.context_svc import ContextService
+from providence.storage import BeliefStore, FragmentStore, RunStore
 
 logger = structlog.get_logger()
 
 DEFAULT_CONFIG_PATH = Path("config/agents.yaml")
+DEFAULT_DATA_DIR = Path("data")
 DEFAULT_INTERVAL = 300  # 5 minutes
 
 
@@ -40,6 +42,12 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_CONFIG_PATH,
         help="Path to agents.yaml config file",
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=DEFAULT_DATA_DIR,
+        help="Directory for persistent storage (fragments, beliefs, runs)",
     )
     parser.add_argument(
         "--skip-perception",
@@ -134,6 +142,13 @@ def _build_system(
         skip_adaptive=args.skip_adaptive,
     )
 
+    # Build storage layer
+    data_dir: Path = args.data_dir
+    data_dir.mkdir(parents=True, exist_ok=True)
+    fragment_store = FragmentStore(persist_path=data_dir / "fragments.jsonl")
+    belief_store = BeliefStore(persist_path=data_dir / "beliefs.jsonl")
+    run_store = RunStore(persist_path=data_dir / "runs.jsonl")
+
     # Build context service and orchestrator
     context_service = ContextService(config_registry)
     orchestrator = Orchestrator(
@@ -143,7 +158,12 @@ def _build_system(
         default_timeout=args.timeout,
     )
 
-    runner = ProvidenceRunner(orchestrator)
+    runner = ProvidenceRunner(
+        orchestrator,
+        fragment_store=fragment_store,
+        belief_store=belief_store,
+        run_store=run_store,
+    )
     return runner, registry
 
 
@@ -156,23 +176,23 @@ async def _cmd_run_once(args: argparse.Namespace) -> int:
         with_governance=args.with_governance,
     )
 
-    run = await runner.run_once(
-        fragments=[],
+    runs = await runner.run_once(
         metadata={},
         run_exit=args.with_exit,
         run_governance=args.with_governance,
     )
 
+    main_run = runs["MAIN"]
     logger.info(
         "Cycle complete",
-        status=run.status.value,
-        stages=len(run.stage_results),
-        succeeded=run.succeeded_count,
-        failed=run.failed_count,
-        skipped=run.skipped_count,
-        duration_ms=run.total_duration_ms,
+        status=main_run.status.value,
+        stages=len(main_run.stage_results),
+        succeeded=main_run.succeeded_count,
+        failed=main_run.failed_count,
+        skipped=main_run.skipped_count,
+        duration_ms=main_run.total_duration_ms,
     )
-    return 0 if run.status.value in ("SUCCEEDED", "PARTIAL_FAILURE") else 1
+    return 0 if main_run.status.value in ("SUCCEEDED", "PARTIAL_FAILURE") else 1
 
 
 async def _cmd_run_continuous(args: argparse.Namespace) -> int:
@@ -186,12 +206,7 @@ async def _cmd_run_continuous(args: argparse.Namespace) -> int:
 
     logger.info("Starting continuous mode", interval_seconds=args.interval)
 
-    async def _fragment_provider():
-        """Placeholder — returns empty fragments for now."""
-        return []
-
     await runner.run_continuous(
-        fragment_provider=_fragment_provider,
         interval_seconds=args.interval,
     )
     logger.info("Shutdown complete")
