@@ -112,7 +112,7 @@ COGNIT-EXIT + INVALID-MON + THESIS-RENEW + SHADOW-EXIT + RENEW-MON — COMPLETE
 ### Phase 4: Learning + Governance (Sessions 22-23)
 LEARN-ATTRIB + LEARN-CALIB + LEARN-RETRAIN + LEARN-BACKTEST — COMPLETE
 GOVERN-CAPITAL + GOVERN-MATURITY + GOVERN-OVERSIGHT + GOVERN-POLICY — COMPLETE
-ALL 7 SUBSYSTEMS BUILT. 31 agents total.
+ALL 7 SUBSYSTEMS BUILT. 35 agents total.
 
 ### Phase 5: Orchestration (Session 24)
 StageResult + PipelineRun models, PipelineStage executor, Orchestrator (4 loops), ProvidenceRunner — COMPLETE
@@ -122,7 +122,7 @@ Error isolation: failed stages → FAILED result, downstream dependents → SKIP
 
 ### Phase 5 continued: Factory + CLI (Session 25)
 Agent factory (build_agent_registry) — dependency injection for 3 agent categories:
-  Frozen (17 agents, zero args), Adaptive (8 agents, optional LLM client), Perception (6 agents, require API clients)
+  Frozen (21 agents, zero args), Adaptive (8 agents, optional LLM client), Perception (6 agents, require API clients)
 CLI entry point (python -m providence) — 5 commands: run-once, run-continuous, run-learning, health, list-agents
 Supports: --skip-perception, --skip-adaptive, --timeout, --log-level, agent_filter
 

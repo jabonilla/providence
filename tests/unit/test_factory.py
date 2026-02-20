@@ -21,7 +21,7 @@ from providence.factory import (
 
 class TestAgentIDCompleteness:
     def test_total_agent_count(self):
-        """All 31 agents should be accounted for."""
+        """All 35 agents should be accounted for."""
         total = (
             len(_FROZEN_NO_ARGS)
             + len(_ADAPTIVE_LLM)
@@ -29,11 +29,11 @@ class TestAgentIDCompleteness:
             + len(_PERCEPTION_EDGAR)
             + len(_PERCEPTION_FRED)
         )
-        assert total == 31
+        assert total == 35
 
     def test_all_agent_ids_sorted(self):
         assert ALL_AGENT_IDS == sorted(ALL_AGENT_IDS)
-        assert len(ALL_AGENT_IDS) == 31
+        assert len(ALL_AGENT_IDS) == 35
 
     def test_no_duplicate_ids(self):
         all_ids = (
@@ -71,8 +71,8 @@ class TestAgentIDCompleteness:
         assert set(_ADAPTIVE_LLM) == expected
 
     def test_frozen_no_args_count(self):
-        # 31 total - 8 adaptive - 6 perception = 17 frozen no-args
-        assert len(_FROZEN_NO_ARGS) == 17
+        # 35 total - 8 adaptive - 6 perception = 21 frozen no-args
+        assert len(_FROZEN_NO_ARGS) == 21
 
 
 # ===========================================================================

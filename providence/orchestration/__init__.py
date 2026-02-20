@@ -1,6 +1,6 @@
 """Providence orchestration layer.
 
-Wires all 31 agents together across 4 pipeline loops:
+Wires all 35 agents together across 4 pipeline loops:
   - Main: Cognition → Regime → Decision → Execution
   - Exit: COGNIT-EXIT → INVALID-MON → THESIS-RENEW → SHADOW-EXIT → RENEW-MON
   - Learning: LEARN-ATTRIB → LEARN-CALIB → LEARN-RETRAIN → LEARN-BACKTEST

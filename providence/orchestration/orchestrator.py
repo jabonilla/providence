@@ -1,6 +1,6 @@
 """Orchestrator — DAG coordinator for the Providence pipeline.
 
-Wires all 31 agents together across 4 loops:
+Wires all 35 agents together across 4 loops:
   - Main loop: Cognition → Regime → Decision → Execution
   - Exit loop: COGNIT-EXIT → INVALID-MON → THESIS-RENEW → SHADOW-EXIT → RENEW-MON
   - Learning loop: LEARN-ATTRIB → LEARN-CALIB → LEARN-RETRAIN → LEARN-BACKTEST
