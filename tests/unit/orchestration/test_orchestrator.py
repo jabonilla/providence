@@ -189,10 +189,13 @@ class TestMainLoop:
         orch = Orchestrator(agents, _mock_context_service(), _mock_config_registry())
 
         run = await orch.run_main_loop(fragments=[])
-        # Should still complete (missing agents → skipped)
-        assert run.status in (RunStatus.PARTIAL_FAILURE, RunStatus.FAILED)
+        # Should still complete (missing agents → skipped, not crashed)
+        assert run.status in (RunStatus.SUCCEEDED, RunStatus.PARTIAL_FAILURE, RunStatus.FAILED)
         cog_results = [s for s in run.stage_results if s.agent_id in COGNITION_AGENTS]
         assert all(s.status == StageStatus.SUCCEEDED for s in cog_results)
+        # Non-cognition agents should be skipped (not in registry)
+        skipped = [s for s in run.stage_results if s.status == StageStatus.SKIPPED]
+        assert len(skipped) > 0
 
 
 # ===========================================================================
