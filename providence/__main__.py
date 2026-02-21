@@ -23,6 +23,7 @@ from providence.factory import ALL_AGENT_IDS, build_agent_registry
 from providence.orchestration.orchestrator import Orchestrator
 from providence.orchestration.runner import ProvidenceRunner
 from providence.services.context_svc import ContextService
+from providence.services.health import HealthService
 from providence.storage import BeliefStore, FragmentStore, RunStore
 
 logger = structlog.get_logger()
@@ -231,22 +232,43 @@ async def _cmd_run_learning(args: argparse.Namespace) -> int:
 
 
 def _cmd_health(args: argparse.Namespace) -> int:
-    """Print health status of all agents."""
-    _, registry = _build_system(args)
+    """Print health status of all agents and system summary."""
+    runner, registry = _build_system(args)
 
+    # Use HealthService for aggregated report
+    health_svc = HealthService(registry, run_store=runner._run_store)
+    report = health_svc.check()
+
+    # Print per-agent table
     print(f"\n{'Agent ID':<25} {'Type':<12} {'Status':<12} {'Version'}")
     print("-" * 65)
 
     for agent_id in sorted(registry):
         agent = registry[agent_id]
-        health = agent.get_health()
+        health = report.agent_health.get(agent_id)
+        status_str = health.status if health else "UNKNOWN"
         print(
             f"{agent_id:<25} {agent.agent_type:<12} "
-            f"{health.status:<12} {agent.version}"
+            f"{status_str:<12} {agent.version}"
         )
 
-    print(f"\nTotal: {len(registry)} agents registered")
-    print(f"Expected: {len(ALL_AGENT_IDS)} agents")
+    # Print system summary
+    summary = report.summary()
+    agents = summary["agents"]
+    pipeline = summary["pipeline"]
+    print(f"\n--- System Status: {report.system_status} ---")
+    print(
+        f"Agents: {agents['healthy']} healthy, "
+        f"{agents['degraded']} degraded, "
+        f"{agents['unhealthy']} unhealthy, "
+        f"{agents['offline']} offline "
+        f"(total: {agents['total']})"
+    )
+    print(
+        f"Pipeline: {pipeline['run_count']} runs, "
+        f"{pipeline['success_rate']:.1%} success rate"
+    )
+
     missing = set(ALL_AGENT_IDS) - set(registry)
     if missing:
         print(f"Missing: {', '.join(sorted(missing))}")
