@@ -95,14 +95,25 @@ class MockCognitionAgent(BaseAgent[dict]):
         )
 
 
+PERCEPTION_AGENTS = [
+    "PERCEPT-PRICE", "PERCEPT-FILING", "PERCEPT-NEWS",
+    "PERCEPT-OPTIONS", "PERCEPT-CDS", "PERCEPT-MACRO",
+]
+
+
 def _build_registry() -> dict[str, BaseAgent]:
     """Build a full 35-agent registry with mocks."""
     registry: dict[str, BaseAgent] = {}
+    # 6 Perception agents (not orchestrated, but part of the registry)
+    for aid in PERCEPTION_AGENTS:
+        registry[aid] = MockAgent(aid)
+    # 16 Main loop agents (6 cognition + 3 regime parallel + 1 mismatch + 2 decision + 4 execution)
     for aid in ALL_MAIN_AGENTS:
         if aid.startswith("COGNIT-"):
             registry[aid] = MockCognitionAgent(aid)
         else:
             registry[aid] = MockAgent(aid)
+    # 5 Exit + 4 Learning + 4 Governance
     for aid in EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS:
         registry[aid] = MockAgent(aid)
     return registry

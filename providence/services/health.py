@@ -111,6 +111,7 @@ class HealthService:
             unhealthy=counts[AgentStatus.UNHEALTHY],
             offline=counts[AgentStatus.OFFLINE],
             run_success_rate=run_success_rate,
+            run_count=run_count,
         )
 
         report = SystemHealth(
@@ -136,13 +137,14 @@ class HealthService:
         unhealthy: int,
         offline: int,
         run_success_rate: float,
+        run_count: int = 0,
     ) -> str:
         """Classify overall system health.
 
         - HALTED: >50% agents offline or all pipeline runs failing
         - CRITICAL: >25% unhealthy/offline or success rate < 50%
         - DEGRADED: any agent unhealthy/offline or success rate < 90%
-        - HEALTHY: all agents healthy and success rate >= 90%
+        - HEALTHY: all agents healthy and success rate >= 90% (or no runs yet)
         """
         if total == 0:
             return "HALTED"
@@ -150,10 +152,13 @@ class HealthService:
         offline_pct = offline / total
         problem_pct = (unhealthy + offline) / total
 
-        if offline_pct > 0.5 or (run_success_rate < 0.01 and total > 0):
+        # Only factor in run_success_rate when there are actual runs
+        has_runs = run_count > 0
+
+        if offline_pct > 0.5 or (has_runs and run_success_rate < 0.01):
             return "HALTED"
-        if problem_pct > 0.25 or run_success_rate < 0.5:
+        if problem_pct > 0.25 or (has_runs and run_success_rate < 0.5):
             return "CRITICAL"
-        if unhealthy > 0 or offline > 0 or run_success_rate < 0.9:
+        if unhealthy > 0 or offline > 0 or (has_runs and run_success_rate < 0.9):
             return "DEGRADED"
         return "HEALTHY"
