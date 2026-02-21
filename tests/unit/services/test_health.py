@@ -124,6 +124,8 @@ class TestDegraded:
         registry = {
             "HEALTHY-1": HealthyAgent("HEALTHY-1"),
             "HEALTHY-2": HealthyAgent("HEALTHY-2"),
+            "HEALTHY-3": HealthyAgent("HEALTHY-3"),
+            "HEALTHY-4": HealthyAgent("HEALTHY-4"),
             "SICK-1": UnhealthyAgent("SICK-1"),
         }
         svc = HealthService(registry)
