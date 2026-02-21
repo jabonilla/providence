@@ -116,11 +116,15 @@ class Orchestrator:
             )
             return ctx
         except Exception:
-            # Fallback: construct directly
-            from providence.utils.hashing import compute_context_window_hash
+            # Fallback: construct directly — hash fragment versions manually
+            import hashlib
 
-            frag_hashes = sorted(f.version for f in fragments if hasattr(f, "version"))
-            ctx_hash = compute_context_window_hash(frag_hashes) if frag_hashes else "empty"
+            frag_versions = sorted(f.version for f in fragments if hasattr(f, "version"))
+            if frag_versions:
+                combined = "|".join(frag_versions).encode("utf-8")
+                ctx_hash = hashlib.sha256(combined).hexdigest()
+            else:
+                ctx_hash = "empty"
 
             return AgentContext(
                 agent_id=agent_id,
