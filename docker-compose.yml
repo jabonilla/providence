@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  providence:
+    build: .
+    container_name: providence
+    env_file:
+      - .env
+    volumes:
+      - providence-data:/app/data
+      - ./config:/app/config:ro
+    command: ["run-continuous", "--interval", "300", "--data-dir", "/app/data"]
+    restart: unless-stopped
+
+  # Single run mode (for testing or manual triggers)
+  providence-once:
+    build: .
+    container_name: providence-once
+    env_file:
+      - .env
+    volumes:
+      - providence-data:/app/data
+      - ./config:/app/config:ro
+    command: ["run-once", "--with-exit", "--with-governance", "--data-dir", "/app/data"]
+    profiles:
+      - manual
+
+  # Learning batch (weekly offline run)
+  providence-learning:
+    build: .
+    container_name: providence-learning
+    env_file:
+      - .env
+    volumes:
+      - providence-data:/app/data
+      - ./config:/app/config:ro
+    command: ["run-learning", "--data-dir", "/app/data"]
+    profiles:
+      - learning
+
+volumes:
+  providence-data:
+    driver: local
