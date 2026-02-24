@@ -151,8 +151,9 @@ def black_litterman_weights(
     for i in range(n):
         # Prior return proxy: equal weight * risk-free-ish baseline
         prior_return = prior_weights[i] * 0.05  # 5% baseline return
-        # View return proxy: direction * confidence
-        view_return = view_directions[i] * view_confidences[i] * 0.10
+        # View return proxy: direction * confidence (must be strong enough
+        # relative to prior to flip sign for short views)
+        view_return = view_directions[i] * view_confidences[i] * 0.20
         # BL blend: weight by inverse uncertainty
         prior_precision = 1.0 / tau
         view_precision = 1.0 / omega[i] if omega[i] > 0 else 0.0
