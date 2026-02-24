@@ -20,8 +20,8 @@ RUN mkdir -p /app/data
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -m providence health --skip-perception --skip-adaptive --data-dir /app/data || exit 1
+    CMD python -m providence --skip-perception --skip-adaptive --data-dir /app/data health || exit 1
 
 # Default entry point
 ENTRYPOINT ["python", "-m", "providence"]
-CMD ["run-once", "--skip-perception", "--data-dir", "/app/data"]
+CMD ["--skip-perception", "--data-dir", "/app/data", "run-once"]

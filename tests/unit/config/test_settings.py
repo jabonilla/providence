@@ -106,12 +106,12 @@ class TestApiKeyDetection:
     def test_polygon_key_present(self):
         with patch.dict(os.environ, {"POLYGON_API_KEY": "test-key"}):
             settings = get_settings()
-        assert settings.has_polygon_key() is True
+            assert settings.has_polygon_key() is True
 
     def test_anthropic_key_present(self):
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test"}):
             settings = get_settings()
-        assert settings.has_anthropic_key() is True
+            assert settings.has_anthropic_key() is True
 
     def test_all_keys_present(self):
         env = {
@@ -123,7 +123,7 @@ class TestApiKeyDetection:
         with patch.dict(os.environ, env):
             settings = get_settings()
             summary = settings.available_api_summary()
-        assert all(summary.values())
+            assert all(summary.values())
 
 
 class TestImmutability:

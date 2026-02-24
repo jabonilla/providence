@@ -35,13 +35,13 @@ run-learning:  ## Run offline learning batch
 	python -m providence run-learning --log-level INFO
 
 health:  ## Check system health
-	python -m providence health --skip-perception --skip-adaptive
+	python -m providence --skip-perception --skip-adaptive health
 
 agents:  ## List all agents
 	python -m providence list-agents
 
 frozen:  ## Run with frozen agents only (no API keys needed)
-	python -m providence run-once --skip-perception --skip-adaptive --log-level DEBUG
+	python -m providence --skip-perception --skip-adaptive --log-level DEBUG run-once
 
 docker:  ## Build Docker image
 	docker build -t providence:latest .
