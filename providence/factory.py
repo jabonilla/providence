@@ -1,8 +1,11 @@
-"""Agent factory — instantiates all 31 Providence agents.
+"""Agent factory — instantiates all 35 Providence agents.
 
 Maps agent IDs to their concrete classes and handles dependency
 injection (API clients for perception, LLM clients for adaptive agents).
 Frozen agents are instantiated with zero external dependencies.
+
+API clients auto-discover credentials from environment variables:
+  POLYGON_API_KEY, EDGAR_USER_AGENT, FRED_API_KEY, ANTHROPIC_API_KEY
 """
 
 from __future__ import annotations
@@ -322,3 +325,59 @@ def build_agent_registry(
         ),
     )
     return registry
+
+
+def build_agent_registry_from_env(
+    *,
+    skip_perception: bool = False,
+    skip_adaptive: bool = False,
+    agent_filter: set[str] | None = None,
+) -> dict[str, BaseAgent]:
+    """Build agent registry with API clients auto-created from environment.
+
+    Clients are only instantiated when their env vars are set.
+    Missing keys cause the corresponding agents to be skipped
+    (with a warning), not a hard failure.
+
+    Environment variables:
+        POLYGON_API_KEY: Polygon.io API key
+        EDGAR_USER_AGENT: SEC EDGAR user agent string
+        FRED_API_KEY: FRED API key
+        ANTHROPIC_API_KEY: Anthropic (Claude) API key
+
+    Returns:
+        Agent registry ready for Orchestrator.
+    """
+    import os
+
+    polygon_client = None
+    edgar_client = None
+    fred_client = None
+    llm_client = None
+
+    if not skip_perception:
+        if os.environ.get("POLYGON_API_KEY"):
+            polygon_client = PolygonClient()
+            logger.info("PolygonClient initialized from environment")
+        if os.environ.get("EDGAR_USER_AGENT"):
+            edgar_client = EdgarClient()
+            logger.info("EdgarClient initialized from environment")
+        if os.environ.get("FRED_API_KEY"):
+            fred_client = FredClient()
+            logger.info("FredClient initialized from environment")
+
+    if not skip_adaptive:
+        if os.environ.get("ANTHROPIC_API_KEY"):
+            from providence.infra.llm_client import AnthropicClient
+            llm_client = AnthropicClient()
+            logger.info("AnthropicClient initialized from environment")
+
+    return build_agent_registry(
+        polygon_client=polygon_client,
+        edgar_client=edgar_client,
+        fred_client=fred_client,
+        llm_client=llm_client,
+        skip_perception=skip_perception,
+        skip_adaptive=skip_adaptive,
+        agent_filter=agent_filter,
+    )

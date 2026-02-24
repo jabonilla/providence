@@ -19,7 +19,7 @@ from pathlib import Path
 import structlog
 
 from providence.config.agent_config import AgentConfigRegistry
-from providence.factory import ALL_AGENT_IDS, build_agent_registry
+from providence.factory import ALL_AGENT_IDS, build_agent_registry_from_env
 from providence.orchestration.orchestrator import Orchestrator
 from providence.orchestration.runner import ProvidenceRunner
 from providence.services.context_svc import ContextService
@@ -134,11 +134,8 @@ def _build_system(
     # Load agent configs
     config_registry = AgentConfigRegistry.from_yaml(args.config)
 
-    # Build agent registry
-    # NOTE: In production, pass real Polygon/EDGAR/FRED clients here.
-    # For now, skip_perception=True by default since we don't have
-    # live API credentials wired up yet.
-    registry = build_agent_registry(
+    # Build agent registry — auto-discovers API keys from environment
+    registry = build_agent_registry_from_env(
         skip_perception=args.skip_perception,
         skip_adaptive=args.skip_adaptive,
     )
