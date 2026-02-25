@@ -52,6 +52,13 @@ class ProvidenceSettings:
     def has_anthropic_key(self) -> bool:
         return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
+    def has_alpaca_keys(self) -> bool:
+        return bool(os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_SECRET_KEY"))
+
+    def is_paper_trading(self) -> bool:
+        val = os.environ.get("ALPACA_PAPER", "true").lower()
+        return val in ("1", "true", "yes")
+
     def available_api_summary(self) -> dict[str, bool]:
         """Return which APIs are configured."""
         return {
@@ -59,6 +66,7 @@ class ProvidenceSettings:
             "edgar": self.has_edgar_agent(),
             "fred": self.has_fred_key(),
             "anthropic": self.has_anthropic_key(),
+            "alpaca": self.has_alpaca_keys(),
         }
 
 

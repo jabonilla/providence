@@ -117,10 +117,11 @@ def _parse_args() -> argparse.Namespace:
 
 def _configure_logging(level: str) -> None:
     """Configure structlog with the given level."""
+    import logging
+
+    level_num = getattr(logging, level.upper(), logging.INFO)
     structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(structlog, level, structlog.INFO)
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(level_num),
     )
 
 

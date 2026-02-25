@@ -1,0 +1,116 @@
+# Providence Ticker Watchlist Configuration
+# Defines which securities to run perception and analysis on
+
+name: "production"
+max_positions: 20
+
+tickers:
+  # Technology - Mega-cap leaders
+  - ticker: AAPL
+    sector: Information Technology
+    priority: 1
+    tags: ["mega_cap", "tech", "sp500"]
+    
+  - ticker: MSFT
+    sector: Information Technology
+    priority: 1
+    tags: ["mega_cap", "tech", "sp500"]
+    
+  - ticker: GOOGL
+    sector: Communication Services
+    priority: 1
+    tags: ["mega_cap", "tech", "sp500"]
+    
+  - ticker: NVDA
+    sector: Information Technology
+    priority: 1
+    tags: ["mega_cap", "tech", "gpu", "sp500"]
+
+  # Consumer & E-commerce
+  - ticker: AMZN
+    sector: Consumer Discretionary
+    priority: 1
+    tags: ["mega_cap", "consumer", "ecommerce", "sp500"]
+    
+  - ticker: TSLA
+    sector: Consumer Discretionary
+    priority: 1
+    tags: ["mega_cap", "consumer", "automotive", "ev"]
+
+  # Financials
+  - ticker: JPM
+    sector: Financials
+    priority: 1
+    tags: ["mega_cap", "finance", "banking", "sp500"]
+    
+  - ticker: GS
+    sector: Financials
+    priority: 2
+    tags: ["large_cap", "finance", "banking"]
+
+  # Healthcare
+  - ticker: JNJ
+    sector: Health Care
+    priority: 1
+    tags: ["mega_cap", "healthcare", "pharma", "sp500"]
+    
+  - ticker: UNH
+    sector: Health Care
+    priority: 1
+    tags: ["mega_cap", "healthcare", "insurance", "sp500"]
+
+  # Energy
+  - ticker: XOM
+    sector: Energy
+    priority: 1
+    tags: ["mega_cap", "energy", "oil_gas", "sp500"]
+    
+  - ticker: CVX
+    sector: Energy
+    priority: 1
+    tags: ["mega_cap", "energy", "oil_gas", "sp500"]
+
+  # Consumer Staples
+  - ticker: PG
+    sector: Consumer Staples
+    priority: 1
+    tags: ["mega_cap", "consumer", "staples", "sp500"]
+    
+  - ticker: KO
+    sector: Consumer Staples
+    priority: 2
+    tags: ["large_cap", "consumer", "beverage"]
+
+  # Industrials
+  - ticker: BA
+    sector: Industrials
+    priority: 2
+    tags: ["large_cap", "industrial", "aerospace", "defense"]
+    
+  - ticker: CAT
+    sector: Industrials
+    priority: 2
+    tags: ["large_cap", "industrial", "machinery"]
+
+  # Real Estate
+  - ticker: SPG
+    sector: Real Estate
+    priority: 2
+    tags: ["mid_cap", "real_estate", "reit"]
+
+  # Utilities
+  - ticker: NEE
+    sector: Utilities
+    priority: 2
+    tags: ["large_cap", "utilities", "renewable_energy"]
+
+  # Broad Market ETFs
+  - ticker: SPY
+    sector: ETF
+    priority: 2
+    tags: ["etf", "broad_market", "sp500"]
+    
+  - ticker: QQQ
+    sector: ETF
+    priority: 2
+    tags: ["etf", "tech_heavy", "nasdaq"]
