@@ -18,6 +18,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from providence.schemas.enums import StatisticalRegime, AgentRecommendation
+
 
 # ---------------------------------------------------------------------------
 # LEARN-ATTRIB output
@@ -374,6 +376,114 @@ class BacktestOutput(BaseModel):
                 "total_return_bps": self.total_return_bps,
                 "annualized_sharpe": self.annualized_sharpe,
                 "total_trades": self.total_trades,
+            }
+            serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
+            object.__setattr__(self, "content_hash", hashlib.sha256(serialized).hexdigest())
+        return self
+
+
+# ---------------------------------------------------------------------------
+# AGENT SCORECARD output (Spec Section 2.7)
+# ---------------------------------------------------------------------------
+
+class ScorecardCalibration(BaseModel):
+    """Calibration metrics for agent's confidence predictions."""
+
+    model_config = ConfigDict(frozen=True)
+
+    overall_brier_score: float = Field(default=0.0, ge=0.0)
+    calibration_curve: dict[str, dict[str, float]] = Field(
+        default_factory=dict,
+        description="Map of bucket -> {stated, realized}",
+    )
+    is_overconfident: bool = Field(default=False)
+    recommended_adjustment: float = Field(
+        default=1.0, gt=0.0,
+        description="Suggested confidence multiplier",
+    )
+
+
+class RegimePerformance(BaseModel):
+    """Performance metrics for a specific market regime."""
+
+    model_config = ConfigDict(frozen=True)
+
+    hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    avg_pnl: float = Field(default=0.0)
+    sharpe: float = Field(default=0.0)
+
+
+class ConflictRecord(BaseModel):
+    """Record of conflicts with other agents."""
+
+    model_config = ConfigDict(frozen=True)
+
+    times_in_conflict: int = Field(default=0, ge=0)
+    times_conflict_won: int = Field(default=0, ge=0)
+    conflict_win_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    common_opponents: list[str] = Field(default_factory=list)
+
+
+class RenewalRecord(BaseModel):
+    """Record of thesis renewals issued by this agent."""
+
+    model_config = ConfigDict(frozen=True)
+
+    renewals_issued: int = Field(default=0, ge=0)
+    renewals_value_added: int = Field(default=0, ge=0)
+    avg_renewal_pnl_bps: float = Field(default=0.0)
+    renewal_quality_score: float = Field(default=0.0, ge=0.0, le=1.0)
+
+
+class InvalidationRecord(BaseModel):
+    """Record of invalidations triggered by this agent."""
+
+    model_config = ConfigDict(frozen=True)
+
+    invalidations_triggered: int = Field(default=0, ge=0)
+    invalidations_correct: int = Field(default=0, ge=0)
+    invalidation_accuracy: float = Field(default=0.0, ge=0.0, le=1.0)
+
+
+class AgentScorecard(BaseModel):
+    """Complete performance scorecard for an agent over a review period.
+
+    Aggregates beliefs, hit rate, calibration, regime performance,
+    conflict record, renewal record, and invalidation record.
+    Used for agent lifecycle management decisions.
+    Content-hashed.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    agent_id: str = Field(...)
+    review_period: str = Field(..., description="e.g., '2026-Q1'")
+    beliefs_generated: int = Field(default=0, ge=0)
+    beliefs_acted_on: int = Field(default=0, ge=0)
+    hit_rate_raw: float = Field(default=0.0, ge=0.0, le=1.0, description="Before calibration")
+    hit_rate_calibrated: float = Field(default=0.0, ge=0.0, le=1.0, description="After calibration")
+    avg_pnl_per_belief_bps: float = Field(default=0.0)
+    sharpe_contribution: float = Field(default=0.0)
+    information_ratio: float = Field(default=0.0)
+    max_drawdown_contribution_bps: float = Field(default=0.0, ge=0.0)
+    calibration: ScorecardCalibration = Field(default_factory=ScorecardCalibration)
+    regime_performance: dict[str, RegimePerformance] = Field(default_factory=dict)
+    conflict_record: ConflictRecord = Field(default_factory=ConflictRecord)
+    renewal_record: RenewalRecord = Field(default_factory=RenewalRecord)
+    invalidation_record: InvalidationRecord = Field(default_factory=InvalidationRecord)
+    recommendation: AgentRecommendation = Field(...)
+    recommendation_rationale: str = Field(default="")
+    content_hash: str = Field(default="")
+
+    @model_validator(mode="after")
+    def _compute_content_hash(self) -> "AgentScorecard":
+        if not self.content_hash:
+            data = {
+                "agent_id": self.agent_id,
+                "review_period": self.review_period,
+                "hit_rate_calibrated": self.hit_rate_calibrated,
+                "avg_pnl_per_belief_bps": self.avg_pnl_per_belief_bps,
+                "recommendation": self.recommendation.value,
             }
             serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
             object.__setattr__(self, "content_hash", hashlib.sha256(serialized).hexdigest())

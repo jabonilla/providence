@@ -9,12 +9,14 @@ from providence.schemas.belief import (
 )
 from providence.schemas.enums import (
     Action,
+    AgentRecommendation,
     CapitalTier,
     CatalystType,
     ComparisonOperator,
     ConditionStatus,
     DataType,
     Direction,
+    ExecutionStatus,
     IncidentSeverity,
     Magnitude,
     MarketCapBucket,
@@ -37,6 +39,7 @@ from providence.schemas.decision import (
 from providence.schemas.execution import (
     CaptureDecision,
     CaptureOutput,
+    ExecutionReport,
     GuardianCheck,
     GuardianVerdict,
     RoutedOrder,
@@ -71,13 +74,19 @@ from providence.schemas.governance import (
 from providence.schemas.learning import (
     AgentAttribution,
     AgentCalibration,
+    AgentScorecard,
     AttributionOutput,
     BacktestOutput,
     BacktestPeriod,
     CalibrationBucket,
     CalibrationOutput,
+    ConflictRecord,
+    InvalidationRecord,
+    RegimePerformance,
+    RenewalRecord,
     RetrainOutput,
     RetrainRecommendation,
+    ScorecardCalibration,
     TickerAttribution,
 )
 from providence.schemas.regime import (
@@ -89,12 +98,14 @@ from providence.schemas.regime import (
 __all__ = [
     # Enums
     "Action",
+    "AgentRecommendation",
     "CapitalTier",
     "CatalystType",
     "ComparisonOperator",
     "ConditionStatus",
     "DataType",
     "Direction",
+    "ExecutionStatus",
     "IncidentSeverity",
     "Magnitude",
     "MarketCapBucket",
@@ -122,6 +133,7 @@ __all__ = [
     # Execution
     "CaptureDecision",
     "CaptureOutput",
+    "ExecutionReport",
     "GuardianCheck",
     "GuardianVerdict",
     "RoutedOrder",
@@ -153,13 +165,19 @@ __all__ = [
     # Learning
     "AgentAttribution",
     "AgentCalibration",
+    "AgentScorecard",
     "AttributionOutput",
     "BacktestOutput",
     "BacktestPeriod",
     "CalibrationBucket",
     "CalibrationOutput",
+    "ConflictRecord",
+    "InvalidationRecord",
+    "RegimePerformance",
+    "RenewalRecord",
     "RetrainOutput",
     "RetrainRecommendation",
+    "ScorecardCalibration",
     "TickerAttribution",
     # Regime
     "NarrativeRegimeOverlay",

@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from providence.schemas.enums import Action, Direction, SystemRiskMode
+from providence.schemas.enums import Action, Direction, SystemRiskMode, ExecutionStatus
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +298,67 @@ class CaptureOutput(BaseModel):
                     {"ticker": d.ticker, "action": d.action, "trim_pct": d.trim_pct}
                     for d in self.decisions
                 ],
+            }
+            serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
+            object.__setattr__(self, "content_hash", hashlib.sha256(serialized).hexdigest())
+        return self
+
+
+# ---------------------------------------------------------------------------
+# EXECUTION REPORT output (Spec Section 2.6)
+# ---------------------------------------------------------------------------
+
+class ExecutionReport(BaseModel):
+    """Complete execution report for a filled/partial/rejected position.
+
+    Links back to the PositionProposal and tracks actual fill price, slippage,
+    market impact, and any constraint violations during execution.
+    Content-hashed.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    execution_id: UUID = Field(default_factory=uuid4)
+    proposal_id: UUID = Field(..., description="Links to PositionProposal")
+    ticker: str = Field(...)
+    status: ExecutionStatus = Field(...)
+    requested_weight: float = Field(..., ge=0.0, le=0.20)
+    achieved_weight: float = Field(..., ge=0.0, le=0.20)
+    avg_fill_price: float = Field(..., gt=0.0)
+    benchmark_price: float = Field(..., gt=0.0, description="Arrival price for slippage calc")
+    slippage_bps: float = Field(..., ge=0.0, description="Basis points")
+    market_impact_bps: float = Field(..., ge=0.0, description="Estimated permanent impact")
+    execution_algo: str = Field(
+        ..., description="TWAP_15, VWAP_30, LIMIT, or MARKET"
+    )
+    execution_duration_ms: int = Field(..., ge=0)
+    venue: str = Field(..., description="Exchange or venue name")
+    fees_bps: float = Field(..., ge=0.0)
+    constraint_violations: list[str] = Field(
+        default_factory=list,
+        description="Should be empty if execution succeeded",
+    )
+    timestamp_start: datetime = Field(...)
+    timestamp_end: datetime = Field(...)
+    content_hash: str = Field(default="")
+
+    @field_validator("timestamp_start", "timestamp_end")
+    @classmethod
+    def must_have_timezone(cls, v: datetime) -> datetime:
+        if v.tzinfo is None:
+            raise ValueError("Timestamp must include timezone information")
+        return v
+
+    @model_validator(mode="after")
+    def _compute_content_hash(self) -> "ExecutionReport":
+        if not self.content_hash:
+            data = {
+                "proposal_id": str(self.proposal_id),
+                "ticker": self.ticker,
+                "status": self.status.value,
+                "achieved_weight": self.achieved_weight,
+                "avg_fill_price": self.avg_fill_price,
+                "slippage_bps": self.slippage_bps,
             }
             serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
             object.__setattr__(self, "content_hash", hashlib.sha256(serialized).hexdigest())

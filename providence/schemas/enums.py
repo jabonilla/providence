@@ -143,3 +143,26 @@ class IncidentSeverity(str, Enum):
     INFO = "INFO"          # Informational — no action required
     WARNING = "WARNING"    # Attention needed — degradation detected
     CRITICAL = "CRITICAL"  # Immediate action required — system risk
+
+
+class ExecutionStatus(str, Enum):
+    """Status of an execution report.
+
+    Produced by EXEC-CAPTURE. Records outcome of order execution.
+    """
+    FILLED = "FILLED"
+    PARTIAL = "PARTIAL"
+    REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
+
+
+class AgentRecommendation(str, Enum):
+    """Recommendation for agent lifecycle management.
+
+    Produced by LEARN-SCORECARD. Determines promotion, retention,
+    retraining, or retirement of an agent.
+    """
+    PROMOTE = "PROMOTE"
+    MAINTAIN = "MAINTAIN"
+    RETRAIN = "RETRAIN"
+    RETIRE = "RETIRE"
