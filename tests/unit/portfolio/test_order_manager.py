@@ -32,6 +32,8 @@ class TestManagedOrder:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
         )
         assert order.order_id == order_id
         assert order.ticker == "AAPL"
@@ -49,6 +51,8 @@ class TestManagedOrder:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.PENDING,
         )
         assert order.is_terminal is False
@@ -68,6 +72,8 @@ class TestManagedOrder:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.SUBMITTED,
         )
         assert order.is_active is True
@@ -87,6 +93,8 @@ class TestManagedOrder:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             filled_qty=Decimal("50"),
         )
         assert order.fill_pct == pytest.approx(0.5, abs=0.01)
@@ -103,6 +111,8 @@ class TestManagedOrder:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.FAILED,
             retry_count=0,
         )
@@ -127,6 +137,8 @@ class TestOrderTransitions:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.PENDING,
         )
 
@@ -147,6 +159,8 @@ class TestOrderTransitions:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.SUBMITTED,
         )
 
@@ -171,6 +185,8 @@ class TestOrderTransitions:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.FILLED,
         )
 
@@ -189,6 +205,8 @@ class TestOrderTransitions:
             time_in_force="day",
             qty=Decimal("100"),
             notional=None,
+            limit_price=None,
+            stop_price=None,
             status=OrderStatus.PENDING,
         )
 

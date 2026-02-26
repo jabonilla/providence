@@ -415,9 +415,10 @@ class PortfolioTracker:
             if pos.side == PositionSide.FLAT:
                 return
             
-            market_value = pos.quantity * price
+            abs_qty = abs(pos.quantity)
+            market_value = abs_qty * price
             cost_basis = pos.cost_basis
-            
+
             if pos.side == PositionSide.LONG:
                 unrealized_pnl = market_value - cost_basis
             else:  # SHORT
@@ -427,13 +428,14 @@ class PortfolioTracker:
                 (unrealized_pnl / cost_basis * 100) if cost_basis > 0 else 0
             )
             
+            signed_market_value = pos.quantity * price
             self._positions[ticker] = Position(
                 ticker=ticker,
                 side=pos.side,
                 quantity=pos.quantity,
                 avg_entry_price=pos.avg_entry_price,
                 current_price=price,
-                market_value=market_value,
+                market_value=signed_market_value,
                 unrealized_pnl=unrealized_pnl,
                 unrealized_pnl_pct=unrealized_pnl_pct,
                 realized_pnl=pos.realized_pnl,

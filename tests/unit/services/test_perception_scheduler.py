@@ -18,7 +18,9 @@ class TestRunFullSweep:
             "agent_1": AsyncMock(),
             "agent_2": AsyncMock(),
         }
-        fragment_store = AsyncMock()
+        fragment_store = MagicMock()
+        fragment_store.append.return_value = True
+        fragment_store.append_many.return_value = 1
         watchlist = Watchlist.default()
 
         return PerceptionScheduler(
@@ -34,7 +36,7 @@ class TestRunFullSweep:
         """run_full_sweep processes all enabled tickers."""
         # Mock agent execution
         for agent in scheduler._agents.values():
-            agent.run.return_value = {
+            agent.process.return_value = {
                 "ticker": "AAPL",
                 "agent_id": "test",
                 "fragment": "test_fragment",
@@ -50,14 +52,14 @@ class TestRunFullSweep:
     async def test_run_full_sweep_returns_stats(self, scheduler):
         """run_full_sweep returns sweep statistics."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {"agent_id": "test", "fragment": "data"}
+            agent.process.return_value = {"agent_id": "test", "fragment": "data"}
 
         result = await scheduler.run_full_sweep()
 
         assert "duration_seconds" in result
         assert "tickers_processed" in result
         assert "agents_run" in result
-        assert "fragments_stored" in result
+        assert "fragments_created" in result
 
 
 class TestRunPrioritySweep:
@@ -70,7 +72,9 @@ class TestRunPrioritySweep:
             "agent_1": AsyncMock(),
             "agent_2": AsyncMock(),
         }
-        fragment_store = AsyncMock()
+        fragment_store = MagicMock()
+        fragment_store.append.return_value = True
+        fragment_store.append_many.return_value = 1
 
         # Create watchlist with different priorities
         entries = [
@@ -92,9 +96,9 @@ class TestRunPrioritySweep:
     async def test_run_priority_sweep_filters_by_priority(self, scheduler):
         """run_priority_sweep only processes specified priority."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {"agent_id": "test", "fragment": "data"}
+            agent.process.return_value = {"agent_id": "test", "fragment": "data"}
 
-        result = await scheduler.run_priority_sweep(priority=1)
+        result = await scheduler.run_priority_sweep(max_priority=1)
 
         # Should only process priority-1 tickers (2 of them)
         assert result["tickers_processed"] <= 2
@@ -103,9 +107,9 @@ class TestRunPrioritySweep:
     async def test_run_priority_sweep_returns_stats(self, scheduler):
         """run_priority_sweep returns statistics."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {"agent_id": "test", "fragment": "data"}
+            agent.process.return_value = {"agent_id": "test", "fragment": "data"}
 
-        result = await scheduler.run_priority_sweep(priority=1)
+        result = await scheduler.run_priority_sweep(max_priority=1)
 
         assert "tickers_processed" in result
         assert "duration_seconds" in result
@@ -121,7 +125,9 @@ class TestRunSingle:
             "agent_1": AsyncMock(),
             "agent_2": AsyncMock(),
         }
-        fragment_store = AsyncMock()
+        fragment_store = MagicMock()
+        fragment_store.append.return_value = True
+        fragment_store.append_many.return_value = 1
         watchlist = Watchlist.default()
 
         return PerceptionScheduler(
@@ -136,7 +142,7 @@ class TestRunSingle:
     async def test_run_single_processes_one_ticker(self, scheduler):
         """run_single processes a single ticker."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {
+            agent.process.return_value = {
                 "ticker": "AAPL",
                 "agent_id": "test",
                 "fragment": "data",
@@ -151,7 +157,7 @@ class TestRunSingle:
     async def test_run_single_returns_fragment_count(self, scheduler):
         """run_single returns fragment count."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {
+            agent.process.return_value = {
                 "ticker": "AAPL",
                 "agent_id": "test",
                 "fragment": "data",
@@ -159,8 +165,8 @@ class TestRunSingle:
 
         result = await scheduler.run_single("AAPL")
 
-        assert "fragments_stored" in result
-        assert result["fragments_stored"] >= 0
+        assert "fragments" in result
+        assert result["fragments"] >= 0
 
 
 class TestAgentFailureIsolation:
@@ -174,9 +180,11 @@ class TestAgentFailureIsolation:
             "bad_agent": AsyncMock(),
         }
         # Make bad_agent raise exception
-        agents["bad_agent"].run.side_effect = Exception("Agent error")
+        agents["bad_agent"].process.side_effect = Exception("Agent error")
 
-        fragment_store = AsyncMock()
+        fragment_store = MagicMock()
+        fragment_store.append.return_value = True
+        fragment_store.append_many.return_value = 1
         watchlist = Watchlist.default()
 
         return PerceptionScheduler(
@@ -190,19 +198,21 @@ class TestAgentFailureIsolation:
     @pytest.mark.asyncio
     async def test_agent_failure_isolation(self, scheduler):
         """One agent failure doesn't stop other agents."""
-        # Set good agent to succeed
-        scheduler._agents["good_agent"].run.return_value = {
+        # Set good agent to succeed via process (the method the scheduler calls)
+        scheduler._agents["good_agent"].process.return_value = {
             "ticker": "AAPL",
             "agent_id": "good_agent",
             "fragment": "data",
         }
+        # Make bad_agent.process raise
+        scheduler._agents["bad_agent"].process.side_effect = Exception("Agent error")
 
         # Should not raise despite bad_agent failure
         result = await scheduler.run_single("AAPL")
 
         assert result is not None
         # Good agent should have been called
-        scheduler._agents["good_agent"].run.assert_called()
+        scheduler._agents["good_agent"].process.assert_called()
 
 
 class TestSweepStats:
@@ -215,7 +225,9 @@ class TestSweepStats:
             "agent_1": AsyncMock(),
             "agent_2": AsyncMock(),
         }
-        fragment_store = AsyncMock()
+        fragment_store = MagicMock()
+        fragment_store.append.return_value = True
+        fragment_store.append_many.return_value = 1
         watchlist = Watchlist.default()
 
         return PerceptionScheduler(
@@ -230,7 +242,7 @@ class TestSweepStats:
     async def test_sweep_stats_populated(self, scheduler):
         """Sweep stats are populated after sweep."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {"agent_id": "test", "fragment": "data"}
+            agent.process.return_value = {"agent_id": "test", "fragment": "data"}
 
         result = await scheduler.run_full_sweep()
 
@@ -245,7 +257,7 @@ class TestSweepStats:
     async def test_sweep_stats_stored_in_scheduler(self, scheduler):
         """Last sweep stats are stored in scheduler."""
         for agent in scheduler._agents.values():
-            agent.run.return_value = {"agent_id": "test", "fragment": "data"}
+            agent.process.return_value = {"agent_id": "test", "fragment": "data"}
 
         await scheduler.run_full_sweep()
 

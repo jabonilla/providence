@@ -94,7 +94,7 @@ class TestApiKeyDetection:
 
     def test_no_keys_available(self):
         env = {k: v for k, v in os.environ.items()
-               if k not in ("POLYGON_API_KEY", "EDGAR_USER_AGENT", "FRED_API_KEY", "ANTHROPIC_API_KEY")}
+               if k not in ("POLYGON_API_KEY", "EDGAR_USER_AGENT", "FRED_API_KEY", "ANTHROPIC_API_KEY", "ALPACA_API_KEY", "ALPACA_SECRET_KEY")}
         with patch.dict(os.environ, env, clear=True):
             settings = get_settings()
             summary = settings.available_api_summary()
@@ -119,6 +119,8 @@ class TestApiKeyDetection:
             "EDGAR_USER_AGENT": "Test/1.0 test@test.com",
             "FRED_API_KEY": "fk",
             "ANTHROPIC_API_KEY": "sk",
+            "ALPACA_API_KEY": "ak",
+            "ALPACA_SECRET_KEY": "ask",
         }
         with patch.dict(os.environ, env):
             settings = get_settings()

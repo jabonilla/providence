@@ -214,10 +214,10 @@ class TestReconcile:
             }
         ]
 
-        snap = await mocked_service.reconcile()
+        result = await mocked_service.reconcile()
 
-        assert snap.equity == Decimal("105000.00")
-        assert "AAPL" in snap.positions
+        assert result["account_synced"] is True
+        assert "AAPL" in result["positions_synced"]
 
 
 class TestEmergencyHalt:
@@ -256,7 +256,7 @@ class TestEmergencyHalt:
 
         result = await mocked_service.emergency_halt()
 
-        assert result["cancelled"] >= 0
+        assert result["cancelled_orders"] >= 0
         mocked_service._broker.cancel_all_orders.assert_called_once()
 
 

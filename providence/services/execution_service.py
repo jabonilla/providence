@@ -383,13 +383,14 @@ class ExecutionService:
         positions_synced = []
 
         try:
-            # Get account data
+            # Get account data and positions from broker
             account = await self._broker.get_account()
+            broker_positions = await self._broker.list_positions()
             equity = Decimal(str(account.get("portfolio_value", 0)))
             cash = Decimal(str(account.get("cash", 0)))
 
-            # Sync portfolio tracker
-            await self._portfolio.sync_from_broker(account)
+            # Sync portfolio tracker with both account and positions
+            self._portfolio.sync_from_broker(account, broker_positions)
             account_synced = True
 
             logger.debug(
@@ -411,8 +412,7 @@ class ExecutionService:
             }
 
         try:
-            # Get broker positions
-            broker_positions = await self._broker.list_positions()
+            # Detect orphaned positions
             broker_tickers = {pos.get("symbol") for pos in broker_positions}
 
             # Get portfolio positions
@@ -484,18 +484,14 @@ class ExecutionService:
             cancelled_count = len(active_orders)
 
             for order in active_orders:
-                self._orders.mark_submitted(
-                    order.order_id,
-                    order.broker_order_id or f"cancelled-{order.order_id}",
-                )
                 try:
                     order.transition_to(
                         OrderStatus.CANCELLED,
                         reason="Emergency halt triggered",
                     )
                 except ValueError:
-                    # If transition is invalid, mark as cancelled anyway
-                    pass
+                    # Force cancel if transition is invalid
+                    order.status = OrderStatus.CANCELLED
 
             logger.info(
                 "All orders cancelled",
