@@ -116,9 +116,14 @@ class ContextService:
         result: list[MarketStateFragment] = []
 
         for frag in fragments:
-            # Exclude QUARANTINED fragments — don't send error data to LLM
+            # Allow all validation statuses through — downstream agents
+            # handle data quality. Many quarantined fragments still contain
+            # useful data (e.g. SEC filings with metadata but missing XBRL).
+            # Only skip fragments whose payload is purely an error message.
             if frag.validation_status == ValidationStatus.QUARANTINED:
-                continue
+                payload = frag.payload or {}
+                if isinstance(payload, dict) and "error" in payload and len(payload) <= 3:
+                    continue
 
             # Must match one of the agent's consumed data types
             if frag.data_type not in target_data_types:

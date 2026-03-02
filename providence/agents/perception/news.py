@@ -143,7 +143,10 @@ class PerceptNews(BaseAgent[list[MarketStateFragment]]):
     async def _fetch(self, ticker: str, limit: int) -> dict[str, Any]:
         """Step 1: FETCH — Pull raw news data from Polygon.io."""
         try:
-            return await self._polygon.get_ticker_news(ticker, limit)
+            # PolygonClient.get_ticker_news returns list[dict] (the results array).
+            # Wrap it back into a dict so _validate/_normalize see {"results": [...]}.
+            results = await self._polygon.get_ticker_news(ticker, limit)
+            return {"results": results, "ticker": ticker}
         except Exception as e:
             raise DataIngestionError(
                 message=f"Failed to fetch {ticker} news from Polygon: {e}",

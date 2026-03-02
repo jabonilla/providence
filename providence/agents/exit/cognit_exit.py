@@ -55,46 +55,51 @@ HEALTH_SCORE_EXIT_THRESHOLD = 0.30  # Below this → strong exit signal
 HEALTH_SCORE_REDUCE_THRESHOLD = 0.50  # Below this → reduce signal
 
 
-def parse_exit_response(raw: str) -> list[dict[str, Any]] | None:
+def parse_exit_response(raw: str | dict[str, Any]) -> list[dict[str, Any]] | None:
     """Parse the LLM response into exit assessments.
 
     Args:
-        raw: Raw LLM response string (should be JSON).
+        raw: Raw LLM response — either a pre-parsed dict (from
+            AnthropicClient.complete()) or a raw JSON string.
 
     Returns:
         List of assessment dicts, or None if parsing fails.
     """
-    text = raw.strip()
+    # If already a dict (AnthropicClient returns parsed JSON), use directly
+    if isinstance(raw, dict):
+        parsed = raw
+    else:
+        text = raw.strip()
 
-    # Handle markdown code fences
-    if text.startswith("```"):
-        lines = text.split("\n")
-        json_lines = []
-        in_block = False
-        for line in lines:
-            if line.strip().startswith("```") and not in_block:
-                in_block = True
-                continue
-            elif line.strip() == "```" and in_block:
-                break
-            elif in_block:
-                json_lines.append(line)
-        text = "\n".join(json_lines)
+        # Handle markdown code fences
+        if text.startswith("```"):
+            lines = text.split("\n")
+            json_lines = []
+            in_block = False
+            for line in lines:
+                if line.strip().startswith("```") and not in_block:
+                    in_block = True
+                    continue
+                elif line.strip() == "```" and in_block:
+                    break
+                elif in_block:
+                    json_lines.append(line)
+            text = "\n".join(json_lines)
 
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1:
-            return None
         try:
-            parsed = json.loads(text[start:end + 1])
+            parsed = json.loads(text)
         except json.JSONDecodeError:
-            return None
+            start = text.find("{")
+            end = text.rfind("}")
+            if start == -1 or end == -1:
+                return None
+            try:
+                parsed = json.loads(text[start:end + 1])
+            except json.JSONDecodeError:
+                return None
 
-    if not isinstance(parsed, dict):
-        return None
+        if not isinstance(parsed, dict):
+            return None
 
     assessments = parsed.get("assessments")
     if not isinstance(assessments, list):

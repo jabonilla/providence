@@ -93,10 +93,14 @@ class ProvidenceRunner:
         return stored
 
     def _get_fragments_from_store(self) -> list[MarketStateFragment]:
-        """Pull all non-quarantined fragments from the FragmentStore."""
+        """Pull all fragments from the FragmentStore (including quarantined).
+
+        Quarantined fragments may still contain useful data (e.g. SEC filings
+        with metadata but missing XBRL). Downstream agents handle data quality.
+        """
         if self._fragment_store is None:
             return []
-        return self._fragment_store.query(exclude_quarantined=True)
+        return self._fragment_store.query(exclude_quarantined=False)
 
     async def run_once(
         self,

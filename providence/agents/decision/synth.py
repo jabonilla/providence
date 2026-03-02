@@ -47,46 +47,51 @@ DIRECTION_MAP = {d.value: d for d in Direction}
 MAGNITUDE_MAP = {m.value: m for m in Magnitude}
 
 
-def parse_synthesis_response(raw: str) -> dict[str, Any] | None:
+def parse_synthesis_response(raw: str | dict[str, Any]) -> dict[str, Any] | None:
     """Parse LLM response into synthesis data.
 
     Args:
-        raw: Raw LLM response string (should be JSON).
+        raw: Raw LLM response — either a pre-parsed dict (from
+            AnthropicClient.complete()) or a raw JSON string.
 
     Returns:
         Parsed dict with position_intents, or None if parsing fails.
     """
-    text = raw.strip()
+    # If already a dict (AnthropicClient returns parsed JSON), use directly
+    if isinstance(raw, dict):
+        parsed = raw
+    else:
+        text = raw.strip()
 
-    # Handle markdown code fences
-    if text.startswith("```"):
-        lines = text.split("\n")
-        json_lines = []
-        in_block = False
-        for line in lines:
-            if line.strip().startswith("```") and not in_block:
-                in_block = True
-                continue
-            elif line.strip() == "```" and in_block:
-                break
-            elif in_block:
-                json_lines.append(line)
-        text = "\n".join(json_lines)
+        # Handle markdown code fences
+        if text.startswith("```"):
+            lines = text.split("\n")
+            json_lines = []
+            in_block = False
+            for line in lines:
+                if line.strip().startswith("```") and not in_block:
+                    in_block = True
+                    continue
+                elif line.strip() == "```" and in_block:
+                    break
+                elif in_block:
+                    json_lines.append(line)
+            text = "\n".join(json_lines)
 
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1:
-            return None
         try:
-            parsed = json.loads(text[start:end + 1])
+            parsed = json.loads(text)
         except json.JSONDecodeError:
-            return None
+            start = text.find("{")
+            end = text.rfind("}")
+            if start == -1 or end == -1:
+                return None
+            try:
+                parsed = json.loads(text[start:end + 1])
+            except json.JSONDecodeError:
+                return None
 
-    if not isinstance(parsed, dict):
-        return None
+        if not isinstance(parsed, dict):
+            return None
 
     intents = parsed.get("position_intents")
     if not isinstance(intents, list) or len(intents) == 0:

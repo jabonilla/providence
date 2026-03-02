@@ -291,9 +291,19 @@ class PerceptionScheduler:
         errors = 0
 
         # Build metadata from entry
-        metadata = {
+        # Perception agents expect "tickers" (list) and "date" (YYYY-MM-DD)
+        # PERCEPT-CDS expects "entities" (list of dicts with name/series_id/tenor)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        metadata: dict[str, Any] = {
             "ticker": ticker,
+            "tickers": [ticker],
+            "date": today,
             "trigger": "schedule",
+            # Default CDS entities — investment-grade and high-yield credit spreads
+            "entities": [
+                {"name": "IG_CDX", "series_id": "BAMLC0A0CM", "tenor": "5Y"},
+                {"name": "HY_CDX", "series_id": "BAMLH0A0HYM2", "tenor": "5Y"},
+            ],
         }
         if entry:
             metadata["sector"] = entry.sector

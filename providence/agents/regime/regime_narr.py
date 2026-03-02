@@ -50,7 +50,7 @@ RISK_MODE_MAP = {r.value: r for r in SystemRiskMode}
 
 
 def parse_narrative_response(
-    raw: str,
+    raw: str | dict[str, Any],
 ) -> dict[str, Any] | None:
     """Parse the LLM response into a structured narrative assessment.
 
@@ -58,45 +58,50 @@ def parse_narrative_response(
     required fields.
 
     Args:
-        raw: Raw LLM response string (should be JSON).
+        raw: Raw LLM response — either a pre-parsed dict (from
+            AnthropicClient.complete()) or a raw JSON string.
 
     Returns:
         Parsed dict with narrative fields, or None if parsing fails.
     """
-    # Try to extract JSON from the response
-    text = raw.strip()
+    # If already a dict (AnthropicClient returns parsed JSON), use directly
+    if isinstance(raw, dict):
+        parsed = raw
+    else:
+        # Try to extract JSON from the response string
+        text = raw.strip()
 
-    # Handle markdown code fences
-    if text.startswith("```"):
-        lines = text.split("\n")
-        # Remove first and last lines (fences)
-        json_lines = []
-        in_block = False
-        for line in lines:
-            if line.strip().startswith("```") and not in_block:
-                in_block = True
-                continue
-            elif line.strip() == "```" and in_block:
-                break
-            elif in_block:
-                json_lines.append(line)
-        text = "\n".join(json_lines)
+        # Handle markdown code fences
+        if text.startswith("```"):
+            lines = text.split("\n")
+            # Remove first and last lines (fences)
+            json_lines = []
+            in_block = False
+            for line in lines:
+                if line.strip().startswith("```") and not in_block:
+                    in_block = True
+                    continue
+                elif line.strip() == "```" and in_block:
+                    break
+                elif in_block:
+                    json_lines.append(line)
+            text = "\n".join(json_lines)
 
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        # Try to find JSON object within the text
-        start = text.find("{")
-        end = text.rfind("}")
-        if start == -1 or end == -1:
-            return None
         try:
-            parsed = json.loads(text[start:end + 1])
+            parsed = json.loads(text)
         except json.JSONDecodeError:
-            return None
+            # Try to find JSON object within the text
+            start = text.find("{")
+            end = text.rfind("}")
+            if start == -1 or end == -1:
+                return None
+            try:
+                parsed = json.loads(text[start:end + 1])
+            except json.JSONDecodeError:
+                return None
 
-    if not isinstance(parsed, dict):
-        return None
+        if not isinstance(parsed, dict):
+            return None
 
     # Validate required fields
     label = parsed.get("narrative_label")

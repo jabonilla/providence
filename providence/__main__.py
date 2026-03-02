@@ -16,14 +16,21 @@ import signal
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load .env file before anything reads os.environ
+load_dotenv()
+
 import structlog
 
 from providence.config.agent_config import AgentConfigRegistry
+from providence.config.watchlist import Watchlist
 from providence.factory import ALL_AGENT_IDS, build_agent_registry_from_env
 from providence.orchestration.orchestrator import Orchestrator
 from providence.orchestration.runner import ProvidenceRunner
 from providence.services.context_svc import ContextService
 from providence.services.health import HealthService
+from providence.services.perception_scheduler import PerceptionScheduler
 from providence.storage import BeliefStore, FragmentStore, RunStore
 
 logger = structlog.get_logger()
@@ -106,6 +113,24 @@ def _parse_args() -> argparse.Namespace:
         "run-learning", help="Run an offline learning batch"
     )
 
+    # perceive
+    perceive = subparsers.add_parser(
+        "perceive", help="Run perception agents to ingest market data"
+    )
+    perceive.add_argument(
+        "--ticker",
+        type=str,
+        default=None,
+        help="Run perception for a single ticker (e.g. AAPL). "
+             "If omitted, runs full watchlist sweep.",
+    )
+    perceive.add_argument(
+        "--priority",
+        type=int,
+        default=None,
+        help="Run perception for tickers up to this priority level (1=high, 2=med, 3=low)",
+    )
+
     # health
     subparsers.add_parser("health", help="Print agent health status")
 
@@ -164,6 +189,83 @@ def _build_system(
         run_store=run_store,
     )
     return runner, registry
+
+
+async def _cmd_perceive(args: argparse.Namespace) -> int:
+    """Run perception agents to ingest market data."""
+    # Build minimal system — only need perception agents + fragment store
+    registry = build_agent_registry_from_env(
+        skip_adaptive=True,  # Don't need LLM agents for perception
+    )
+
+    # Extract perception agents only
+    perception_agents = {
+        aid: agent for aid, agent in registry.items()
+        if aid.startswith("PERCEPT-")
+    }
+
+    if not perception_agents:
+        logger.error("No perception agents available — check API keys")
+        return 1
+
+    # Build storage
+    data_dir: Path = args.data_dir
+    data_dir.mkdir(parents=True, exist_ok=True)
+    fragment_store = FragmentStore(persist_path=data_dir / "fragments.jsonl")
+
+    # Load watchlist
+    watchlist_path = Path("config/watchlist.yaml")
+    if watchlist_path.exists():
+        watchlist = Watchlist.from_yaml(watchlist_path)
+    else:
+        watchlist = Watchlist.default()
+
+    scheduler = PerceptionScheduler(
+        perception_agents=perception_agents,
+        fragment_store=fragment_store,
+        watchlist=watchlist,
+        inter_ticker_delay=1.5,
+        inter_agent_delay=0.5,
+    )
+
+    logger.info(
+        "Perception ready",
+        agents=list(perception_agents.keys()),
+        watchlist_tickers=len(watchlist.tickers),
+    )
+
+    if args.ticker:
+        # Single ticker mode
+        result = await scheduler.run_single(args.ticker.upper())
+        logger.info(
+            "Perception complete",
+            ticker=args.ticker.upper(),
+            fragments=result.get("fragments", 0),
+            errors=result.get("errors", 0),
+        )
+    elif args.priority:
+        # Priority sweep
+        result = await scheduler.run_priority_sweep(max_priority=args.priority)
+        logger.info(
+            "Priority sweep complete",
+            tickers_processed=result.get("tickers_processed", 0),
+            fragments=result.get("fragments_created", 0),
+            errors=result.get("errors", 0),
+        )
+    else:
+        # Full sweep
+        result = await scheduler.run_full_sweep()
+        logger.info(
+            "Full sweep complete",
+            tickers_processed=result.get("tickers_processed", 0),
+            fragments=result.get("fragments_created", 0),
+            errors=result.get("errors", 0),
+        )
+
+    # Print summary
+    frag_count = fragment_store.count()
+    logger.info("Fragment store total", total_fragments=frag_count)
+    return 0
 
 
 async def _cmd_run_once(args: argparse.Namespace) -> int:
@@ -309,6 +411,8 @@ def main() -> int:
         return _cmd_list_agents(args)
     elif args.command == "health":
         return _cmd_health(args)
+    elif args.command == "perceive":
+        return asyncio.run(_cmd_perceive(args))
     elif args.command == "run-once":
         return asyncio.run(_cmd_run_once(args))
     elif args.command == "run-continuous":

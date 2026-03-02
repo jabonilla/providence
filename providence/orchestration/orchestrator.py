@@ -325,6 +325,20 @@ class Orchestrator:
         completed["REGIME-MISMATCH"] = mismatch_result
         self._inject_output(meta, "regime_mismatch", mismatch_result)
 
+        # Bridge: extract regime_state for downstream decision agents
+        if (
+            mismatch_result.status == StageStatus.SUCCEEDED
+            and mismatch_result.output is not None
+        ):
+            mismatch_out = mismatch_result.output
+            meta["regime_state"] = (
+                mismatch_out.model_dump(mode="json")
+                if hasattr(mismatch_out, "model_dump")
+                else mismatch_out
+                if isinstance(mismatch_out, dict)
+                else {}
+            )
+
         # Stage 4: DECIDE-SYNTH (sequential)
         log.info("Running decision synthesis stage")
         synth_result = await self._run_sequential_stage(
@@ -333,6 +347,24 @@ class Orchestrator:
         all_results.append(synth_result)
         completed["DECIDE-SYNTH"] = synth_result
         self._inject_output(meta, "synthesis_output", synth_result)
+
+        # Bridge: extract position_intents from SynthesisOutput for DECIDE-OPTIM
+        if (
+            synth_result.status == StageStatus.SUCCEEDED
+            and synth_result.output is not None
+        ):
+            synth_out = synth_result.output
+            # SynthesisOutput has a position_intents attribute
+            if hasattr(synth_out, "position_intents"):
+                meta["position_intents"] = [
+                    intent.model_dump(mode="json")
+                    if hasattr(intent, "model_dump")
+                    else intent
+                    for intent in synth_out.position_intents
+                ]
+            # Also extract regime_state from earlier stages for DECIDE-OPTIM
+            if "regime_state" not in meta and hasattr(synth_out, "regime_context"):
+                meta["regime_context"] = synth_out.regime_context
 
         # Stage 5: DECIDE-OPTIM (sequential)
         log.info("Running decision optimization stage")
