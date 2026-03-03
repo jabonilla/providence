@@ -120,7 +120,7 @@ async def test_full_pipeline(ticker: str, skip_llm: bool = False) -> dict:
     """Test Phase 2: Full pipeline via Orchestrator."""
     print_section("Phase 2: FULL PIPELINE (Orchestrator)")
 
-    from providence.orchestration.factory import build_agent_registry
+    from providence.factory import build_agent_registry, build_agent_registry_from_env
     from providence.orchestration.orchestrator import Orchestrator
     from providence.orchestration.runner import ProvidenceRunner
     from providence.config.agent_config import AgentConfigRegistry
@@ -140,9 +140,9 @@ async def test_full_pipeline(ticker: str, skip_llm: bool = False) -> dict:
     config_registry = AgentConfigRegistry()
     context_svc = ContextService(config_registry)
 
-    # Build agent registry
+    # Build agent registry (auto-discovers API keys from env)
     skip_perception = True  # We'll inject fragments manually
-    registry = build_agent_registry(
+    registry = build_agent_registry_from_env(
         skip_perception=skip_perception,
         skip_adaptive=skip_llm,
     )
@@ -172,22 +172,33 @@ async def test_full_pipeline(ticker: str, skip_llm: bool = False) -> dict:
         from providence.services.perception_scheduler import PerceptionScheduler
         from providence.config.watchlist import Watchlist
 
-        perception_registry = build_agent_registry(
+        percept_ids = {
+            "PERCEPT-PRICE", "PERCEPT-FILING", "PERCEPT-NEWS",
+            "PERCEPT-OPTIONS", "PERCEPT-CDS", "PERCEPT-MACRO",
+        }
+        perception_registry = build_agent_registry_from_env(
             skip_adaptive=True,
-            agent_filter=lambda aid: aid.startswith("PERCEPT-"),
+            agent_filter=percept_ids,
         )
 
+        # Build a minimal watchlist with just our test ticker
+        watchlist = Watchlist.from_dict({
+            "max_positions": 5,
+            "tickers": [{"ticker": ticker, "sector": "Technology", "priority": 1}],
+        })
+
         scheduler = PerceptionScheduler(
-            agents=perception_registry,
+            perception_agents=perception_registry,
             fragment_store=fragment_store,
-            config_registry=config_registry,
-            context_service=context_svc,
+            watchlist=watchlist,
         )
 
         stats = await scheduler.run_single(ticker)
-        print(f"  Perception sweep: {stats}")
+        print(f"  Perception sweep: {stats.get('fragments', 0)} fragments, "
+              f"{stats.get('errors', 0)} errors")
     except Exception as e:
         print(f"  ⚠️ Perception sweep failed: {e}")
+        import traceback; traceback.print_exc()
         print("  Continuing with empty fragment store...")
 
     # Run main loop
@@ -230,9 +241,13 @@ async def test_full_pipeline(ticker: str, skip_llm: bool = False) -> dict:
         print(f"  Succeeded: {succeeded}")
         print(f"  Failed/Skipped: {failed}")
 
-        # Check beliefs stored
-        beliefs = belief_store.get_all()
-        print(f"  Beliefs stored: {len(beliefs)}")
+        # Check stores
+        belief_count = belief_store.count()
+        fragment_count = fragment_store.count()
+        run_count = run_store.count(loop_type=None)
+        print(f"  Fragments stored: {fragment_count}")
+        print(f"  Beliefs stored: {belief_count}")
+        print(f"  Runs stored: {run_count}")
 
         return results
 
