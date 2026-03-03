@@ -72,6 +72,23 @@ GOVERNANCE_AGENTS = [
 ]
 
 
+# Semantic metadata key aliases for sequential loop outputs.
+# Maps agent_id → the metadata key that *downstream* agents expect.
+_LOOP_SEMANTIC_KEYS: dict[str, str] = {
+    # Exit loop: downstream agents read these specific keys
+    "COGNIT-EXIT": "exit_assessments",
+    "INVALID-MON": "invalidation_results",
+    "THESIS-RENEW": "renewal_state",
+    # Learning loop: downstream agents read these
+    "LEARN-ATTRIB": "attribution_results",
+    "LEARN-CALIB": "calibration_results",
+    "LEARN-RETRAIN": "retrain_recommendations",
+    # Governance loop: results flow between governance agents
+    "GOVERN-CAPITAL": "capital_tier_output",
+    "GOVERN-MATURITY": "maturity_output",
+}
+
+
 class Orchestrator:
     """DAG coordinator for the Providence pipeline.
 
@@ -326,18 +343,22 @@ class Orchestrator:
         self._inject_output(meta, "regime_mismatch", mismatch_result)
 
         # Bridge: extract regime_state for downstream decision agents
+        # Note: PipelineStage serializes output → dict, so expect dict here
         if (
             mismatch_result.status == StageStatus.SUCCEEDED
             and mismatch_result.output is not None
         ):
             mismatch_out = mismatch_result.output
-            meta["regime_state"] = (
-                mismatch_out.model_dump(mode="json")
-                if hasattr(mismatch_out, "model_dump")
-                else mismatch_out
-                if isinstance(mismatch_out, dict)
-                else {}
-            )
+            if isinstance(mismatch_out, dict):
+                meta["regime_state"] = mismatch_out
+            elif hasattr(mismatch_out, "model_dump"):
+                meta["regime_state"] = mismatch_out.model_dump(mode="json")
+            else:
+                meta["regime_state"] = {}
+        # Ensure regime_state always exists with at least system_risk_mode
+        if "regime_state" not in meta or not isinstance(meta.get("regime_state"), dict):
+            log.warning("regime_state missing after REGIME-MISMATCH, defaulting to NORMAL")
+            meta["regime_state"] = {"system_risk_mode": "NORMAL"}
 
         # Stage 4: DECIDE-SYNTH (sequential)
         log.info("Running decision synthesis stage")
@@ -354,17 +375,17 @@ class Orchestrator:
             and synth_result.output is not None
         ):
             synth_out = synth_result.output
-            # SynthesisOutput has a position_intents attribute
-            if hasattr(synth_out, "position_intents"):
+            # PipelineStage serializes output → dict via model_dump(mode="json")
+            if isinstance(synth_out, dict) and "position_intents" in synth_out:
+                meta["position_intents"] = synth_out["position_intents"]
+            elif hasattr(synth_out, "position_intents"):
+                # Fallback: Pydantic model (shouldn't happen, but be safe)
                 meta["position_intents"] = [
                     intent.model_dump(mode="json")
                     if hasattr(intent, "model_dump")
                     else intent
                     for intent in synth_out.position_intents
                 ]
-            # Also extract regime_state from earlier stages for DECIDE-OPTIM
-            if "regime_state" not in meta and hasattr(synth_out, "regime_context"):
-                meta["regime_context"] = synth_out.regime_context
 
         # Stage 5: DECIDE-OPTIM (sequential)
         log.info("Running decision optimization stage")
@@ -378,7 +399,20 @@ class Orchestrator:
         self._inject_output(meta, "optimization_output", optim_result)
 
         # Stage 6: Execution (strictly sequential)
+        # Bridge: rename optimization_output → proposal for EXEC-VALIDATE
+        if "optimization_output" in meta:
+            meta["proposal"] = meta["optimization_output"]
+
         log.info("Running execution pipeline (sequential)")
+
+        # Map each exec agent's output to the semantic key the *next* agent expects
+        EXEC_OUTPUT_KEYS = {
+            "EXEC-VALIDATE": "validated_proposal",
+            "EXEC-ROUTER": "routing_plan",
+            "EXEC-GUARDIAN": "guardian_verdict",
+            "EXEC-CAPTURE": "capture_output",
+        }
+
         prev_exec = None
         for exec_aid in EXECUTION_AGENTS:
             deps = [prev_exec] if prev_exec else []
@@ -389,7 +423,8 @@ class Orchestrator:
             )
             all_results.append(exec_result)
             completed[exec_aid] = exec_result
-            self._inject_output(meta, f"exec_{exec_aid.lower()}", exec_result)
+            semantic_key = EXEC_OUTPUT_KEYS.get(exec_aid, f"exec_{exec_aid.lower()}")
+            self._inject_output(meta, semantic_key, exec_result)
             prev_exec = exec_aid
 
         # Determine run status
@@ -514,7 +549,12 @@ class Orchestrator:
             )
             all_results.append(result)
             completed[aid] = result
+            # Store output under generic key
             self._inject_output(meta, f"{loop_type.lower()}_{aid.lower()}", result)
+            # Also store under semantic alias so downstream agents can find it
+            semantic = _LOOP_SEMANTIC_KEYS.get(aid)
+            if semantic:
+                self._inject_output(meta, semantic, result)
             prev_agent = aid
 
         failed = sum(1 for r in all_results if r.status == StageStatus.FAILED)
