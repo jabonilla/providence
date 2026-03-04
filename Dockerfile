@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
@@ -14,14 +14,29 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY providence/ providence/
 COPY config/ config/
+COPY scripts/ scripts/
 
-# Create data directory for persistent storage
-RUN mkdir -p /app/data
+# Create non-root user
+RUN groupadd -r providence && useradd -r -g providence providence \
+    && mkdir -p /app/data && chown -R providence:providence /app
 
-# Health check
+USER providence
+
+# ── API server target (default) ──────────────────────────────────
+FROM base AS api
+EXPOSE 8000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health/live || exit 1
+
+ENTRYPOINT ["python", "-m", "providence.api.server"]
+CMD ["--host", "0.0.0.0", "--port", "8000", "--data-dir", "/app/data"]
+
+# ── Pipeline runner target ───────────────────────────────────────
+FROM base AS runner
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -m providence --skip-perception --skip-adaptive --data-dir /app/data health || exit 1
 
-# Default entry point
 ENTRYPOINT ["python", "-m", "providence"]
-CMD ["--skip-perception", "--data-dir", "/app/data", "run-once"]
+CMD ["--data-dir", "/app/data", "run-once"]

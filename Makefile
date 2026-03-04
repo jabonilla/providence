@@ -3,6 +3,8 @@
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+# ── Development ──────────────────────────────────────────────────
+
 install:  ## Install dependencies
 	pip install -e ".[dev]"
 
@@ -25,6 +27,8 @@ lint:  ## Run linters (ruff)
 format:  ## Auto-format code
 	ruff format providence/ tests/
 
+# ── Local execution ──────────────────────────────────────────────
+
 run:  ## Run continuous mode (default)
 	python -m providence run-continuous --log-level INFO
 
@@ -43,17 +47,48 @@ agents:  ## List all agents
 frozen:  ## Run with frozen agents only (no API keys needed)
 	python -m providence --skip-perception --skip-adaptive --log-level DEBUG run-once
 
-docker:  ## Build Docker image
-	docker build -t providence:latest .
+# ── API server ───────────────────────────────────────────────────
 
-docker-run:  ## Run with Docker Compose (continuous mode)
-	docker compose up -d providence
+api:  ## Start the REST API server locally
+	python -m providence.api.server --port 8000 --data-dir data/ --log-level info
+
+api-dev:  ## Start API with auto-reload (dev mode)
+	uvicorn providence.api.app:create_app --factory --host 0.0.0.0 --port 8000 --reload
+
+monitor:  ## Run health monitor against local API
+	python scripts/monitor.py --url http://localhost:8000 --verbose
+
+monitor-loop:  ## Run health monitor in continuous loop (60s interval)
+	python scripts/monitor.py --url http://localhost:8000 --interval 60 --verbose
+
+# ── Docker ───────────────────────────────────────────────────────
+
+docker-build:  ## Build all Docker images
+	docker build --target api -t providence-api:latest .
+	docker build --target runner -t providence-runner:latest .
+
+docker-api:  ## Start API server with Docker Compose
+	docker compose up -d api
+
+docker-full:  ## Start API + runner with Docker Compose
+	docker compose up -d api runner
 
 docker-once:  ## Run single cycle with Docker Compose
-	docker compose run --rm providence-once
+	docker compose run --rm run-once
 
 docker-learning:  ## Run learning batch with Docker Compose
-	docker compose run --rm providence-learning
+	docker compose run --rm learning
+
+docker-prod:  ## Start full production stack (API + runner + nginx)
+	docker compose --profile production up -d
+
+docker-down:  ## Stop all services
+	docker compose --profile production down
+
+docker-logs:  ## Tail all service logs
+	docker compose logs -f
+
+# ── Cleanup ──────────────────────────────────────────────────────
 
 clean:  ## Remove build artifacts and caches
 	rm -rf __pycache__ .pytest_cache .ruff_cache htmlcov .coverage

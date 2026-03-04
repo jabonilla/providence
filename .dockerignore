@@ -1,0 +1,83 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git and repository metadata
+.git
+.gitignore
+.github
+
+# Python caches and compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*.vim
+*~
+.project
+.pydevproject
+.settings
+
+# OS files
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Testing artifacts
+tests/
+.pytest_cache
+.coverage
+htmlcov
+coverage.xml
+.tox
+
+# Runtime and log files
+*.log
+logs/
+data/
+
+# Docker metadata
+.dockerignore
+docker-compose.yml
+
+# Deployment configs
+deploy/
+
+# Documentation
+*.md
+CLAUDE.md
+FRONTEND_ASSESSMENT.md
+
+# Node.js (if any frontend)
+node_modules
+package-lock.json
+yarn.lock
+
+# Claude workspace
+.claude/
+
+# Miscellaneous
+*.bak
+*.tmp
+*.cache
+.mypy_cache
+.ruff_cache

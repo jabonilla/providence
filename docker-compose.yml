@@ -1,9 +1,35 @@
 version: "3.9"
 
 services:
-  providence:
-    build: .
-    container_name: providence
+  # ── REST API server (always running) ───────────────────────────
+  api:
+    build:
+      context: .
+      target: api
+    container_name: providence-api
+    env_file:
+      - .env
+    ports:
+      - "${PROVIDENCE_API_PORT:-8000}:8000"
+    volumes:
+      - providence-data:/app/data
+      - ./config:/app/config:ro
+    command: [
+      "--host", "0.0.0.0",
+      "--port", "8000",
+      "--data-dir", "/app/data",
+      "--skip-perception",
+    ]
+    restart: unless-stopped
+    networks:
+      - providence-net
+
+  # ── Continuous pipeline runner ─────────────────────────────────
+  runner:
+    build:
+      context: .
+      target: runner
+    container_name: providence-runner
     env_file:
       - .env
     volumes:
@@ -11,10 +37,17 @@ services:
       - ./config:/app/config:ro
     command: ["run-continuous", "--interval", "300", "--data-dir", "/app/data"]
     restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - providence-net
 
-  # Single run mode (for testing or manual triggers)
-  providence-once:
-    build: .
+  # ── Single run (manual trigger) ────────────────────────────────
+  run-once:
+    build:
+      context: .
+      target: runner
     container_name: providence-once
     env_file:
       - .env
@@ -24,10 +57,14 @@ services:
     command: ["run-once", "--with-exit", "--with-governance", "--data-dir", "/app/data"]
     profiles:
       - manual
+    networks:
+      - providence-net
 
-  # Learning batch (weekly offline run)
-  providence-learning:
-    build: .
+  # ── Learning batch (offline, weekly) ───────────────────────────
+  learning:
+    build:
+      context: .
+      target: runner
     container_name: providence-learning
     env_file:
       - .env
@@ -37,7 +74,32 @@ services:
     command: ["run-learning", "--data-dir", "/app/data"]
     profiles:
       - learning
+    networks:
+      - providence-net
+
+  # ── Nginx reverse proxy ────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: providence-nginx
+    ports:
+      - "${PROVIDENCE_HTTPS_PORT:-443}:443"
+      - "${PROVIDENCE_HTTP_PORT:-80}:80"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - production
+    networks:
+      - providence-net
 
 volumes:
   providence-data:
     driver: local
+
+networks:
+  providence-net:
+    driver: bridge

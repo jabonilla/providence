@@ -12,6 +12,8 @@ dependencies = [
     "structlog>=23.0",
     "httpx>=0.24",
     "python-dotenv>=1.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
 ]
 
 [project.optional-dependencies]
