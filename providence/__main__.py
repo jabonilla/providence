@@ -28,9 +28,11 @@ from providence.config.watchlist import Watchlist
 from providence.factory import ALL_AGENT_IDS, build_agent_registry_from_env
 from providence.orchestration.orchestrator import Orchestrator
 from providence.orchestration.runner import ProvidenceRunner
+from providence.schemas.enums import SystemMode
 from providence.services.context_svc import ContextService
 from providence.services.health import HealthService
 from providence.services.perception_scheduler import PerceptionScheduler
+from providence.services.shadow_execution import ShadowSignalStore
 from providence.storage import BeliefStore, FragmentStore, RunStore
 
 logger = structlog.get_logger()
@@ -78,6 +80,12 @@ def _parse_args() -> argparse.Namespace:
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default="INFO",
         help="Logging level",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["SHADOW", "PAPER", "LIVE"],
+        default="SHADOW",
+        help="System execution mode (default: SHADOW — signal only, no broker)",
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -166,12 +174,20 @@ def _build_system(
         skip_adaptive=args.skip_adaptive,
     )
 
+    # Determine system mode
+    system_mode = SystemMode(args.mode)
+
     # Build storage layer
     data_dir: Path = args.data_dir
     data_dir.mkdir(parents=True, exist_ok=True)
     fragment_store = FragmentStore(persist_path=data_dir / "fragments.jsonl")
     belief_store = BeliefStore(persist_path=data_dir / "beliefs.jsonl")
     run_store = RunStore(persist_path=data_dir / "runs.jsonl")
+
+    # Shadow signal store (always created, only active in SHADOW mode)
+    shadow_signal_store = ShadowSignalStore(
+        persist_path=data_dir / "shadow_signals.jsonl"
+    ) if system_mode == SystemMode.SHADOW else None
 
     # Build context service and orchestrator
     context_service = ContextService(config_registry)
@@ -187,6 +203,15 @@ def _build_system(
         fragment_store=fragment_store,
         belief_store=belief_store,
         run_store=run_store,
+        shadow_signal_store=shadow_signal_store,
+        system_mode=system_mode,
+    )
+
+    logger.info(
+        "System built",
+        system_mode=system_mode.value,
+        agents=len(registry),
+        shadow_store="active" if shadow_signal_store else "disabled",
     )
     return runner, registry
 

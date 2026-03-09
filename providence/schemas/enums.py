@@ -166,3 +166,16 @@ class AgentRecommendation(str, Enum):
     MAINTAIN = "MAINTAIN"
     RETRAIN = "RETRAIN"
     RETIRE = "RETIRE"
+
+
+class SystemMode(str, Enum):
+    """System-wide execution mode controlling order submission behavior.
+
+    Controls whether the pipeline actually submits orders to a broker
+    or records signals for offline analysis.
+
+    Progression: SHADOW → PAPER → LIVE (per Launch Plan phases B → C → E/F).
+    """
+    SHADOW = "SHADOW"    # Signal-only: no broker interaction, simulated fills from market data
+    PAPER = "PAPER"      # Paper trading: orders submitted to Alpaca paper endpoint
+    LIVE = "LIVE"        # Live trading: orders submitted to Alpaca live endpoint

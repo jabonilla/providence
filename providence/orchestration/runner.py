@@ -7,6 +7,12 @@ Storage integration:
   - FragmentStore: pulls available fragments before each cycle
   - BeliefStore: captures cognition outputs after main loop
   - RunStore: persists every PipelineRun for audit and analytics
+  - ShadowSignalStore: captures signals in shadow mode (no broker)
+
+Shadow mode integration:
+  When system_mode is SHADOW, the pipeline runs fully through
+  EXEC-VALIDATE but does not submit orders to any broker. Instead,
+  ShadowExecutionService records signals for offline analysis.
 """
 
 import asyncio
@@ -17,7 +23,9 @@ import structlog
 
 from providence.orchestration.models import PipelineRun, StageStatus
 from providence.orchestration.orchestrator import Orchestrator
+from providence.schemas.enums import SystemMode
 from providence.schemas.market_state import MarketStateFragment
+from providence.services.shadow_execution import ShadowExecutionService, ShadowSignalStore
 from providence.storage.belief_store import BeliefStore
 from providence.storage.fragment_store import FragmentStore
 from providence.storage.run_store import RunStore
@@ -34,6 +42,7 @@ class ProvidenceRunner:
       - Offline batch runs (learning)
       - Graceful shutdown
       - Storage integration (fragments, beliefs, run history)
+      - Shadow mode (signal recording without broker interaction)
     """
 
     def __init__(
@@ -42,13 +51,30 @@ class ProvidenceRunner:
         fragment_store: FragmentStore | None = None,
         belief_store: BeliefStore | None = None,
         run_store: RunStore | None = None,
+        shadow_signal_store: ShadowSignalStore | None = None,
+        system_mode: SystemMode = SystemMode.SHADOW,
     ) -> None:
         self._orchestrator = orchestrator
         self._fragment_store = fragment_store
         self._belief_store = belief_store
         self._run_store = run_store
+        self._system_mode = system_mode
         self._shutdown_event = asyncio.Event()
         self._running = False
+
+        # Shadow mode services
+        self._shadow_signal_store = shadow_signal_store
+        self._shadow_svc: ShadowExecutionService | None = None
+        if shadow_signal_store is not None:
+            self._shadow_svc = ShadowExecutionService(shadow_signal_store)
+
+    @property
+    def system_mode(self) -> SystemMode:
+        return self._system_mode
+
+    @property
+    def shadow_signal_store(self) -> ShadowSignalStore | None:
+        return self._shadow_signal_store
 
     @property
     def is_running(self) -> bool:
@@ -114,6 +140,10 @@ class ProvidenceRunner:
         Runs main loop, then optionally exit and governance loops.
         If fragments is None, pulls from FragmentStore automatically.
 
+        In SHADOW mode, after the main loop completes, signals are
+        extracted from EXEC-VALIDATE output and recorded via
+        ShadowExecutionService instead of submitting to a broker.
+
         Args:
             fragments: MarketStateFragments from Perception. If None,
                 reads from FragmentStore.
@@ -124,13 +154,20 @@ class ProvidenceRunner:
         Returns:
             Dict of loop_type → PipelineRun.
         """
-        log = logger.bind(trigger="manual")
+        log = logger.bind(trigger="manual", system_mode=self._system_mode.value)
         log.info("Starting single pipeline run")
 
         # Pull fragments from store if not provided
         if fragments is None:
             fragments = self._get_fragments_from_store()
             log.info("Fragments loaded from store", count=len(fragments))
+
+        # Inject system mode into metadata for downstream agents
+        if metadata is None:
+            metadata = {}
+        metadata["system_mode"] = self._system_mode.value
+        if self._system_mode == SystemMode.SHADOW:
+            metadata["capital_tier"] = "SEED"  # Shadow mode = SEED tier
 
         runs: dict[str, PipelineRun] = {}
 
@@ -145,6 +182,10 @@ class ProvidenceRunner:
         beliefs_stored = self._extract_and_store_beliefs(main_run)
         if beliefs_stored:
             log.info("Beliefs stored", count=beliefs_stored)
+
+        # Shadow mode: record signals instead of real execution
+        if self._system_mode == SystemMode.SHADOW and self._shadow_svc is not None:
+            self._record_shadow_signals(main_run)
 
         # Exit loop (uses main loop metadata)
         if run_exit:
@@ -168,8 +209,42 @@ class ProvidenceRunner:
             "Single pipeline run complete",
             loops=list(runs.keys()),
             statuses={k: v.status.value for k, v in runs.items()},
+            system_mode=self._system_mode.value,
         )
         return runs
+
+    def _record_shadow_signals(self, main_run: PipelineRun) -> None:
+        """Extract EXEC-VALIDATE output from main run and record shadow signals."""
+        if self._shadow_svc is None:
+            return
+
+        validated_proposal = None
+        regime_state = None
+
+        for sr in main_run.stage_results:
+            if sr.agent_id == "EXEC-VALIDATE" and sr.status == StageStatus.SUCCEEDED:
+                validated_proposal = sr.output
+            if sr.agent_id == "REGIME-MISMATCH" and sr.status == StageStatus.SUCCEEDED:
+                regime_state = sr.output
+
+        if validated_proposal and isinstance(validated_proposal, dict):
+            summary = self._shadow_svc.record_signals(
+                run_id=main_run.run_id,
+                validated_proposal=validated_proposal,
+                regime_state=regime_state if isinstance(regime_state, dict) else {},
+                metadata=main_run.metadata,
+            )
+            logger.info(
+                "Shadow signals captured",
+                run_id=str(main_run.run_id),
+                signals=summary.total_signals,
+                approved=summary.approved_signals,
+            )
+        else:
+            logger.debug(
+                "No EXEC-VALIDATE output found for shadow recording",
+                run_id=str(main_run.run_id),
+            )
 
     async def run_continuous(
         self,

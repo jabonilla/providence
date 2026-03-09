@@ -22,6 +22,7 @@ from providence.schemas.enums import (
     MarketCapBucket,
     MaturityStage,
     StatisticalRegime,
+    SystemMode,
     SystemRiskMode,
     ValidationStatus,
 )
@@ -121,6 +122,7 @@ __all__ = [
     "MarketCapBucket",
     "MaturityStage",
     "StatisticalRegime",
+    "SystemMode",
     "SystemRiskMode",
     "ValidationStatus",
     # Market State

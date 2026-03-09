@@ -23,7 +23,7 @@ import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.exceptions import AgentProcessingError
-from providence.schemas.enums import Action, Direction
+from providence.schemas.enums import Action, Direction, SystemMode
 from providence.schemas.execution import ValidatedProposal, ValidationResult
 
 logger = structlog.get_logger()
@@ -183,6 +183,22 @@ class ExecValidate(BaseAgent[ValidatedProposal]):
             risk_mode = "NORMAL"
             if isinstance(regime_state, dict):
                 risk_mode = regime_state.get("system_risk_mode", "NORMAL")
+
+            # Capital tier enforcement: SEED tier blocks all execution
+            capital_tier = context.metadata.get("capital_tier", "SEED")
+            system_mode_str = context.metadata.get("system_mode", "SHADOW")
+            try:
+                system_mode = SystemMode(system_mode_str)
+            except ValueError:
+                system_mode = SystemMode.SHADOW
+
+            if capital_tier == "SEED" and system_mode == SystemMode.LIVE:
+                log.warning(
+                    "SEED tier cannot execute live trades — blocking all orders",
+                    capital_tier=capital_tier,
+                    system_mode=system_mode.value,
+                )
+                risk_mode = "HALTED"
 
             limits = VALIDATION_LIMITS.get(risk_mode, VALIDATION_LIMITS["NORMAL"])
 
