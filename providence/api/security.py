@@ -66,7 +66,7 @@ async def require_api_key(request: Request) -> str:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if api_key != DEFAULT_API_KEY or not DEFAULT_API_KEY:
+    if api_key != DEFAULT_API_KEY:
         logger.warning("invalid_api_key", path=request.url.path)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
