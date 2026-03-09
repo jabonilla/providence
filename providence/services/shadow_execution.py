@@ -135,6 +135,65 @@ class ShadowSignalStore:
         with self._lock:
             return len(self._by_run)
 
+    def update_signal(self, signal_id: UUID, new_signal: ShadowSignal) -> bool:
+        """Replace a signal by ID with an updated version.
+
+        Used by PriceBackfillService to fill in realized return fields.
+        The signal_id of the new signal MUST match the target signal_id.
+
+        Args:
+            signal_id: The signal to replace.
+            new_signal: Updated signal (same signal_id, new price/return data).
+
+        Returns:
+            True if updated, False if signal_id not found.
+        """
+        if new_signal.signal_id != signal_id:
+            return False
+
+        with self._lock:
+            if signal_id not in self._signal_ids:
+                return False
+
+            # Replace in main list
+            for i, s in enumerate(self._signals):
+                if s.signal_id == signal_id:
+                    self._signals[i] = new_signal
+                    break
+
+            # Replace in run index
+            run_signals = self._by_run.get(new_signal.run_id, [])
+            for i, s in enumerate(run_signals):
+                if s.signal_id == signal_id:
+                    run_signals[i] = new_signal
+                    break
+
+            # Replace in ticker index
+            ticker_signals = self._by_ticker.get(new_signal.ticker, [])
+            for i, s in enumerate(ticker_signals):
+                if s.signal_id == signal_id:
+                    ticker_signals[i] = new_signal
+                    break
+
+            # Re-persist entire store (since we modified in place)
+            self._re_persist_all()
+            return True
+
+    def _re_persist_all(self) -> None:
+        """Rewrite the entire JSONL file from in-memory state.
+
+        Called after update_signal to ensure persistence reflects updates.
+        """
+        if self._persist_path is None:
+            return
+        try:
+            self._persist_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._persist_path, "w") as f:
+                for signal in self._signals:
+                    f.write(signal.model_dump_json() + "\n")
+        except Exception as exc:
+            logger.warning("Failed to re-persist shadow signals", error=str(exc))
+
     def stats(self) -> dict[str, Any]:
         """Return store statistics."""
         with self._lock:

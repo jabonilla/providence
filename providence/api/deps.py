@@ -14,6 +14,7 @@ from providence.config.agent_config import AgentConfigRegistry
 from providence.config.watchlist import Watchlist
 from providence.orchestration.runner import ProvidenceRunner
 from providence.services.health import HealthService
+from providence.services.shadow_execution import ShadowSignalStore
 from providence.storage.belief_store import BeliefStore
 from providence.storage.fragment_store import FragmentStore
 from providence.storage.run_store import RunStore
@@ -33,6 +34,9 @@ class AppState:
 
     # Agent registry
     agent_registry: dict[str, BaseAgent] = field(default_factory=dict)
+
+    # Shadow mode
+    shadow_signal_store: Optional[ShadowSignalStore] = None
 
     # Services
     health_service: Optional[HealthService] = None

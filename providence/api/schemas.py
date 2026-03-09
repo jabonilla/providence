@@ -225,6 +225,98 @@ class PortfolioSnapshotResponse(BaseModel):
     drawdown_pct: float
 
 
+# ── Shadow Mode ────────────────────────────────────────────────────
+
+class ShadowSignalResponse(BaseModel):
+    """Shadow mode trading signal."""
+
+    signal_id: UUID
+    run_id: UUID
+    timestamp: datetime
+    ticker: str
+    action: str
+    direction: str
+    target_weight: float
+    confidence: float
+    approved: bool
+    rejection_reasons: list[str] = Field(default_factory=list)
+    adjusted_weight: float = 0.0
+    risk_mode_applied: str = "NORMAL"
+    simulated_entry_price: Optional[float] = None
+    simulated_fill_qty: Optional[int] = None
+    simulated_notional: Optional[float] = None
+    price_at_signal: Optional[float] = None
+    price_1d_later: Optional[float] = None
+    price_5d_later: Optional[float] = None
+    price_20d_later: Optional[float] = None
+    realized_return_1d: Optional[float] = None
+    realized_return_5d: Optional[float] = None
+    realized_return_20d: Optional[float] = None
+
+
+class ShadowRunSummaryResponse(BaseModel):
+    """Summary of a single shadow pipeline run."""
+
+    run_id: UUID
+    timestamp: datetime
+    system_mode: str
+    total_signals: int
+    approved_signals: int
+    rejected_signals: int
+    long_signals: int = 0
+    short_signals: int = 0
+    risk_mode: str = "NORMAL"
+    regime_state: str = "LOW_VOL_TRENDING"
+
+
+class ShadowStoreStatsResponse(BaseModel):
+    """Shadow signal store statistics."""
+
+    total_signals: int
+    total_runs: int
+    total_summaries: int
+    unique_tickers: int
+    approved_signals: int
+    rejected_signals: int
+
+
+class ShadowReportResponse(BaseModel):
+    """Shadow mode performance report."""
+
+    status: str
+    generated_at: Optional[str] = None
+    period_start: Optional[str] = None
+    period_end: Optional[str] = None
+    total_runs: int = 0
+    total_signals: int = 0
+    total_approved: int = 0
+    total_rejected: int = 0
+    total_longs: int = 0
+    total_shorts: int = 0
+    unique_tickers: int = 0
+    avg_confidence: float = 0.0
+    avg_signals_per_run: float = 0.0
+    long_short_ratio: Optional[float] = None
+    accuracy_1d: Optional[float] = None
+    accuracy_5d: Optional[float] = None
+    accuracy_20d: Optional[float] = None
+    hypothetical_return_1d: Optional[float] = None
+    hypothetical_return_5d: Optional[float] = None
+    hypothetical_return_20d: Optional[float] = None
+    phase_b_criteria: dict[str, bool] = Field(default_factory=dict)
+    ticker_breakdown: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class BackfillTriggerResponse(BaseModel):
+    """Response from a price backfill run."""
+
+    processed: int
+    updated: int
+    errors: int
+    skipped: int
+    prices_fetched: int = 0
+
+
 # ── Generic ─────────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):

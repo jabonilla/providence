@@ -4,6 +4,8 @@ Usage:
     python -m providence run-once          Run a single main loop cycle
     python -m providence run-continuous    Run continuously with scheduling
     python -m providence run-learning      Run an offline learning batch
+    python -m providence perceive          Run perception agents (data ingestion)
+    python -m providence backfill          Backfill realized returns for shadow signals
     python -m providence health            Print agent health status
     python -m providence list-agents       List all registered agents
 """
@@ -137,6 +139,18 @@ def _parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="Run perception for tickers up to this priority level (1=high, 2=med, 3=low)",
+    )
+
+    # backfill
+    backfill_parser = subparsers.add_parser(
+        "backfill",
+        help="Backfill realized returns for shadow signals from market prices",
+    )
+    backfill_parser.add_argument(
+        "--max-signals",
+        type=int,
+        default=500,
+        help="Max signals to process in one batch (default: 500)",
     )
 
     # health
@@ -428,6 +442,50 @@ def _cmd_list_agents(_args: argparse.Namespace) -> int:
     return 0
 
 
+async def _cmd_backfill(args: argparse.Namespace) -> int:
+    """Backfill realized returns for shadow signals."""
+    import os
+    from providence.services.price_backfill import PriceBackfillService
+
+    data_dir: Path = args.data_dir
+    signal_path = data_dir / "shadow_signals.jsonl"
+
+    if not signal_path.exists():
+        logger.error("No shadow signals file found", path=str(signal_path))
+        print(f"No shadow signals found at {signal_path}")
+        print("Run the pipeline in SHADOW mode first: python -m providence run-once --mode SHADOW")
+        return 1
+
+    store = ShadowSignalStore(persist_path=signal_path)
+    logger.info("Shadow signals loaded", count=store.count)
+
+    # Build price client
+    api_key = os.environ.get("POLYGON_API_KEY", "")
+    if not api_key:
+        logger.error("POLYGON_API_KEY not set — cannot fetch prices for backfill")
+        print("Error: POLYGON_API_KEY environment variable required for price backfill")
+        return 1
+
+    from providence.infra.polygon_client import PolygonClient
+    price_client = PolygonClient(api_key=api_key)
+
+    backfill = PriceBackfillService(
+        signal_store=store,
+        price_client=price_client,
+    )
+
+    result = await backfill.run(max_signals=args.max_signals)
+
+    print(f"\nBackfill complete:")
+    print(f"  Processed:      {result['processed']}")
+    print(f"  Updated:        {result['updated']}")
+    print(f"  Skipped:        {result['skipped']}")
+    print(f"  Errors:         {result['errors']}")
+    print(f"  Prices fetched: {result.get('prices_fetched', 0)}")
+
+    return 0
+
+
 def main() -> int:
     args = _parse_args()
     _configure_logging(args.log_level)
@@ -444,6 +502,8 @@ def main() -> int:
         return asyncio.run(_cmd_run_continuous(args))
     elif args.command == "run-learning":
         return asyncio.run(_cmd_run_learning(args))
+    elif args.command == "backfill":
+        return asyncio.run(_cmd_backfill(args))
     else:
         print(f"Unknown command: {args.command}", file=sys.stderr)
         return 1

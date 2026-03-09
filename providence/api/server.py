@@ -38,7 +38,9 @@ def build_state(
     from providence.orchestration.orchestrator import Orchestrator
     from providence.orchestration.runner import ProvidenceRunner
     from providence.services.context_svc import ContextService
+    from providence.schemas.enums import SystemMode
     from providence.services.health import HealthService
+    from providence.services.shadow_execution import ShadowSignalStore
     from providence.storage.belief_store import BeliefStore
     from providence.storage.fragment_store import FragmentStore
     from providence.storage.run_store import RunStore
@@ -77,11 +79,17 @@ def build_state(
         context_service=context_service,
         config_registry=config_registry,
     )
+    # Shadow signal store (always create for API visibility)
+    shadow_path = data_dir / "shadow_signals.jsonl" if data_dir else None
+    shadow_signal_store = ShadowSignalStore(persist_path=shadow_path)
+
     runner = ProvidenceRunner(
         orchestrator=orchestrator,
         fragment_store=fragment_store,
         belief_store=belief_store,
         run_store=run_store,
+        shadow_signal_store=shadow_signal_store,
+        system_mode=SystemMode.SHADOW,
     )
     health_service = HealthService(
         agent_registry=registry,
@@ -92,6 +100,7 @@ def build_state(
         fragment_store=fragment_store,
         belief_store=belief_store,
         run_store=run_store,
+        shadow_signal_store=shadow_signal_store,
         agent_registry=registry,
         health_service=health_service,
         runner=runner,
