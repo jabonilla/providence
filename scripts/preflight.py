@@ -72,10 +72,10 @@ def check_agent_imports() -> tuple[int, int]:
         "providence.agents.cognition.event": "CognitEvent",
         "providence.agents.cognition.crosssec": "CognitCrossSec",
         # Regime (4)
-        "providence.agents.regime.stat": "RegimeStat",
-        "providence.agents.regime.sector": "RegimeSector",
-        "providence.agents.regime.narrative": "RegimeNarr",
-        "providence.agents.regime.mismatch": "RegimeMismatch",
+        "providence.agents.regime.regime_stat": "RegimeStat",
+        "providence.agents.regime.regime_sector": "RegimeSector",
+        "providence.agents.regime.regime_narr": "RegimeNarr",
+        "providence.agents.regime.regime_mismatch": "RegimeMismatch",
         # Decision (2)
         "providence.agents.decision.synth": "DecideSynth",
         "providence.agents.decision.optim": "DecideOptim",
@@ -303,8 +303,8 @@ def check_config() -> tuple[int, int]:
     passed, failed = 0, 0
 
     config_files = {
-        "agents.yaml": PROJECT_ROOT / "providence" / "config" / "agents.yaml",
-        "watchlist.yaml": PROJECT_ROOT / "providence" / "config" / "watchlist.yaml",
+        "agents.yaml": PROJECT_ROOT / "config" / "agents.yaml",
+        "watchlist.yaml": PROJECT_ROOT / "config" / "watchlist.yaml",
         "Dockerfile": PROJECT_ROOT / "Dockerfile",
         "docker-compose.yml": PROJECT_ROOT / "docker-compose.yml",
         ".env.example": PROJECT_ROOT / ".env.example",
@@ -334,12 +334,13 @@ def check_prompts() -> tuple[int, int]:
         _fail("prompts/ directory missing")
         return 0, 1
 
-    templates = list(prompts_dir.glob("*.py"))
-    _ok(f"Prompt template files", f"{len(templates)} found")
+    templates = list(prompts_dir.glob("*.yaml"))
+    _ok(f"Prompt template files", f"{len(templates)} .yaml found")
     passed += 1
 
     for t in templates:
         if t.stat().st_size > 0:
+            _ok(f"  {t.name}")
             passed += 1
         else:
             _fail(f"Empty template: {t.name}")
