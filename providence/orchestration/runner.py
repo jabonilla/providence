@@ -53,6 +53,7 @@ class ProvidenceRunner:
         run_store: RunStore | None = None,
         shadow_signal_store: ShadowSignalStore | None = None,
         system_mode: SystemMode = SystemMode.SHADOW,
+        paper_trading_service: Optional[Any] = None,
     ) -> None:
         self._orchestrator = orchestrator
         self._fragment_store = fragment_store
@@ -67,6 +68,9 @@ class ProvidenceRunner:
         self._shadow_svc: ShadowExecutionService | None = None
         if shadow_signal_store is not None:
             self._shadow_svc = ShadowExecutionService(shadow_signal_store)
+
+        # Paper trading service
+        self._paper_trading_service = paper_trading_service
 
     @property
     def system_mode(self) -> SystemMode:
@@ -187,6 +191,10 @@ class ProvidenceRunner:
         if self._system_mode == SystemMode.SHADOW and self._shadow_svc is not None:
             self._record_shadow_signals(main_run)
 
+        # Paper mode: execute signals to paper trading + record as shadows
+        if self._system_mode == SystemMode.PAPER and self._paper_trading_service is not None:
+            await self._execute_paper_signals(main_run)
+
         # Exit loop (uses main loop metadata)
         if run_exit:
             exit_run = await self._orchestrator.run_exit_loop(
@@ -244,6 +252,28 @@ class ProvidenceRunner:
             logger.debug(
                 "No EXEC-VALIDATE output found for shadow recording",
                 run_id=str(main_run.run_id),
+            )
+
+    async def _execute_paper_signals(self, main_run: PipelineRun) -> None:
+        """Execute signals from main run to paper trading (with dual shadow recording)."""
+        if self._paper_trading_service is None:
+            return
+
+        try:
+            execution_result = await self._paper_trading_service.execute_signals(main_run)
+            logger.info(
+                "Paper trading execution complete",
+                run_id=str(main_run.run_id),
+                submitted=execution_result.get("submitted", 0),
+                filled=execution_result.get("filled", 0),
+                rejected=execution_result.get("rejected", 0),
+                halted=execution_result.get("halted", False),
+            )
+        except Exception as e:
+            logger.error(
+                "Paper trading execution failed",
+                run_id=str(main_run.run_id),
+                error=str(e),
             )
 
     async def run_continuous(

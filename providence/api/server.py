@@ -37,6 +37,8 @@ def build_state(
     from providence.factory import build_agent_registry
     from providence.orchestration.orchestrator import Orchestrator
     from providence.orchestration.runner import ProvidenceRunner
+    from providence.portfolio.order_manager import OrderManager
+    from providence.portfolio.tracker import PortfolioTracker
     from providence.services.context_svc import ContextService
     from providence.schemas.enums import SystemMode
     from providence.services.health import HealthService
@@ -49,6 +51,8 @@ def build_state(
     frag_path = data_dir / "fragments.jsonl" if data_dir else None
     belief_path = data_dir / "beliefs.jsonl" if data_dir else None
     run_path = data_dir / "runs.jsonl" if data_dir else None
+    portfolio_path = data_dir / "portfolio.jsonl" if data_dir else None
+    orders_path = data_dir / "orders.jsonl" if data_dir else None
 
     if data_dir:
         data_dir.mkdir(parents=True, exist_ok=True)
@@ -83,6 +87,10 @@ def build_state(
     shadow_path = data_dir / "shadow_signals.jsonl" if data_dir else None
     shadow_signal_store = ShadowSignalStore(persist_path=shadow_path)
 
+    # Portfolio tracking
+    portfolio_tracker = PortfolioTracker(persist_path=portfolio_path)
+    order_manager = OrderManager(persist_path=orders_path)
+
     runner = ProvidenceRunner(
         orchestrator=orchestrator,
         fragment_store=fragment_store,
@@ -106,6 +114,8 @@ def build_state(
         runner=runner,
         config_registry=config_registry,
         watchlist=watchlist,
+        portfolio_tracker=portfolio_tracker,
+        order_manager=order_manager,
     )
 
 

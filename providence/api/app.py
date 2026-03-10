@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from providence.api.deps import AppState, get_state, set_state
-from providence.api.routes import agents, config, health, pipeline, shadow, stores
+from providence.api.routes import agents, config, health, pipeline, portfolio, shadow, stores
 from providence.api.security import (
     RateLimitMiddleware,
     RequestSizeLimitMiddleware,
@@ -178,6 +178,7 @@ def create_app(
     app.include_router(agents.router, prefix=api_prefix)
     app.include_router(stores.router, prefix=api_prefix)
     app.include_router(shadow.router, prefix=api_prefix)
+    app.include_router(portfolio.router, prefix=api_prefix)
     app.include_router(config.router, prefix=api_prefix)
 
     # ── Root endpoint ───────────────────────────────────────────────

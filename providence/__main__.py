@@ -179,6 +179,8 @@ def _build_system(
 
     Returns (runner, agent_registry) tuple.
     """
+    import os
+
     # Load agent configs
     config_registry = AgentConfigRegistry.from_yaml(args.config)
 
@@ -198,10 +200,53 @@ def _build_system(
     belief_store = BeliefStore(persist_path=data_dir / "beliefs.jsonl")
     run_store = RunStore(persist_path=data_dir / "runs.jsonl")
 
-    # Shadow signal store (always created, only active in SHADOW mode)
-    shadow_signal_store = ShadowSignalStore(
-        persist_path=data_dir / "shadow_signals.jsonl"
-    ) if system_mode == SystemMode.SHADOW else None
+    # Shadow signal store (always created for SHADOW and PAPER modes)
+    shadow_signal_store = None
+    if system_mode in (SystemMode.SHADOW, SystemMode.PAPER):
+        shadow_signal_store = ShadowSignalStore(
+            persist_path=data_dir / "shadow_signals.jsonl"
+        )
+
+    # Paper trading service (only for PAPER mode)
+    paper_trading_service = None
+    if system_mode == SystemMode.PAPER:
+        from providence.infra.alpaca_client import AlpacaClient
+        from providence.portfolio.order_manager import OrderManager
+        from providence.portfolio.tracker import PortfolioTracker
+        from providence.services.paper_trading import PaperTradingService
+
+        # Get Alpaca credentials from environment
+        api_key = os.environ.get("ALPACA_API_KEY", "")
+        secret_key = os.environ.get("ALPACA_SECRET_KEY", "")
+
+        if not api_key or not secret_key:
+            logger.error("ALPACA_API_KEY and ALPACA_SECRET_KEY required for PAPER mode")
+            raise ValueError("Missing Alpaca credentials for PAPER mode")
+
+        # Create Alpaca client in paper trading mode
+        alpaca_client = AlpacaClient(
+            api_key=api_key,
+            secret_key=secret_key,
+            paper=True,  # Paper trading mode
+        )
+
+        # Create order manager and portfolio tracker
+        order_manager = OrderManager(
+            persist_path=data_dir / "orders.jsonl"
+        )
+        portfolio_tracker = PortfolioTracker(
+            persist_path=data_dir / "portfolio.jsonl"
+        )
+
+        # Create paper trading service
+        paper_trading_service = PaperTradingService(
+            broker=alpaca_client,
+            order_manager=order_manager,
+            portfolio=portfolio_tracker,
+            shadow_signal_store=shadow_signal_store,
+        )
+
+        logger.info("Paper trading service initialized")
 
     # Build context service and orchestrator
     context_service = ContextService(config_registry)
@@ -219,6 +264,7 @@ def _build_system(
         run_store=run_store,
         shadow_signal_store=shadow_signal_store,
         system_mode=system_mode,
+        paper_trading_service=paper_trading_service,
     )
 
     logger.info(
@@ -226,6 +272,7 @@ def _build_system(
         system_mode=system_mode.value,
         agents=len(registry),
         shadow_store="active" if shadow_signal_store else "disabled",
+        paper_trading="active" if paper_trading_service else "disabled",
     )
     return runner, registry
 

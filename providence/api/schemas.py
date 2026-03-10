@@ -225,6 +225,40 @@ class PortfolioSnapshotResponse(BaseModel):
     drawdown_pct: float
 
 
+class OrderResponse(BaseModel):
+    """Single portfolio order."""
+
+    order_id: UUID
+    broker_order_id: Optional[str] = None
+    client_order_id: str
+    ticker: str
+    side: str
+    order_type: str
+    time_in_force: str
+    qty: Optional[str] = None
+    notional: Optional[str] = None
+    limit_price: Optional[str] = None
+    status: str
+    filled_qty: str = "0"
+    filled_avg_price: str = "0"
+    execution_strategy: str = "MARKET"
+    target_weight: float = 0.0
+    confidence: float = 0.0
+    created_at: datetime
+    submitted_at: Optional[datetime] = None
+    filled_at: Optional[datetime] = None
+    retry_count: int = 0
+    last_error: Optional[str] = None
+
+
+class OrderStatsResponse(BaseModel):
+    """Order statistics."""
+
+    total: int
+    active: int
+    by_status: dict[str, int]
+
+
 # ── Shadow Mode ────────────────────────────────────────────────────
 
 class ShadowSignalResponse(BaseModel):

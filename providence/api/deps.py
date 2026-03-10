@@ -13,6 +13,8 @@ from providence.agents.base import BaseAgent
 from providence.config.agent_config import AgentConfigRegistry
 from providence.config.watchlist import Watchlist
 from providence.orchestration.runner import ProvidenceRunner
+from providence.portfolio.order_manager import OrderManager
+from providence.portfolio.tracker import PortfolioTracker
 from providence.services.health import HealthService
 from providence.services.shadow_execution import ShadowSignalStore
 from providence.storage.belief_store import BeliefStore
@@ -37,6 +39,10 @@ class AppState:
 
     # Shadow mode
     shadow_signal_store: Optional[ShadowSignalStore] = None
+
+    # Portfolio management
+    portfolio_tracker: Optional[PortfolioTracker] = None
+    order_manager: Optional[OrderManager] = None
 
     # Services
     health_service: Optional[HealthService] = None
