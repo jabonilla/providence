@@ -4,14 +4,18 @@ Collects health from all agents, computes system-level metrics,
 and produces a structured health report for monitoring and governance.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from providence.agents.base import AgentStatus, BaseAgent, HealthStatus
-from providence.storage.run_store import RunStore
+
+if TYPE_CHECKING:
+    from providence.storage.run_store import RunStore
 
 logger = structlog.get_logger()
 
