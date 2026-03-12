@@ -26,8 +26,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from providence.schemas.enums import (
-    Action, DataType, Direction, SystemMode, ValidationStatus,
-    ComparisonOperator, Magnitude,
+    Action, CatalystType, DataType, Direction, Magnitude, MarketCapBucket,
+    SystemMode, ValidationStatus, ComparisonOperator,
 )
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.shadow import ShadowSignal, ShadowRunSummary
@@ -117,13 +117,27 @@ def seed_fragments(store: FragmentStore, base_time: datetime) -> None:
 
 def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
     """Create BeliefObjects from various cognition agents."""
-    from providence.schemas.belief import BeliefObject, Belief, InvalidationCondition
+    from providence.schemas.belief import (
+        BeliefObject, Belief, InvalidationCondition, EvidenceRef, BeliefMetadata,
+    )
 
     print("  Seeding beliefs...")
     agents = [
         "COGNIT-TECHNICAL", "COGNIT-FUNDAMENTAL", "COGNIT-MACRO",
         "COGNIT-EVENT", "COGNIT-NARRATIVE", "COGNIT-CROSSSEC",
     ]
+    # Map sectors to MarketCapBucket for demo variety
+    cap_buckets = {
+        "AAPL": MarketCapBucket.MEGA, "MSFT": MarketCapBucket.MEGA,
+        "GOOGL": MarketCapBucket.MEGA, "AMZN": MarketCapBucket.MEGA,
+        "NVDA": MarketCapBucket.LARGE, "TSLA": MarketCapBucket.LARGE,
+        "META": MarketCapBucket.MEGA, "JPM": MarketCapBucket.MEGA,
+    }
+    catalyst_by_agent = {
+        "COGNIT-TECHNICAL": None, "COGNIT-FUNDAMENTAL": CatalystType.EARNINGS,
+        "COGNIT-MACRO": CatalystType.MACRO, "COGNIT-EVENT": CatalystType.EVENT,
+        "COGNIT-NARRATIVE": None, "COGNIT-CROSSSEC": None,
+    }
     count = 0
     for run_idx in range(NUM_RUNS):
         ts = base_time + timedelta(hours=run_idx * 6, minutes=30)
@@ -132,6 +146,19 @@ def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
             for ticker in random.sample(TICKERS, k=random.randint(2, 5)):
                 direction = random.choice([Direction.LONG, Direction.SHORT, Direction.NEUTRAL])
                 threshold = PRICES[ticker] * (0.9 if direction == Direction.LONG else 1.1)
+                # Create proper EvidenceRef with a dummy fragment UUID
+                evidence_ref = EvidenceRef(
+                    source_fragment_id=uuid4(),
+                    field_path="payload.close",
+                    observation=f"Signal from {agent_id} analysis of {ticker}",
+                    weight=round(random.uniform(0.5, 1.0), 2),
+                )
+                # Create proper BeliefMetadata
+                metadata = BeliefMetadata(
+                    sector=SECTORS.get(ticker, "Technology"),
+                    market_cap_bucket=cap_buckets.get(ticker, MarketCapBucket.LARGE),
+                    catalyst_type=catalyst_by_agent.get(agent_id),
+                )
                 beliefs.append(Belief(
                     thesis_id=f"{agent_id}-{ticker}-{run_idx}",
                     ticker=ticker,
@@ -140,7 +167,7 @@ def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
                     magnitude=random.choice(list(Magnitude)),
                     raw_confidence=round(random.uniform(0.3, 0.9), 2),
                     time_horizon_days=random.choice([5, 10, 20, 60]),
-                    evidence=[f"Signal from {agent_id} analysis"],
+                    evidence=[evidence_ref],
                     invalidation_conditions=[
                         InvalidationCondition(
                             description=f"{ticker} price breaches invalidation threshold",
@@ -150,6 +177,7 @@ def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
                             threshold=round(threshold, 2),
                         )
                     ],
+                    metadata=metadata,
                 ))
             bo = BeliefObject(
                 agent_id=agent_id,
