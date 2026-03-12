@@ -19,7 +19,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 # Ensure providence package is importable
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 
 from providence.schemas.enums import (
     Action, DataType, Direction, SystemMode, ValidationStatus,
+    ComparisonOperator, Magnitude,
 )
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.shadow import ShadowSignal, ShadowRunSummary
@@ -62,7 +63,7 @@ def _hash(data: dict) -> str:
 
 
 def seed_fragments(store: FragmentStore, base_time: datetime) -> None:
-    """Create PRICE and TECHNICAL fragments for each ticker across runs."""
+    """Create PRICE_OHLCV and SENTIMENT_NEWS fragments for each ticker across runs."""
     print("  Seeding fragments...")
     count = 0
     for run_idx in range(NUM_RUNS):
@@ -85,32 +86,30 @@ def seed_fragments(store: FragmentStore, base_time: datetime) -> None:
                 timestamp=ts,
                 source_timestamp=ts - timedelta(minutes=5),
                 entity=ticker,
-                data_type=DataType.PRICE,
+                data_type=DataType.PRICE_OHLCV,
                 source_hash=_hash(payload),
                 payload=payload,
             )
             store.append(frag)
             count += 1
 
-            # Technical fragment
-            tech_payload = {
-                "sma_20": round(base_price * (1 + drift * 0.8), 2),
-                "ema_12": round(base_price * (1 + drift * 0.9), 2),
-                "rsi_14": round(random.uniform(30, 70), 1),
-                "macd_histogram": round(random.gauss(0, 2), 3),
-                "bollinger_position": round(random.uniform(0.1, 0.9), 3),
-                "momentum_10d": round(random.gauss(0.01, 0.03), 4),
+            # News sentiment fragment
+            news_payload = {
+                "headline": f"{ticker} shows {'positive' if drift > 0 else 'mixed'} momentum",
+                "sentiment_score": round(random.uniform(-0.5, 0.8), 3),
+                "source": "financial_news",
+                "article_count": random.randint(1, 15),
             }
-            tech_frag = MarketStateFragment(
-                agent_id="COGNIT-TECHNICAL",
+            news_frag = MarketStateFragment(
+                agent_id="PERCEPT-NEWS",
                 timestamp=ts,
                 source_timestamp=ts - timedelta(minutes=1),
                 entity=ticker,
-                data_type=DataType.TECHNICAL,
-                source_hash=_hash(tech_payload),
-                payload=tech_payload,
+                data_type=DataType.SENTIMENT_NEWS,
+                source_hash=_hash(news_payload),
+                payload=news_payload,
             )
-            store.append(tech_frag)
+            store.append(news_frag)
             count += 1
 
     print(f"    {count} fragments created")
@@ -119,7 +118,6 @@ def seed_fragments(store: FragmentStore, base_time: datetime) -> None:
 def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
     """Create BeliefObjects from various cognition agents."""
     from providence.schemas.belief import BeliefObject, Belief, InvalidationCondition
-    from providence.schemas.enums import Magnitude, Operator
 
     print("  Seeding beliefs...")
     agents = [
@@ -133,8 +131,9 @@ def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
             beliefs = []
             for ticker in random.sample(TICKERS, k=random.randint(2, 5)):
                 direction = random.choice([Direction.LONG, Direction.SHORT, Direction.NEUTRAL])
+                threshold = PRICES[ticker] * (0.9 if direction == Direction.LONG else 1.1)
                 beliefs.append(Belief(
-                    thesis_id=uuid4(),
+                    thesis_id=f"{agent_id}-{ticker}-{run_idx}",
                     ticker=ticker,
                     thesis_summary=f"{agent_id} view on {ticker}: {'bullish' if direction == Direction.LONG else 'bearish' if direction == Direction.SHORT else 'neutral'}",
                     direction=direction,
@@ -144,9 +143,11 @@ def seed_beliefs(store: BeliefStore, base_time: datetime) -> None:
                     evidence=[f"Signal from {agent_id} analysis"],
                     invalidation_conditions=[
                         InvalidationCondition(
-                            metric=f"{ticker}_price",
-                            operator=Operator.GT if direction == Direction.LONG else Operator.LT,
-                            threshold=PRICES[ticker] * (0.9 if direction == Direction.LONG else 1.1),
+                            description=f"{ticker} price breaches invalidation threshold",
+                            data_source_agent="PERCEPT-PRICE",
+                            metric=f"{ticker}_close",
+                            operator=ComparisonOperator.GT if direction == Direction.LONG else ComparisonOperator.LT,
+                            threshold=round(threshold, 2),
                         )
                     ],
                 ))
@@ -170,7 +171,7 @@ def seed_runs(store: RunStore, base_time: datetime) -> None:
         ts = base_time + timedelta(hours=run_idx * 6)
         stages = []
         for stage_name in ["COGNIT", "REGIME", "DECIDE", "EXEC"]:
-            status = StageStatus.SUCCESS if random.random() > 0.1 else StageStatus.FAILED
+            status = StageStatus.SUCCEEDED if random.random() > 0.1 else StageStatus.FAILED
             stages.append(StageResult(
                 stage_name=stage_name,
                 agent_id=f"{stage_name}-STAGE",
@@ -179,10 +180,10 @@ def seed_runs(store: RunStore, base_time: datetime) -> None:
                 finished_at=ts + timedelta(seconds=random.randint(1, 30)),
                 output={"mock": True},
             ))
-        succeeded = sum(1 for s in stages if s.status == StageStatus.SUCCESS)
+        succeeded = sum(1 for s in stages if s.status == StageStatus.SUCCEEDED)
         run = PipelineRun(
             loop_type="main",
-            status=RunStatus.COMPLETED if succeeded == len(stages) else RunStatus.PARTIAL,
+            status=RunStatus.SUCCEEDED if succeeded == len(stages) else RunStatus.PARTIAL_FAILURE,
             started_at=ts,
             finished_at=ts + timedelta(minutes=2),
             stage_results=stages,
@@ -306,8 +307,7 @@ def seed_portfolio(tracker: PortfolioTracker) -> None:
     tracker._cash = Decimal("45200.30")
     tracker._buying_power = Decimal("45200.30")
     tracker._peak_equity = Decimal("108000.00")
-    snap = tracker.snapshot()
-    print(f"    {len(positions)} positions seeded, equity=${tracker.equity}")
+    print(f"    {len(positions)} positions seeded")
 
 
 def seed_orders(manager: OrderManager) -> None:
