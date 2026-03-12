@@ -174,25 +174,95 @@ async def get_shadow_report() -> ShadowReportResponse:
     and Phase B readiness criteria from stored signals.
     """
     store = _get_shadow_store()
+    signals = store.get_all()
+    stats = store.stats()
 
-    # Import the report generator (same one used by the CLI script)
-    from scripts.shadow_report import compute_report
+    if not signals:
+        return ShadowReportResponse(status="NO_DATA", **{
+            k: v for k, v in stats.items()
+            if k in ("total_runs", "total_signals")
+        })
 
-    try:
-        report = compute_report(store)
-    except Exception:
-        # If the script can't be imported (running outside project root),
-        # fall back to a basic report from store stats
-        stats = store.stats()
-        report = {
-            "status": "BASIC",
-            "total_runs": stats["total_runs"],
-            "total_signals": stats["total_signals"],
-            "total_approved": stats["approved_signals"],
-            "total_rejected": stats["rejected_signals"],
+    from datetime import datetime, timezone
+
+    approved = [s for s in signals if s.approved]
+    longs = [s for s in signals if s.direction.value == "LONG"]
+    shorts = [s for s in signals if s.direction.value == "SHORT"]
+    confidences = [s.confidence for s in signals]
+
+    # Directional accuracy at each horizon
+    def _accuracy(horizon: str) -> float | None:
+        attr = f"realized_return_{horizon}"
+        measured = [(s, getattr(s, attr, None)) for s in approved]
+        measured = [(s, r) for s, r in measured if r is not None]
+        if not measured:
+            return None
+        correct = sum(
+            1 for s, r in measured
+            if (r > 0 and s.direction.value == "LONG")
+            or (r > 0 and s.direction.value == "SHORT")  # short return already signed
+            or (r == 0)
+        )
+        return round(correct / len(measured), 4)
+
+    def _hypo_return(horizon: str) -> float | None:
+        attr = f"realized_return_{horizon}"
+        returns = [getattr(s, attr) for s in approved if getattr(s, attr, None) is not None]
+        if not returns:
+            return None
+        return round(sum(returns) / len(returns), 6)
+
+    acc_1d = _accuracy("1d")
+    acc_5d = _accuracy("5d")
+    acc_20d = _accuracy("20d")
+
+    # Phase B criteria
+    phase_b = {
+        "accuracy_above_55pct": (acc_5d or 0) > 0.55,
+        "min_20_signals": len(approved) >= 20,
+        "stability": stats["total_runs"] >= 5,
+    }
+
+    # Per-ticker breakdown
+    ticker_breakdown: dict = {}
+    for ticker in set(s.ticker for s in signals):
+        t_sigs = [s for s in signals if s.ticker == ticker]
+        t_approved = [s for s in t_sigs if s.approved]
+        t_ret_5d = [s.realized_return_5d for s in t_approved if s.realized_return_5d is not None]
+        ticker_breakdown[ticker] = {
+            "total": len(t_sigs),
+            "approved": len(t_approved),
+            "avg_confidence": round(sum(s.confidence for s in t_sigs) / len(t_sigs), 3) if t_sigs else 0,
+            "accuracy_5d": round(
+                sum(1 for r in t_ret_5d if r > 0) / len(t_ret_5d), 3
+            ) if t_ret_5d else None,
+            "avg_return_5d": round(sum(t_ret_5d) / len(t_ret_5d), 5) if t_ret_5d else None,
         }
 
-    return ShadowReportResponse(**report)
+    return ShadowReportResponse(
+        status="OK",
+        generated_at=datetime.now(timezone.utc).isoformat(),
+        period_start=signals[-1].timestamp.isoformat() if signals else None,
+        period_end=signals[0].timestamp.isoformat() if signals else None,
+        total_runs=stats["total_runs"],
+        total_signals=stats["total_signals"],
+        total_approved=stats["approved_signals"],
+        total_rejected=stats["rejected_signals"],
+        total_longs=len(longs),
+        total_shorts=len(shorts),
+        unique_tickers=stats["unique_tickers"],
+        avg_confidence=round(sum(confidences) / len(confidences), 3) if confidences else 0,
+        avg_signals_per_run=round(len(signals) / max(stats["total_runs"], 1), 1),
+        long_short_ratio=round(len(longs) / max(len(shorts), 1), 2),
+        accuracy_1d=acc_1d,
+        accuracy_5d=acc_5d,
+        accuracy_20d=acc_20d,
+        hypothetical_return_1d=_hypo_return("1d"),
+        hypothetical_return_5d=_hypo_return("5d"),
+        hypothetical_return_20d=_hypo_return("20d"),
+        phase_b_criteria=phase_b,
+        ticker_breakdown=ticker_breakdown,
+    )
 
 
 # ── Backfill Trigger ───────────────────────────────────────────────

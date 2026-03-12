@@ -48,8 +48,16 @@ class ShadowSignalStore:
         self._lock = threading.RLock()
 
         self._persist_path = persist_path
+        # Summaries stored in a sibling file: shadow_signals.jsonl → shadow_summaries.jsonl
+        self._summaries_path: Path | None = None
+        if persist_path:
+            self._summaries_path = persist_path.parent / persist_path.name.replace(
+                "signals", "summaries"
+            )
         if persist_path and persist_path.exists():
             self._load_from_disk()
+        if self._summaries_path and self._summaries_path.exists():
+            self._load_summaries_from_disk()
 
     def _load_from_disk(self) -> None:
         """Load signals from JSONL file."""
@@ -100,10 +108,42 @@ class ShadowSignalStore:
             self._persist_signal(signal)
             return True
 
+    def _load_summaries_from_disk(self) -> None:
+        """Load run summaries from JSONL file."""
+        count = 0
+        try:
+            with open(self._summaries_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                        summary = ShadowRunSummary.model_validate(data)
+                        self._summaries.append(summary)
+                        count += 1
+                    except Exception as exc:
+                        logger.debug("Skipping corrupt summary line", error=str(exc))
+            logger.info("Loaded shadow summaries from disk", count=count)
+        except Exception as exc:
+            logger.warning("Failed to load shadow summaries", error=str(exc))
+
+    def _persist_summary(self, summary: ShadowRunSummary) -> None:
+        """Append a single summary to JSONL file."""
+        if self._summaries_path is None:
+            return
+        try:
+            self._summaries_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._summaries_path, "a") as f:
+                f.write(summary.model_dump_json() + "\n")
+        except Exception as exc:
+            logger.warning("Failed to persist shadow summary", error=str(exc))
+
     def append_summary(self, summary: ShadowRunSummary) -> None:
         """Append a run summary."""
         with self._lock:
             self._summaries.append(summary)
+            self._persist_summary(summary)
 
     def get_by_run(self, run_id: UUID) -> list[ShadowSignal]:
         """Get all signals for a specific pipeline run."""
