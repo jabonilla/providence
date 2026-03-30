@@ -22,7 +22,7 @@ from typing import Any, AsyncIterator
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from providence.api.deps import AppState, get_state, set_state
 from providence.api.routes import agents, config, health, pipeline, portfolio, shadow, stores
@@ -183,6 +183,8 @@ def create_app(
     app.include_router(config.router, prefix=api_prefix)
 
     # ── Root endpoint ───────────────────────────────────────────────
+    portal_port = os.environ.get("PORTAL_PORT", "3000")
+
     @app.get("/")
     async def root():
         return {
@@ -190,19 +192,12 @@ def create_app(
             "version": version,
             "docs": "/docs",
             "health": f"{api_prefix}/health",
-            "dashboard": "/dashboard",
+            "portal": f"http://localhost:{portal_port}",
         }
 
-    # ── Dashboard (serves shadow_dashboard.html) ──────────────────
-    _dashboard_path = Path(__file__).resolve().parent.parent.parent / "dashboard" / "shadow_dashboard.html"
-
-    @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+    # ── Dashboard redirect → Providence Portal ────────────────────
+    @app.get("/dashboard", include_in_schema=False)
     async def dashboard():
-        if _dashboard_path.exists():
-            return HTMLResponse(content=_dashboard_path.read_text(encoding="utf-8"))
-        return HTMLResponse(
-            content="<h1>Dashboard not found</h1><p>Place shadow_dashboard.html in the dashboard/ directory.</p>",
-            status_code=404,
-        )
+        return RedirectResponse(url=f"http://localhost:{portal_port}")
 
     return app
