@@ -166,7 +166,66 @@ class PortfolioTracker:
         self._persist_path = persist_path
         if self._persist_path:
             self._persist_path.parent.mkdir(parents=True, exist_ok=True)
-    
+            self._load_from_disk()
+
+    def _load_from_disk(self) -> None:
+        """Reload portfolio state from the last snapshot in the JSONL file."""
+        if not self._persist_path or not self._persist_path.exists():
+            return
+
+        last_snapshot = None
+        try:
+            with open(self._persist_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    data = json.loads(line)
+                    # Skip fill records
+                    if data.get("type") == "fill":
+                        continue
+                    last_snapshot = data
+        except Exception as e:
+            logger.error("portfolio_load_error", error=str(e))
+            return
+
+        if not last_snapshot:
+            return
+
+        # Restore account state
+        self._equity = Decimal(last_snapshot.get("equity", str(self._equity)))
+        self._cash = Decimal(last_snapshot.get("cash", str(self._cash)))
+        self._buying_power = Decimal(last_snapshot.get("buying_power", str(self._buying_power)))
+        self._peak_equity = Decimal(last_snapshot.get("peak_equity", str(self._peak_equity)))
+
+        # Restore positions
+        positions_data = last_snapshot.get("positions", {})
+        for ticker, pos_data in positions_data.items():
+            opened_at = pos_data.get("opened_at", datetime.now(timezone.utc).isoformat())
+            last_updated = pos_data.get("last_updated", datetime.now(timezone.utc).isoformat())
+            self._positions[ticker] = Position(
+                ticker=ticker,
+                side=PositionSide(pos_data["side"]),
+                quantity=Decimal(pos_data["quantity"]),
+                avg_entry_price=Decimal(pos_data["avg_entry_price"]),
+                current_price=Decimal(pos_data["current_price"]),
+                market_value=Decimal(pos_data["market_value"]),
+                unrealized_pnl=Decimal(pos_data["unrealized_pnl"]),
+                unrealized_pnl_pct=float(pos_data.get("unrealized_pnl_pct", 0.0)),
+                realized_pnl=Decimal(pos_data.get("realized_pnl", "0")),
+                cost_basis=Decimal(pos_data.get("cost_basis", "0")),
+                weight=float(pos_data.get("weight", 0.0)),
+                sector=pos_data.get("sector", ""),
+                opened_at=datetime.fromisoformat(opened_at),
+                last_updated=datetime.fromisoformat(last_updated),
+            )
+
+        logger.info(
+            "Portfolio loaded from disk",
+            positions=len(self._positions),
+            equity=str(self._equity),
+        )
+
     def sync_from_broker(
         self,
         account: dict[str, Any],

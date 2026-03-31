@@ -335,6 +335,8 @@ def seed_portfolio(tracker: PortfolioTracker) -> None:
     tracker._cash = Decimal("45200.30")
     tracker._buying_power = Decimal("45200.30")
     tracker._peak_equity = Decimal("108000.00")
+    # Persist a snapshot so the server can reload positions on startup
+    tracker.snapshot()
     print(f"    {len(positions)} positions seeded")
 
 
@@ -384,6 +386,9 @@ def seed_orders(manager: OrderManager) -> None:
             order.filled_qty = Decimal(qty)
             order.filled_avg_price = Decimal(fill_price)
             order.filled_at = order.submitted_at + timedelta(seconds=random.randint(1, 30))
+
+        # Persist to JSONL so the server can reload on startup
+        manager._persist(order)
 
     print(f"    {len(orders)} orders seeded")
 
