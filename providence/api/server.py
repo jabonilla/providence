@@ -34,7 +34,7 @@ def build_state(
     """Build the full AppState with stores, agents, and services."""
     from providence.config.agent_config import AgentConfigRegistry
     from providence.config.watchlist import Watchlist
-    from providence.factory import build_agent_registry
+    from providence.factory import build_agent_registry_from_env
     from providence.orchestration.orchestrator import Orchestrator
     from providence.orchestration.runner import ProvidenceRunner
     from providence.portfolio.order_manager import OrderManager
@@ -61,8 +61,8 @@ def build_state(
     belief_store = BeliefStore(persist_path=belief_path)
     run_store = RunStore(persist_path=run_path)
 
-    # Agent registry
-    registry = build_agent_registry(
+    # Agent registry — auto-creates API clients from env vars
+    registry = build_agent_registry_from_env(
         skip_perception=skip_perception,
         skip_adaptive=skip_adaptive,
     )

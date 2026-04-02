@@ -25,7 +25,7 @@ logger = structlog.get_logger(__name__)
 DEFAULT_API_KEY = os.getenv("PROVIDENCE_API_KEY", "")
 MAX_REQUEST_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 RATE_LIMIT_READ_REQ_MIN = 100  # requests per minute
-RATE_LIMIT_WRITE_REQ_MIN = 5  # requests per minute
+RATE_LIMIT_WRITE_REQ_MIN = 30  # requests per minute (relaxed for development)
 
 # Exempt paths from authentication and rate limiting
 EXEMPT_PATHS = {"/health/live", "/health/ready", "/docs", "/openapi.json", "/redoc"}

@@ -9,6 +9,7 @@ Spec Reference: Technical Spec v2.3, Section 4.2
 import asyncio
 import json
 import os
+import random
 from typing import Any, Protocol, runtime_checkable
 
 import httpx
@@ -19,10 +20,14 @@ from providence.exceptions import ExternalAPIError
 logger = structlog.get_logger()
 
 # Default config
-DEFAULT_MAX_RETRIES = 3
+DEFAULT_MAX_RETRIES = 5
 DEFAULT_TIMEOUT_SECONDS = 120
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_MAX_TOKENS = 4096
+
+# Shared semaphore to serialize Anthropic API calls across all agents.
+# This prevents thundering-herd 429s when multiple adaptive agents run in parallel.
+_anthropic_semaphore = asyncio.Semaphore(1)
 
 
 @runtime_checkable
@@ -104,32 +109,37 @@ class AnthropicClient:
 
         for attempt in range(1, self._max_retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self._timeout) as client:
-                    response = await client.post(
-                        f"{self._base_url}/messages",
-                        headers=headers,
-                        json=payload,
-                    )
+                # Serialize API calls across all agents to avoid 429 thundering herd
+                async with _anthropic_semaphore:
+                    async with httpx.AsyncClient(timeout=self._timeout) as client:
+                        response = await client.post(
+                            f"{self._base_url}/messages",
+                            headers=headers,
+                            json=payload,
+                        )
 
                 if response.status_code == 429:
-                    # Rate limited — retry with backoff
-                    wait = 2 ** attempt
+                    # Rate limited — retry with backoff + jitter
+                    base_wait = 2 ** attempt
+                    jitter = random.uniform(0.5, 2.0)
+                    wait = base_wait + jitter
                     logger.warning(
                         "Rate limited by Anthropic API",
                         attempt=attempt,
-                        wait_seconds=wait,
+                        wait_seconds=round(wait, 1),
                     )
                     await asyncio.sleep(wait)
                     continue
 
                 if response.status_code >= 500:
-                    # Server error — retry
+                    # Server error — retry with jitter
+                    wait = 2 ** attempt + random.uniform(0.5, 1.5)
                     logger.warning(
                         "Anthropic API server error",
                         status_code=response.status_code,
                         attempt=attempt,
                     )
-                    await asyncio.sleep(2 ** attempt)
+                    await asyncio.sleep(wait)
                     continue
 
                 if response.status_code != 200:
