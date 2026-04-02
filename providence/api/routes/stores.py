@@ -28,15 +28,20 @@ async def get_fragment_stats() -> FragmentStoreStatsResponse:
     state = get_state()
     store = state.fragment_store
 
-    status_summary = store.validation_status_summary()
+    from providence.schemas.enums import DataType, ValidationStatus
 
-    # Get counts by data type — query all and aggregate
-    from providence.schemas.enums import DataType
+    # Count by data type using the index
     by_type = {}
     for dt in DataType:
-        count = store.count_by_type(dt)
-        if count > 0:
-            by_type[dt.value] = count
+        ids = store._by_data_type.get(dt, [])
+        if ids:
+            by_type[dt.value] = len(ids)
+
+    # Count by validation status by scanning all fragments
+    status_summary: dict[str, int] = {}
+    for frag in store._fragments.values():
+        vs = frag.validation_status.value if hasattr(frag.validation_status, 'value') else str(frag.validation_status)
+        status_summary[vs] = status_summary.get(vs, 0) + 1
 
     return FragmentStoreStatsResponse(
         total_count=store.count(),

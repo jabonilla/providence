@@ -25,6 +25,33 @@ from providence.api.deps import AppState
 logger = structlog.get_logger()
 
 
+def _load_stored_keys(data_dir: Path | None) -> None:
+    """Load API keys from stored JSON file into environment.
+
+    Keys stored via the /api/v1/config/keys endpoint are persisted
+    to api_keys.json. Load them into os.environ so they're available
+    to factory functions that read env vars.
+    """
+    import json
+
+    keys_path = (data_dir or Path("data")) / "api_keys.json"
+    if keys_path.exists():
+        try:
+            with open(keys_path) as f:
+                stored = json.load(f)
+            for key, value in stored.items():
+                if value and key not in os.environ:
+                    # Only set if not already in env (env vars take precedence)
+                    os.environ[key] = value
+            logger.info(
+                "Loaded stored API keys",
+                keys_loaded=len(stored),
+                path=str(keys_path),
+            )
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Failed to load stored API keys", error=str(e))
+
+
 def build_state(
     *,
     data_dir: Path | None = None,
@@ -35,6 +62,9 @@ def build_state(
     from providence.config.agent_config import AgentConfigRegistry
     from providence.config.watchlist import Watchlist
     from providence.factory import build_agent_registry_from_env
+
+    # Load stored API keys before building agents
+    _load_stored_keys(data_dir)
     from providence.orchestration.orchestrator import Orchestrator
     from providence.orchestration.runner import ProvidenceRunner
     from providence.portfolio.order_manager import OrderManager
@@ -71,7 +101,11 @@ def build_state(
     config_path = Path(__file__).parent.parent / "config" / "agents.yaml"
     config_registry = AgentConfigRegistry.from_yaml(config_path)
 
+    # Watchlist: check both providence/config/ and project-root config/
     watchlist_path = Path(__file__).parent.parent / "config" / "watchlist.yaml"
+    if not watchlist_path.exists():
+        # Try project root config/
+        watchlist_path = Path(__file__).parent.parent.parent / "config" / "watchlist.yaml"
     watchlist = None
     if watchlist_path.exists():
         watchlist = Watchlist.from_yaml(watchlist_path)
@@ -116,6 +150,7 @@ def build_state(
         watchlist=watchlist,
         portfolio_tracker=portfolio_tracker,
         order_manager=order_manager,
+        extra={"data_dir": str(data_dir) if data_dir else None},
     )
 
 

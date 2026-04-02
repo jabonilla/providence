@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from providence.api.deps import AppState, get_state, set_state
-from providence.api.routes import agents, config, health, pipeline, portfolio, shadow, stores
+from providence.api.routes import agents, config, health, keys, perception, pipeline, portfolio, shadow, stores
 from providence.api.security import (
     RateLimitMiddleware,
     RequestSizeLimitMiddleware,
@@ -124,6 +124,7 @@ def create_app(
             exempt = {
                 "/api/v1/health/live",
                 "/api/v1/health/ready",
+                "/api/v1/config/keys",
                 "/docs",
                 "/openapi.json",
                 "/redoc",
@@ -181,6 +182,8 @@ def create_app(
     app.include_router(shadow.router, prefix=api_prefix)
     app.include_router(portfolio.router, prefix=api_prefix)
     app.include_router(config.router, prefix=api_prefix)
+    app.include_router(keys.router, prefix=api_prefix)
+    app.include_router(perception.router, prefix=api_prefix)
 
     # ── Root endpoint ───────────────────────────────────────────────
     portal_port = os.environ.get("PORTAL_PORT", "3000")
