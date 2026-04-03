@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -22,6 +23,9 @@ from providence.api.schemas import (
 from providence.orchestration.models import RunStatus
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
+
+# Track in-flight background pipeline runs
+_active_run: dict = {"running": False, "started_at": None, "error": None}
 
 
 def _run_to_response(run) -> PipelineRunResponse:
@@ -55,41 +59,83 @@ def _run_to_response(run) -> PipelineRunResponse:
 
 # ── Trigger endpoints ───────────────────────────────────────────────
 
-@router.post("/run", response_model=RunTriggerResponse)
-async def trigger_run(request: RunTriggerRequest | None = None) -> RunTriggerResponse:
-    """Trigger a single pipeline cycle (main + optional exit/governance).
+async def _run_pipeline_background(run_exit: bool, run_governance: bool) -> None:
+    """Execute the pipeline in the background so the API stays responsive."""
+    state = get_state()
+    try:
+        _active_run["running"] = True
+        _active_run["started_at"] = datetime.now(timezone.utc).isoformat()
+        _active_run["error"] = None
 
-    This is the primary endpoint for on-demand pipeline execution.
-    Equivalent to `python -m providence run-once`.
+        results = await state.runner.run_once(
+            run_exit=run_exit,
+            run_governance=run_governance,
+        )
+
+        summary_parts = []
+        for loop_name, run in results.items():
+            summary_parts.append(
+                f"{loop_name}: {run.status.value} "
+                f"({run.succeeded_count}/{len(run.stage_results)} stages passed)"
+            )
+        logger.info("Background pipeline complete", summary=" | ".join(summary_parts))
+
+    except Exception as exc:
+        logger.error("background_pipeline_failed", error=str(exc))
+        _active_run["error"] = str(exc)
+    finally:
+        _active_run["running"] = False
+
+
+@router.post("/run")
+async def trigger_run(request: RunTriggerRequest | None = None) -> dict:
+    """Trigger a single pipeline cycle in the background.
+
+    Returns immediately with status. Poll /pipeline/runs/latest or
+    /pipeline/status to check progress.
     """
     state = get_state()
     if state.runner is None:
         raise HTTPException(status_code=503, detail="Runner not initialized")
 
+    if _active_run["running"]:
+        return {
+            "status": "already_running",
+            "started_at": _active_run["started_at"],
+            "message": "A pipeline run is already in progress. Poll /api/v1/pipeline/status for updates.",
+        }
+
     req = request or RunTriggerRequest()
 
-    try:
-        results = await state.runner.run_once(
-            run_exit=req.run_exit,
-            run_governance=req.run_governance,
-        )
-    except Exception as exc:
-        logger.error("pipeline_run_failed", error=str(exc))
-        raise HTTPException(status_code=500, detail="Pipeline run failed")
-
-    runs = {}
-    summary_parts = []
-    for loop_name, run in results.items():
-        runs[loop_name] = _run_to_response(run)
-        summary_parts.append(
-            f"{loop_name}: {run.status.value} "
-            f"({run.succeeded_count}/{len(run.stage_results)} stages passed)"
-        )
-
-    return RunTriggerResponse(
-        runs=runs,
-        summary=" | ".join(summary_parts),
+    # Launch in background — returns immediately
+    asyncio.create_task(
+        _run_pipeline_background(req.run_exit, req.run_governance)
     )
+
+    return {
+        "status": "started",
+        "message": "Pipeline run started in background. Poll /api/v1/pipeline/status for updates.",
+    }
+
+
+@router.get("/status")
+async def pipeline_status() -> dict:
+    """Check if a pipeline run is currently in progress."""
+    state = get_state()
+    latest = state.run_store.get_latest(loop_type="MAIN")
+
+    return {
+        "running": _active_run["running"],
+        "started_at": _active_run["started_at"],
+        "last_error": _active_run["error"],
+        "latest_run": {
+            "run_id": str(latest.run_id),
+            "status": latest.status.value,
+            "finished_at": latest.finished_at.isoformat() if latest.finished_at else None,
+            "succeeded": latest.succeeded_count,
+            "failed": latest.failed_count,
+        } if latest else None,
+    }
 
 
 @router.post("/run/learning", response_model=PipelineRunResponse)

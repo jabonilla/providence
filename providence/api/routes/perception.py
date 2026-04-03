@@ -20,6 +20,9 @@ logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/perception", tags=["perception"])
 
+# Track background sweep state
+_sweep_state: dict = {"running": False, "started_at": None, "last_result": None, "error": None}
+
 
 class SweepRequest(BaseModel):
     """Request to trigger a perception sweep."""
@@ -73,22 +76,15 @@ def _build_scheduler() -> PerceptionScheduler:
     )
 
 
-@router.post("/sweep", response_model=SweepResponse)
-async def trigger_sweep(request: SweepRequest | None = None) -> SweepResponse:
-    """Trigger a perception sweep to fetch live market data.
-
-    Runs perception agents (PERCEPT-PRICE, PERCEPT-FILING, PERCEPT-NEWS,
-    PERCEPT-OPTIONS, PERCEPT-CDS, PERCEPT-MACRO) for the specified tickers.
-
-    If no tickers specified, sweeps the full watchlist.
-    If priority is specified, only sweeps tickers at that priority level or higher.
-    """
-    scheduler = _build_scheduler()
-    req = request or SweepRequest()
-
+async def _run_sweep_background(req: SweepRequest) -> None:
+    """Execute perception sweep in background so the API stays responsive."""
     try:
+        _sweep_state["running"] = True
+        _sweep_state["error"] = None
+
+        scheduler = _build_scheduler()
+
         if req.tickers:
-            # Run specific tickers one at a time
             all_results = {}
             total_fragments = 0
             total_agents = 0
@@ -101,37 +97,56 @@ async def trigger_sweep(request: SweepRequest | None = None) -> SweepResponse:
                 total_agents += result.get("agents_run", 0)
                 total_errors += result.get("errors", 0)
 
-            return SweepResponse(
-                status="completed",
-                tickers_processed=len(req.tickers),
-                fragments_created=total_fragments,
-                agents_run=total_agents,
-                errors=total_errors,
-                per_ticker_results=all_results,
-            )
-
+            _sweep_state["last_result"] = {
+                "status": "completed",
+                "tickers_processed": len(req.tickers),
+                "fragments_created": total_fragments,
+                "agents_run": total_agents,
+                "errors": total_errors,
+            }
         elif req.priority:
             result = await scheduler.run_priority_sweep(max_priority=req.priority)
+            _sweep_state["last_result"] = result
         else:
             result = await scheduler.run_full_sweep()
+            _sweep_state["last_result"] = result
 
-        return SweepResponse(
-            status="completed",
-            sweep_start=result.get("sweep_start"),
-            sweep_end=result.get("sweep_end"),
-            duration_seconds=result.get("duration_seconds", 0),
-            tickers_processed=result.get("tickers_processed", 0),
-            fragments_created=result.get("fragments_created", 0),
-            agents_run=result.get("agents_run", 0),
-            errors=result.get("errors", 0),
-            per_ticker_results=result.get("per_ticker_results", {}),
-        )
+        logger.info("Background perception sweep complete",
+                     fragments=_sweep_state["last_result"].get("fragments_created", 0))
 
-    except HTTPException:
-        raise
     except Exception as exc:
-        logger.error("Perception sweep failed", error=str(exc))
-        raise HTTPException(status_code=500, detail="Perception sweep failed")
+        logger.error("Background perception sweep failed", error=str(exc))
+        _sweep_state["error"] = str(exc)
+    finally:
+        _sweep_state["running"] = False
+
+
+@router.post("/sweep")
+async def trigger_sweep(request: SweepRequest | None = None) -> dict:
+    """Trigger a perception sweep in the background.
+
+    Returns immediately. Poll /perception/status for progress.
+    """
+    if _sweep_state["running"]:
+        return {
+            "status": "already_running",
+            "started_at": _sweep_state["started_at"],
+            "message": "A perception sweep is already in progress.",
+        }
+
+    req = request or SweepRequest()
+
+    from datetime import datetime, timezone
+    _sweep_state["started_at"] = datetime.now(timezone.utc).isoformat()
+
+    import asyncio
+    asyncio.create_task(_run_sweep_background(req))
+
+    return {
+        "status": "started",
+        "tickers": req.tickers or "full watchlist",
+        "message": "Perception sweep started in background. Poll /api/v1/perception/status for updates.",
+    }
 
 
 @router.get("/status")

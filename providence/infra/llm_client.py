@@ -20,7 +20,7 @@ from providence.exceptions import ExternalAPIError
 logger = structlog.get_logger()
 
 # Default config
-DEFAULT_MAX_RETRIES = 5
+DEFAULT_MAX_RETRIES = 8
 DEFAULT_TIMEOUT_SECONDS = 120
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_MAX_TOKENS = 4096
@@ -109,7 +109,8 @@ class AnthropicClient:
 
         for attempt in range(1, self._max_retries + 1):
             try:
-                # Serialize API calls across all agents to avoid 429 thundering herd
+                # Serialize ALL API interactions (call + retry wait) to prevent
+                # thundering herd: only one agent talks to Anthropic at a time.
                 async with _anthropic_semaphore:
                     async with httpx.AsyncClient(timeout=self._timeout) as client:
                         response = await client.post(
@@ -118,41 +119,55 @@ class AnthropicClient:
                             json=payload,
                         )
 
-                if response.status_code == 429:
-                    # Rate limited — retry with backoff + jitter
-                    base_wait = 2 ** attempt
-                    jitter = random.uniform(0.5, 2.0)
-                    wait = base_wait + jitter
-                    logger.warning(
-                        "Rate limited by Anthropic API",
-                        attempt=attempt,
-                        wait_seconds=round(wait, 1),
-                    )
-                    await asyncio.sleep(wait)
-                    continue
+                    if response.status_code == 429:
+                        # Rate limited — wait INSIDE semaphore so next agent
+                        # doesn't immediately hit the same limit.
+                        # Use Retry-After header if provided, otherwise exponential backoff.
+                        retry_after = response.headers.get("retry-after")
+                        if retry_after:
+                            try:
+                                wait = float(retry_after) + random.uniform(1.0, 3.0)
+                            except ValueError:
+                                wait = 30 + random.uniform(1.0, 5.0)
+                        else:
+                            # Aggressive backoff: 15s base * attempt + jitter
+                            wait = 15 * attempt + random.uniform(2.0, 5.0)
+                        logger.warning(
+                            "Rate limited by Anthropic API",
+                            attempt=attempt,
+                            wait_seconds=round(wait, 1),
+                            retry_after=retry_after,
+                        )
+                        await asyncio.sleep(wait)
+                        continue
 
-                if response.status_code >= 500:
-                    # Server error — retry with jitter
-                    wait = 2 ** attempt + random.uniform(0.5, 1.5)
-                    logger.warning(
-                        "Anthropic API server error",
-                        status_code=response.status_code,
-                        attempt=attempt,
-                    )
-                    await asyncio.sleep(wait)
-                    continue
+                    if response.status_code >= 500:
+                        # Server error — retry with jitter (inside semaphore)
+                        wait = 2 ** attempt + random.uniform(0.5, 1.5)
+                        logger.warning(
+                            "Anthropic API server error",
+                            status_code=response.status_code,
+                            attempt=attempt,
+                        )
+                        await asyncio.sleep(wait)
+                        continue
 
-                if response.status_code != 200:
-                    raise ExternalAPIError(
-                        message=f"Anthropic API error: {response.status_code}",
-                        service="anthropic",
-                        status_code=response.status_code,
-                    )
+                    if response.status_code != 200:
+                        raise ExternalAPIError(
+                            message=f"Anthropic API error: {response.status_code}",
+                            service="anthropic",
+                            status_code=response.status_code,
+                        )
 
-                # Parse the response
-                data = response.json()
-                content_text = self._extract_text(data)
-                return self._parse_json_response(content_text)
+                    # Parse the response
+                    data = response.json()
+                    content_text = self._extract_text(data)
+
+                    # Delay before releasing semaphore to space out sequential
+                    # agent calls and stay under Anthropic's per-minute rate limit
+                    await asyncio.sleep(5.0)
+
+                    return self._parse_json_response(content_text)
 
             except httpx.TimeoutException as e:
                 last_error = e
