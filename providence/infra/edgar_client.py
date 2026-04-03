@@ -141,6 +141,36 @@ class EdgarClient:
             service="edgar",
         )
 
+    async def get_cik_for_ticker(self, ticker: str) -> str | None:
+        """Look up the SEC CIK number for a stock ticker.
+
+        Uses SEC's company tickers JSON endpoint which maps tickers to CIKs.
+
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL").
+
+        Returns:
+            CIK as a string, or None if not found.
+        """
+        url = f"{self.XBRL_BASE_URL}/api/xbrl/companyfacts.json"
+        try:
+            # SEC provides a ticker→CIK mapping at the company_tickers endpoint
+            tickers_url = "https://www.sec.gov/files/company_tickers.json"
+            client = await self._get_client()
+            await self._rate_limit()
+            response = await client.get(tickers_url)
+            if response.status_code != 200:
+                return None
+
+            data = response.json()
+            ticker_upper = ticker.upper()
+            for entry in data.values():
+                if entry.get("ticker", "").upper() == ticker_upper:
+                    return str(entry["cik_str"])
+            return None
+        except Exception:
+            return None
+
     async def get_recent_filings(
         self, ticker: str, filing_type: str, count: int = 5
     ) -> list[dict[str, Any]]:

@@ -137,9 +137,59 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
                 ticker, filing_type.value, "No filings found"
             )]
 
+        # Step 1b: FETCH XBRL — get company financial facts for 10-K/10-Q
+        xbrl_company_facts: dict[str, Any] | None = None
+        if filing_type in (FilingType.FORM_10K, FilingType.FORM_10Q):
+            # Determine the CIK from the filing results or the provided cik
+            resolved_cik = cik
+            if not resolved_cik:
+                # Try extracting CIK from the first filing result
+                for f in filings:
+                    resolved_cik = f.get("cik", "") or f.get("entity_cik", "")
+                    if resolved_cik:
+                        break
+
+            if not resolved_cik:
+                # Last resort: look up CIK from SEC's ticker mapping
+                try:
+                    resolved_cik = await self._edgar.get_cik_for_ticker(ticker) or ""
+                except Exception:
+                    resolved_cik = ""
+
+            if resolved_cik:
+                try:
+                    xbrl_company_facts = await self._edgar.get_company_facts(resolved_cik)
+                    logger.info(
+                        "XBRL company facts fetched",
+                        agent_id=self.agent_id,
+                        ticker=ticker,
+                        cik=resolved_cik,
+                        has_us_gaap=bool(
+                            xbrl_company_facts.get("facts", {}).get("us-gaap")
+                        ),
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "Failed to fetch XBRL company facts, proceeding with metadata only",
+                        agent_id=self.agent_id,
+                        ticker=ticker,
+                        cik=resolved_cik,
+                        error=str(e),
+                    )
+            else:
+                logger.warning(
+                    "No CIK available for XBRL fetch",
+                    agent_id=self.agent_id,
+                    ticker=ticker,
+                )
+
         fragments: list[MarketStateFragment] = []
 
         for filing_data in filings:
+            # Enrich filing_data with XBRL facts if available
+            if xbrl_company_facts is not None:
+                filing_data["xbrl_data"] = xbrl_company_facts
+
             # Step 2: VALIDATE
             validation_status = self._validate(filing_data, filing_type)
 
