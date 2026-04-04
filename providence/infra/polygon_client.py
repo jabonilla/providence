@@ -160,6 +160,23 @@ class PolygonClient:
         path = f"/v2/aggs/ticker/{ticker}/range/1/day/{date}/{date}"
         return await self._request(path)
 
+    async def get_daily_bars_range(
+        self, ticker: str, from_date: str, to_date: str
+    ) -> dict[str, Any]:
+        """Fetch daily OHLCV bars for a ticker over a date range.
+
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL").
+            from_date: Start date in YYYY-MM-DD format.
+            to_date: End date in YYYY-MM-DD format.
+
+        Returns:
+            Raw API response dict with 'results' containing multiple bars.
+        """
+        path = f"/v2/aggs/ticker/{ticker}/range/1/day/{from_date}/{to_date}"
+        params = {"adjusted": "true", "sort": "asc", "limit": "120"}
+        return await self._request(path, params)
+
     async def get_intraday_bars(
         self,
         ticker: str,

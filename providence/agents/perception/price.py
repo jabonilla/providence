@@ -18,7 +18,7 @@ Common Perception Agent Loop:
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -57,24 +57,27 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
 
         Expected context.metadata keys:
             - tickers: list[str] — ticker symbols to fetch
-            - date: str — date in YYYY-MM-DD format
+            - date: str — date in YYYY-MM-DD format (end date)
             - timeframe: str — "1D" (default), "1H", "1min"
+            - history_days: int — number of calendar days of history (default 90)
 
         Returns:
-            List of MarketStateFragments, one per ticker.
+            List of MarketStateFragments. For daily timeframe with history,
+            produces one fragment per bar per ticker (~60 trading days).
         """
         self._last_run = datetime.now(timezone.utc)
 
         tickers: list[str] = context.metadata.get("tickers", [])
-        date: str = context.metadata.get("date", "")
+        date_str: str = context.metadata.get("date", "")
         timeframe: str = context.metadata.get("timeframe", "1D")
+        history_days: int = context.metadata.get("history_days", 90)
 
         if not tickers:
             raise AgentProcessingError(
                 message="No tickers specified in context metadata",
                 agent_id=self.agent_id,
             )
-        if not date:
+        if not date_str:
             raise AgentProcessingError(
                 message="No date specified in context metadata",
                 agent_id=self.agent_id,
@@ -83,8 +86,15 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
         fragments: list[MarketStateFragment] = []
         for ticker in tickers:
             try:
-                fragment = await self._process_ticker(ticker, date, timeframe)
-                fragments.append(fragment)
+                if timeframe == "1D" and history_days > 1:
+                    # Fetch historical range for technical analysis
+                    ticker_fragments = await self._process_ticker_range(
+                        ticker, date_str, history_days
+                    )
+                    fragments.extend(ticker_fragments)
+                else:
+                    fragment = await self._process_ticker(ticker, date_str, timeframe)
+                    fragments.append(fragment)
             except Exception as e:
                 self._error_count_24h += 1
                 logger.error(
@@ -93,9 +103,8 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
                     ticker=ticker,
                     error=str(e),
                 )
-                # Produce a quarantined fragment so the failure is tracked
                 safe_error = redact_error_message(str(e))
-                fragment = self._create_quarantined_fragment(ticker, date, timeframe, safe_error)
+                fragment = self._create_quarantined_fragment(ticker, date_str, timeframe, safe_error)
                 fragments.append(fragment)
 
         if any(f.validation_status == ValidationStatus.VALID for f in fragments):
@@ -147,6 +156,103 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
         )
 
         return fragment
+
+    async def _process_ticker_range(
+        self, ticker: str, end_date: str, history_days: int
+    ) -> list[MarketStateFragment]:
+        """Fetch a historical range of daily bars and create one fragment per bar.
+
+        This provides the multi-day price series that COGNIT-TECHNICAL needs
+        to compute SMA, EMA, RSI, MACD, Bollinger bands, etc.
+
+        Args:
+            ticker: Stock ticker symbol.
+            end_date: End date in YYYY-MM-DD format.
+            history_days: Calendar days of history to fetch.
+
+        Returns:
+            List of PRICE_OHLCV fragments, one per trading day.
+        """
+        from_date = (
+            datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=history_days)
+        ).strftime("%Y-%m-%d")
+
+        logger.info(
+            "Fetching historical price range",
+            agent_id=self.agent_id,
+            ticker=ticker,
+            from_date=from_date,
+            to_date=end_date,
+        )
+
+        raw_data = await self._polygon.get_daily_bars_range(ticker, from_date, end_date)
+        results = raw_data.get("results", [])
+
+        if not results:
+            logger.warning(
+                "No historical bars returned",
+                agent_id=self.agent_id,
+                ticker=ticker,
+                from_date=from_date,
+                to_date=end_date,
+            )
+            return [self._create_quarantined_fragment(ticker, end_date, "1D", "No bars in range")]
+
+        fragments: list[MarketStateFragment] = []
+        for bar in results:
+            if not isinstance(bar, dict):
+                continue
+
+            # Validate each bar
+            required_fields = {"o", "h", "l", "c", "v"}
+            present_fields = set(bar.keys()) & required_fields
+            if present_fields != required_fields:
+                continue  # Skip incomplete bars
+
+            payload = PricePayload(
+                open=float(bar.get("o", 0.0)),
+                high=float(bar.get("h", 0.0)),
+                low=float(bar.get("l", 0.0)),
+                close=float(bar.get("c", 0.0)),
+                volume=int(bar.get("v", 0)),
+                vwap=float(bar["vw"]) if "vw" in bar else None,
+                num_trades=int(bar["n"]) if "n" in bar else None,
+                timeframe="1D",
+            )
+
+            # Extract timestamp from bar
+            source_ts = datetime.now(timezone.utc)
+            if "t" in bar:
+                source_ts = datetime.fromtimestamp(bar["t"] / 1000, tz=timezone.utc)
+
+            source_hash = hashlib.sha256(
+                json.dumps(bar, sort_keys=True, default=str).encode("utf-8")
+            ).hexdigest()
+
+            fragment = MarketStateFragment(
+                fragment_id=uuid4(),
+                agent_id=self.agent_id,
+                timestamp=source_ts,  # Use bar date as fragment timestamp
+                source_timestamp=source_ts,
+                entity=ticker,
+                data_type=DataType.PRICE_OHLCV,
+                schema_version="1.0.0",
+                source_hash=source_hash,
+                validation_status=ValidationStatus.VALID,
+                payload=payload.model_dump(),
+            )
+            fragments.append(fragment)
+
+        logger.info(
+            "Historical price range loaded",
+            agent_id=self.agent_id,
+            ticker=ticker,
+            bars=len(fragments),
+            from_date=from_date,
+            to_date=end_date,
+        )
+
+        return fragments
 
     async def _fetch(
         self, ticker: str, date: str, timeframe: str
