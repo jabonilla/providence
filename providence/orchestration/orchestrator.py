@@ -101,7 +101,7 @@ class Orchestrator:
         agent_registry: dict[str, BaseAgent],
         context_service: ContextService,
         config_registry: AgentConfigRegistry,
-        default_timeout: float = 120.0,
+        default_timeout: float = 300.0,
     ) -> None:
         self._agents = agent_registry
         self._context_svc = context_service

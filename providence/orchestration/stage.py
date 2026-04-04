@@ -18,7 +18,7 @@ from providence.orchestration.models import StageResult, StageStatus
 
 logger = structlog.get_logger()
 
-DEFAULT_TIMEOUT_SECONDS = 120.0
+DEFAULT_TIMEOUT_SECONDS = 300.0
 
 
 class PipelineStage:
