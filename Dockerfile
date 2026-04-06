@@ -27,10 +27,10 @@ FROM base AS api
 EXPOSE 8000
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health/live || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/api/v1/health/live || exit 1
 
 ENTRYPOINT ["python", "-m", "providence.api.server"]
-CMD ["--host", "0.0.0.0", "--port", "8000", "--data-dir", "/app/data"]
+CMD ["--host", "0.0.0.0", "--data-dir", "/app/data"]
 
 # ── Pipeline runner target ───────────────────────────────────────
 FROM base AS runner

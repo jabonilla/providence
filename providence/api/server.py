@@ -158,7 +158,7 @@ def main() -> None:
     """Parse args and launch the API server."""
     parser = argparse.ArgumentParser(description="Providence REST API Server")
     parser.add_argument("--host", default="0.0.0.0", help="Bind host")
-    parser.add_argument("--port", type=int, default=8000, help="Bind port")
+    parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8000")), help="Bind port")
     parser.add_argument("--data-dir", type=Path, default=None, help="Persistent storage directory")
     parser.add_argument("--skip-perception", action="store_true", help="Skip perception agents")
     parser.add_argument("--skip-adaptive", action="store_true", help="Skip adaptive (LLM) agents")
