@@ -98,14 +98,21 @@ def _seed_fragments(state) -> int:
 
 def _seed_beliefs(state) -> int:
     """Seed BeliefObject records into BeliefStore."""
-    from providence.schemas.belief import BeliefObject
+    from providence.schemas.belief import BeliefObject, Belief, EvidenceRef, InvalidationCondition, BeliefMetadata
+    from providence.schemas.enums import Direction, Magnitude, ComparisonOperator, MarketCapBucket
 
     random.seed(42)
     store = state.belief_store
     count = 0
     now = datetime.now(timezone.utc)
-    directions = ["LONG", "SHORT", "NEUTRAL", "LONG", "LONG"]
-    magnitudes = ["SMALL", "MODERATE", "LARGE", "MODERATE"]
+    directions = [Direction.LONG, Direction.SHORT, Direction.NEUTRAL, Direction.LONG, Direction.LONG]
+    magnitudes = [Magnitude.SMALL, Magnitude.MODERATE, Magnitude.LARGE, Magnitude.MODERATE]
+
+    cap_buckets = {
+        "AAPL": MarketCapBucket.MEGA, "MSFT": MarketCapBucket.MEGA, "GOOGL": MarketCapBucket.MEGA,
+        "AMZN": MarketCapBucket.MEGA, "NVDA": MarketCapBucket.MEGA, "TSLA": MarketCapBucket.LARGE,
+        "META": MarketCapBucket.MEGA, "JPM": MarketCapBucket.MEGA,
+    }
 
     for run_idx in range(NUM_RUNS):
         ts = now - timedelta(hours=NUM_RUNS - run_idx)
@@ -114,36 +121,50 @@ def _seed_beliefs(state) -> int:
             beliefs_array = []
             for ticker in tickers_for_agent:
                 direction = random.choice(directions)
-                beliefs_array.append({
-                    "thesis_id": str(uuid4()),
-                    "ticker": ticker,
-                    "thesis_summary": f"{agent_id} analysis of {ticker}: "
-                                      f"{'bullish momentum' if direction == 'LONG' else 'bearish signals' if direction == 'SHORT' else 'neutral outlook'}",
-                    "direction": direction,
-                    "magnitude": random.choice(magnitudes),
-                    "raw_confidence": round(random.uniform(0.3, 0.9), 2),
-                    "time_horizon_days": random.choice([5, 10, 20, 30, 60]),
-                    "evidence": [
-                        {"source": "market_data", "detail": f"Price action for {ticker}"},
+                frag_id = uuid4()  # mock fragment reference
+
+                belief_entry = Belief(
+                    thesis_id=str(uuid4()),
+                    ticker=ticker,
+                    thesis_summary=f"{agent_id} analysis of {ticker}: "
+                                   f"{'bullish momentum' if direction == Direction.LONG else 'bearish signals' if direction == Direction.SHORT else 'neutral outlook'}",
+                    direction=direction,
+                    magnitude=random.choice(magnitudes),
+                    raw_confidence=round(random.uniform(0.3, 0.9), 2),
+                    time_horizon_days=random.choice([5, 10, 20, 30, 60]),
+                    evidence=[
+                        EvidenceRef(
+                            source_fragment_id=frag_id,
+                            field_path="payload.close",
+                            observation=f"Price action for {ticker}",
+                            weight=0.8,
+                        ),
                     ],
-                    "invalidation_conditions": [
-                        {
-                            "metric": f"{ticker}_close",
-                            "operator": "CROSSES_BELOW" if direction == "LONG" else "CROSSES_ABOVE",
-                            "threshold": round(PRICES[ticker] * (0.95 if direction == "LONG" else 1.05), 2),
-                        }
+                    invalidation_conditions=[
+                        InvalidationCondition(
+                            description=f"{ticker} price crosses invalidation threshold",
+                            data_source_agent="PERCEPT-PRICE",
+                            metric=f"{ticker}_close",
+                            operator=ComparisonOperator.CROSSES_BELOW if direction == Direction.LONG else ComparisonOperator.CROSSES_ABOVE,
+                            threshold=round(PRICES[ticker] * (0.95 if direction == Direction.LONG else 1.05), 2),
+                        ),
                     ],
-                })
+                    metadata=BeliefMetadata(
+                        sector=SECTORS[ticker],
+                        market_cap_bucket=cap_buckets.get(ticker, MarketCapBucket.LARGE),
+                    ),
+                )
+                beliefs_array.append(belief_entry)
 
             context_hash = _hash({"run": run_idx, "agent": agent_id})
-            belief = BeliefObject(
+            belief_obj = BeliefObject(
                 belief_id=str(uuid4()),
                 agent_id=agent_id,
                 timestamp=ts,
                 context_window_hash=context_hash,
                 beliefs=beliefs_array,
             )
-            store.append(belief)
+            store.append(belief_obj)
             count += 1
 
     return count
