@@ -74,23 +74,21 @@ def _seed_fragments(state) -> int:
             store.append(frag)
             count += 1
 
-            # TECHNICAL fragment
-            tech_payload = {
+            # NEWS/SENTIMENT fragment (use SENTIMENT_NEWS type)
+            news_payload = {
                 "ticker": ticker,
-                "sma_20": round(price * 0.98, 2), "sma_50": round(price * 0.96, 2),
-                "ema_12": round(price * 0.99, 2), "ema_26": round(price * 0.97, 2),
-                "rsi_14": round(random.uniform(30, 70), 1),
-                "macd": round(random.uniform(-2, 2), 3),
-                "macd_signal": round(random.uniform(-1, 1), 3),
-                "bb_upper": round(price * 1.02, 2), "bb_lower": round(price * 0.98, 2),
+                "headline": f"{ticker} shows {'strong' if random.random() > 0.5 else 'mixed'} momentum",
+                "sentiment_score": round(random.uniform(-0.5, 0.8), 2),
+                "source": "aggregated",
+                "article_count": random.randint(3, 15),
             }
             frag2 = MarketStateFragment(
-                fragment_id=str(uuid4()), agent_id="COGNIT-TECHNICAL",
+                fragment_id=str(uuid4()), agent_id="PERCEPT-NEWS",
                 timestamp=ts, source_timestamp=ts,
-                version=_hash(tech_payload), entity=ticker,
-                data_type=DataType.TECHNICAL_SIGNALS, schema_version="1.0.0",
-                source_hash=_hash({"source": "computed", "ticker": ticker}),
-                validation_status=ValidationStatus.VALID, payload=tech_payload,
+                version=_hash(news_payload), entity=ticker,
+                data_type=DataType.SENTIMENT_NEWS, schema_version="1.0.0",
+                source_hash=_hash({"source": "news", "ticker": ticker}),
+                validation_status=ValidationStatus.VALID, payload=news_payload,
             )
             store.append(frag2)
             count += 1
