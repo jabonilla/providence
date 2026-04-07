@@ -248,6 +248,7 @@ def _seed_runs(state) -> int:
 def _seed_shadow_signals(state) -> int:
     """Seed ShadowSignal records into ShadowSignalStore."""
     from providence.schemas.shadow import ShadowSignal, ShadowRunSummary
+    from providence.schemas.enums import Action, Direction
 
     random.seed(42)
     store = state.shadow_signal_store
@@ -259,15 +260,16 @@ def _seed_shadow_signals(state) -> int:
 
     for run_idx in range(NUM_RUNS):
         ts = now - timedelta(hours=NUM_RUNS - run_idx)
-        run_id = str(uuid4())
+        run_id = uuid4()
         signals_in_run = []
 
         tickers_this_run = random.sample(TICKERS, k=random.randint(2, 5))
         for ticker in tickers_this_run:
             price = PRICES[ticker] * (1 + random.uniform(-0.03, 0.03))
-            direction = random.choice(["LONG", "SHORT"])
+            direction = random.choice([Direction.LONG, Direction.SHORT])
             approved = random.random() > 0.3  # 70% approval rate
             confidence = round(random.uniform(0.4, 0.9), 2)
+            target_wt = round(random.uniform(0.02, 0.10), 3)
 
             # Compute simulated returns
             ret_1d = round(random.uniform(-0.02, 0.03), 4) if run_idx < NUM_RUNS - 1 else None
@@ -275,22 +277,26 @@ def _seed_shadow_signals(state) -> int:
             ret_20d = round(random.uniform(-0.10, 0.15), 4) if run_idx < NUM_RUNS - 5 else None
 
             signal = ShadowSignal(
-                signal_id=str(uuid4()), run_id=run_id,
+                signal_id=uuid4(), run_id=run_id,
                 timestamp=ts, ticker=ticker,
-                action="OPEN_LONG" if direction == "LONG" else "OPEN_SHORT",
-                direction=direction, confidence=confidence,
-                approved=approved, rejected=not approved,
-                rejection_reason=None if approved else "Below confidence threshold",
+                action=Action.OPEN_LONG if direction == Direction.LONG else Action.OPEN_SHORT,
+                direction=direction,
+                target_weight=target_wt,
+                confidence=confidence,
+                approved=approved,
+                rejection_reasons=[] if approved else ["Below confidence threshold"],
+                adjusted_weight=target_wt * 0.8 if approved else 0.0,
+                risk_mode_applied=RISK_MODES[run_idx % len(RISK_MODES)],
                 price_at_signal=round(price, 2),
-                simulated_entry_price=round(price * (1.001 if approved else 1.0), 2) if approved else None,
+                simulated_entry_price=round(price * 1.001, 2) if approved else None,
                 simulated_fill_qty=random.randint(10, 100) if approved else None,
                 simulated_notional=round(price * random.randint(10, 100), 2) if approved else None,
                 realized_return_1d=ret_1d,
                 realized_return_5d=ret_5d,
                 realized_return_20d=ret_20d,
-                realized_price_1d=round(price * (1 + (ret_1d or 0)), 2) if ret_1d else None,
-                realized_price_5d=round(price * (1 + (ret_5d or 0)), 2) if ret_5d else None,
-                realized_price_20d=round(price * (1 + (ret_20d or 0)), 2) if ret_20d else None,
+                price_1d_later=round(price * (1 + (ret_1d or 0)), 2) if ret_1d else None,
+                price_5d_later=round(price * (1 + (ret_5d or 0)), 2) if ret_5d else None,
+                price_20d_later=round(price * (1 + (ret_20d or 0)), 2) if ret_20d else None,
             )
             store.append(signal)
             signals_in_run.append(signal)
@@ -298,13 +304,17 @@ def _seed_shadow_signals(state) -> int:
 
         # Run summary
         regime_idx = run_idx % len(REGIMES)
+        approved_count = sum(1 for s in signals_in_run if s.approved)
+        rejected_count = len(signals_in_run) - approved_count
+        long_count = sum(1 for s in signals_in_run if s.direction == Direction.LONG)
+        short_count = len(signals_in_run) - long_count
         summary = ShadowRunSummary(
             run_id=run_id, timestamp=ts,
             total_signals=len(signals_in_run),
-            approved_signals=sum(1 for s in signals_in_run if s.approved),
-            rejected_signals=sum(1 for s in signals_in_run if s.rejected),
-            long_signals=sum(1 for s in signals_in_run if s.direction == "LONG"),
-            short_signals=sum(1 for s in signals_in_run if s.direction == "SHORT"),
+            approved_signals=approved_count,
+            rejected_signals=rejected_count,
+            long_signals=long_count,
+            short_signals=short_count,
             regime_state=REGIMES[regime_idx],
             risk_mode=RISK_MODES[regime_idx],
         )
