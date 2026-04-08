@@ -395,37 +395,46 @@ async def reset_all_stores():
     state = get_state()
 
     try:
-        # Clear each store's internal state
-        for store_name in ["fragment_store", "belief_store", "run_store"]:
-            store = getattr(state, store_name, None)
-            if store is not None:
-                store._items.clear()
-                if hasattr(store, "_by_id"):
-                    store._by_id.clear()
-                if hasattr(store, "_by_data_type"):
-                    store._by_data_type.clear()
-                if hasattr(store, "_by_entity"):
-                    store._by_entity.clear()
-                if hasattr(store, "_by_agent"):
-                    store._by_agent.clear()
-                if hasattr(store, "_by_ticker"):
-                    store._by_ticker.clear()
-                if hasattr(store, "_by_loop_type"):
-                    store._by_loop_type.clear()
-                if hasattr(store, "_path") and store._path and store._path.exists():
-                    store._path.write_text("")
+        # Clear FragmentStore
+        frag = state.fragment_store
+        if frag is not None:
+            frag._fragments.clear()
+            frag._by_data_type.clear()
+            frag._by_entity.clear()
+            if hasattr(frag, "_persist_path") and frag._persist_path and frag._persist_path.exists():
+                frag._persist_path.write_text("")
 
-        # Clear shadow signal store
+        # Clear BeliefStore
+        bel = state.belief_store
+        if bel is not None:
+            bel._beliefs.clear()
+            bel._by_agent.clear()
+            bel._by_ticker.clear()
+            if hasattr(bel, "_persist_path") and bel._persist_path and bel._persist_path.exists():
+                bel._persist_path.write_text("")
+
+        # Clear RunStore
+        runs = state.run_store
+        if runs is not None:
+            runs._runs.clear()
+            runs._by_loop_type.clear()
+            if hasattr(runs, "_persist_path") and runs._persist_path and runs._persist_path.exists():
+                runs._persist_path.write_text("")
+
+        # Clear ShadowSignalStore
         shadow = getattr(state, "shadow_signal_store", None)
         if shadow is not None:
             shadow._signals.clear()
-            shadow._by_id.clear()
+            if hasattr(shadow, "_signal_ids"):
+                shadow._signal_ids.clear()
             shadow._by_run.clear()
             shadow._by_ticker.clear()
             if hasattr(shadow, "_summaries"):
                 shadow._summaries.clear()
-            if hasattr(shadow, "_path") and shadow._path and shadow._path.exists():
-                shadow._path.write_text("")
+            if hasattr(shadow, "_persist_path") and shadow._persist_path and shadow._persist_path.exists():
+                shadow._persist_path.write_text("")
+            if hasattr(shadow, "_summaries_path") and shadow._summaries_path and shadow._summaries_path.exists():
+                shadow._summaries_path.write_text("")
 
         # Clear portfolio tracker
         tracker = getattr(state, "portfolio_tracker", None)
