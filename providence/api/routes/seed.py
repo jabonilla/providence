@@ -387,3 +387,81 @@ async def seed_demo_data():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
+
+
+@router.post("/reset")
+async def reset_all_stores():
+    """Clear ALL stores — fresh start. Returns empty portal."""
+    state = get_state()
+
+    try:
+        # Clear each store's internal state
+        for store_name in ["fragment_store", "belief_store", "run_store"]:
+            store = getattr(state, store_name, None)
+            if store is not None:
+                store._items.clear()
+                if hasattr(store, "_by_id"):
+                    store._by_id.clear()
+                if hasattr(store, "_by_data_type"):
+                    store._by_data_type.clear()
+                if hasattr(store, "_by_entity"):
+                    store._by_entity.clear()
+                if hasattr(store, "_by_agent"):
+                    store._by_agent.clear()
+                if hasattr(store, "_by_ticker"):
+                    store._by_ticker.clear()
+                if hasattr(store, "_by_loop_type"):
+                    store._by_loop_type.clear()
+                if hasattr(store, "_path") and store._path and store._path.exists():
+                    store._path.write_text("")
+
+        # Clear shadow signal store
+        shadow = getattr(state, "shadow_signal_store", None)
+        if shadow is not None:
+            shadow._signals.clear()
+            shadow._by_id.clear()
+            shadow._by_run.clear()
+            shadow._by_ticker.clear()
+            if hasattr(shadow, "_summaries"):
+                shadow._summaries.clear()
+            if hasattr(shadow, "_path") and shadow._path and shadow._path.exists():
+                shadow._path.write_text("")
+
+        # Clear portfolio tracker
+        tracker = getattr(state, "portfolio_tracker", None)
+        if tracker is not None:
+            tracker._positions.clear()
+            if hasattr(tracker, "_fills"):
+                tracker._fills.clear()
+
+        # Clear order manager
+        orders = getattr(state, "order_manager", None)
+        if orders is not None:
+            if hasattr(orders, "_orders"):
+                orders._orders.clear()
+
+        return {"status": "reset", "message": "All stores cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
+
+
+@router.post("/seed/perception")
+async def seed_perception_only():
+    """Seed ONLY market data fragments — no beliefs, no runs, no signals.
+
+    This gives the adaptive agents something to analyze when a pipeline
+    run is triggered, without pre-populating any results.
+    """
+    state = get_state()
+
+    if state.fragment_store.count() > 10:
+        return {
+            "status": "already_seeded",
+            "fragments": state.fragment_store.count(),
+        }
+
+    try:
+        fragments = _seed_fragments(state)
+        return {"status": "seeded", "fragments": fragments}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Perception seed failed: {str(e)}")

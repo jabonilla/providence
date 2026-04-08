@@ -26,4 +26,4 @@ USER providence
 EXPOSE 8000
 
 ENTRYPOINT ["python", "-m", "providence.api.server"]
-CMD ["--host", "0.0.0.0", "--data-dir", "/app/data", "--skip-perception", "--skip-adaptive"]
+CMD ["--host", "0.0.0.0", "--data-dir", "/app/data", "--skip-perception"]
