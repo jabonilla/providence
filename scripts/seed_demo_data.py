@@ -209,12 +209,74 @@ def seed_runs(store: RunStore, base_time: datetime) -> None:
                 output={"mock": True},
             ))
         succeeded = sum(1 for s in stages if s.status == StageStatus.SUCCEEDED)
+
+        # Build realistic regime metadata with sector overlays
+        regime_idx = run_idx % len(REGIMES)
+        unique_sectors = list(set(SECTORS.values()))
+        sector_overlays = {}
+        for sec in unique_sectors:
+            # Each sector gets a regime that may differ from global
+            sec_regime_choices = REGIMES + ["CRISIS_DISLOCATION"]
+            sec_regime = sec_regime_choices[(regime_idx + hash(sec)) % len(sec_regime_choices)]
+            stress = round(random.uniform(-0.4, 0.6), 2)
+            conf = round(random.uniform(0.55, 0.95), 2)
+            sec_tickers = [t for t, s in SECTORS.items() if s == sec]
+            sector_overlays[sec] = {
+                "sector": sec,
+                "regime": sec_regime,
+                "regime_confidence": conf,
+                "regime_probabilities": {
+                    "LOW_VOL_TRENDING": round(random.uniform(0.1, 0.7), 2),
+                    "HIGH_VOL_MEAN_REVERTING": round(random.uniform(0.05, 0.3), 2),
+                    "CRISIS_DISLOCATION": round(random.uniform(0.01, 0.15), 2),
+                    "TRANSITION_UNCERTAIN": round(random.uniform(0.05, 0.2), 2),
+                },
+                "relative_stress": stress,
+                "key_signals": random.sample(
+                    ["high realized vol", "earnings compression", "sector rotation",
+                     "momentum divergence", "credit spread widening", "rate sensitivity",
+                     "strong order flow", "low correlation breakdown"],
+                    k=random.randint(1, 3),
+                ),
+                "ticker_count": len(sec_tickers),
+            }
+
+        regime_state = {
+            "statistical_regime": REGIMES[regime_idx],
+            "regime_confidence": round(random.uniform(0.65, 0.95), 2),
+            "regime_probabilities": {
+                "LOW_VOL_TRENDING": round(random.uniform(0.3, 0.8), 2),
+                "HIGH_VOL_MEAN_REVERTING": round(random.uniform(0.05, 0.3), 2),
+                "CRISIS_DISLOCATION": round(random.uniform(0.01, 0.1), 2),
+                "TRANSITION_UNCERTAIN": round(random.uniform(0.05, 0.2), 2),
+            },
+            "system_risk_mode": RISK_MODES[regime_idx],
+            "sector_overlays": sector_overlays,
+            "narrative_overlay": {
+                "label": random.choice([
+                    "AI Infrastructure Boom",
+                    "Fed Pivot Anticipation",
+                    "Earnings Season Rotation",
+                    "Risk-Off Flight to Quality",
+                ]),
+                "confidence": round(random.uniform(0.6, 0.9), 2),
+                "key_signals": random.sample(
+                    ["mega-cap tech momentum", "yield curve normalization",
+                     "consumer spending resilience", "geopolitical hedging"],
+                    k=2,
+                ),
+                "affected_sectors": random.sample(unique_sectors, k=min(3, len(unique_sectors))),
+                "summary": "Market narrative driven by evolving macro conditions.",
+            },
+        }
+
         run = PipelineRun(
-            loop_type="main",
+            loop_type="MAIN",
             status=RunStatus.SUCCEEDED if succeeded == len(stages) else RunStatus.PARTIAL_FAILURE,
             started_at=ts,
             finished_at=ts + timedelta(minutes=2),
             stage_results=stages,
+            metadata={"regime_state": regime_state},
         )
         store.append(run)
     print(f"    {NUM_RUNS} pipeline runs created")

@@ -351,6 +351,40 @@ class BackfillTriggerResponse(BaseModel):
     prices_fetched: int = 0
 
 
+# ── Regime ─────────────────────────────────────────────────────────
+
+class SectorRegimeOverlayResponse(BaseModel):
+    """Sector-level regime overlay."""
+
+    sector: str
+    regime: str = Field(description="StatisticalRegime enum value")
+    regime_confidence: float = Field(ge=0.0, le=1.0)
+    regime_probabilities: dict[str, float] = Field(default_factory=dict)
+    relative_stress: float = Field(
+        default=0.0,
+        description="Relative stress vs market: -1.0 (calmer) to +1.0 (more stressed)",
+    )
+    key_signals: list[str] = Field(default_factory=list)
+    ticker_count: int = Field(default=0, ge=0)
+
+
+class RegimeStateResponse(BaseModel):
+    """Full regime state including global regime, narrative, and sector overlays."""
+
+    statistical_regime: str = Field(description="Global regime classification")
+    regime_confidence: float = Field(ge=0.0, le=1.0)
+    regime_probabilities: dict[str, float] = Field(default_factory=dict)
+    system_risk_mode: str = Field(description="NORMAL/CAUTIOUS/DEFENSIVE/HALTED")
+    sector_overlays: list[SectorRegimeOverlayResponse] = Field(default_factory=list)
+    narrative_label: Optional[str] = None
+    narrative_confidence: Optional[float] = None
+    narrative_key_signals: list[str] = Field(default_factory=list)
+    narrative_affected_sectors: list[str] = Field(default_factory=list)
+    narrative_summary: Optional[str] = None
+    run_id: str = Field(description="Pipeline run that produced this regime state")
+    timestamp: str = Field(description="When this regime was computed")
+
+
 # ── Generic ─────────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):

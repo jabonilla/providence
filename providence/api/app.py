@@ -13,9 +13,11 @@ Security features (Session 35):
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator
 
@@ -25,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from providence.api.deps import AppState, get_state, set_state
-from providence.api.routes import agents, config, health, keys, perception, pipeline, portfolio, seed, shadow, stores
+from providence.api.routes import agents, config, health, keys, perception, pipeline, portfolio, regime, seed, shadow, stores
 from providence.api.security import (
     RateLimitMiddleware,
     RequestSizeLimitMiddleware,
@@ -33,6 +35,88 @@ from providence.api.security import (
 )
 
 logger = structlog.get_logger()
+
+
+# ── Pipeline Scheduler ──────────────────────────────────────────────
+# Configurable via environment variables:
+#   SCHEDULER_ENABLED=true (default: true)
+#   SCHEDULER_HOURS=10,15 (ET hours to run, default: 10,15)
+#   SCHEDULER_DAYS=mon,tue,wed,thu,fri (default: weekdays)
+
+_SCHEDULER_TASK: asyncio.Task | None = None
+
+_DAY_MAP = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+
+
+async def _pipeline_scheduler() -> None:
+    """Background task that triggers pipeline runs on a schedule.
+
+    Runs at configured hours (US/Eastern) on configured days.
+    Checks every 60 seconds if it's time to run.
+    """
+    from zoneinfo import ZoneInfo
+
+    et = ZoneInfo("America/New_York")
+
+    # Parse config from env
+    hours_str = os.getenv("SCHEDULER_HOURS", "10,15")
+    run_hours = {int(h.strip()) for h in hours_str.split(",") if h.strip()}
+
+    days_str = os.getenv("SCHEDULER_DAYS", "mon,tue,wed,thu,fri")
+    run_days = {_DAY_MAP[d.strip().lower()] for d in days_str.split(",") if d.strip().lower() in _DAY_MAP}
+
+    logger.info(
+        "Pipeline scheduler started",
+        run_hours=sorted(run_hours),
+        run_days=sorted(run_days),
+    )
+
+    triggered_today: set[int] = set()  # hours already triggered today
+    last_date = None
+
+    while True:
+        try:
+            await asyncio.sleep(60)  # check every minute
+
+            now_et = datetime.now(et)
+
+            # Reset triggered set on new day
+            if last_date != now_et.date():
+                triggered_today = set()
+                last_date = now_et.date()
+
+            # Check if we should run
+            if (
+                now_et.weekday() in run_days
+                and now_et.hour in run_hours
+                and now_et.minute < 5  # within first 5 minutes of the hour
+                and now_et.hour not in triggered_today
+            ):
+                triggered_today.add(now_et.hour)
+                logger.info(
+                    "Scheduler triggering pipeline run",
+                    time_et=now_et.strftime("%Y-%m-%d %H:%M ET"),
+                )
+
+                try:
+                    state = get_state()
+                    if state.runner:
+                        result = await state.runner.run_once()
+                        logger.info(
+                            "Scheduled pipeline run completed",
+                            status=result.status.value if result else "unknown",
+                        )
+                    else:
+                        logger.warning("Scheduler: no runner available")
+                except Exception as exc:
+                    logger.error("Scheduled pipeline run failed", error=str(exc))
+
+        except asyncio.CancelledError:
+            logger.info("Pipeline scheduler stopped")
+            break
+        except Exception as exc:
+            logger.error("Scheduler error (will retry)", error=str(exc))
+            await asyncio.sleep(60)
 
 
 def create_app(
@@ -64,8 +148,26 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        global _SCHEDULER_TASK
         logger.info("Providence API starting", version=version)
+
+        # Start pipeline scheduler if enabled
+        scheduler_enabled = os.getenv("SCHEDULER_ENABLED", "true").lower() in ("true", "1", "yes")
+        if scheduler_enabled:
+            _SCHEDULER_TASK = asyncio.create_task(_pipeline_scheduler())
+            logger.info("Pipeline scheduler enabled")
+        else:
+            logger.info("Pipeline scheduler disabled (SCHEDULER_ENABLED=false)")
+
         yield
+
+        # Stop scheduler on shutdown
+        if _SCHEDULER_TASK and not _SCHEDULER_TASK.done():
+            _SCHEDULER_TASK.cancel()
+            try:
+                await _SCHEDULER_TASK
+            except asyncio.CancelledError:
+                pass
         logger.info("Providence API shutting down")
 
     app = FastAPI(
@@ -90,10 +192,17 @@ def create_app(
     is_production = os.getenv("PROVIDENCE_ENV", "").lower() == "production"
     if cors_origins:
         origins = cors_origins
+    elif os.getenv("CORS_ORIGINS"):
+        # Allow comma-separated origins from env var
+        origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+        logger.info("CORS: origins from env", origins=origins)
     elif is_production:
-        # In production, CORS must be explicitly configured
-        origins = []
-        logger.warning("CORS: no origins configured in production — all cross-origin requests blocked")
+        # In production, allow Railway portal origin by default
+        origins = [
+            "https://providence-portal-production.up.railway.app",
+            "https://providence-portal.up.railway.app",
+        ]
+        logger.info("CORS: using default production origins", origins=origins)
     else:
         origins = ["*"]
 
@@ -122,6 +231,7 @@ def create_app(
             # Exempt health probes, docs, and root
             path = request.url.path
             exempt = {
+                "/api/v1/health",
                 "/api/v1/health/live",
                 "/api/v1/health/ready",
                 "/api/v1/config/keys",
@@ -131,8 +241,14 @@ def create_app(
                 "/",
                 "/dashboard",
             }
-            if path not in exempt:
-                await require_api_key(request)
+            # Dashboard-served pages can access shadow/health data
+            exempt_prefixes = (
+                "/api/v1/shadow/",
+            )
+            # Skip auth for CORS preflight and exempt paths
+            if request.method == "OPTIONS" or path in exempt or path.startswith(exempt_prefixes):
+                return await call_next(request)
+            await require_api_key(request)
             return await call_next(request)
 
         logger.info("API key authentication enabled")
@@ -181,6 +297,7 @@ def create_app(
     app.include_router(stores.router, prefix=api_prefix)
     app.include_router(shadow.router, prefix=api_prefix)
     app.include_router(portfolio.router, prefix=api_prefix)
+    app.include_router(regime.router, prefix=api_prefix)
     app.include_router(config.router, prefix=api_prefix)
     app.include_router(keys.router, prefix=api_prefix)
     app.include_router(perception.router, prefix=api_prefix)
@@ -199,9 +316,20 @@ def create_app(
             "portal": f"http://localhost:{portal_port}",
         }
 
-    # ── Dashboard redirect → Providence Portal ────────────────────
+    # ── Shadow Dashboard (self-contained HTML) ─────────────────────
     @app.get("/dashboard", include_in_schema=False)
     async def dashboard():
-        return RedirectResponse(url=f"http://localhost:{portal_port}")
+        """Serve the shadow mode monitoring dashboard."""
+        dashboard_path = Path(__file__).parent.parent.parent / "dashboard" / "shadow_dashboard.html"
+        if not dashboard_path.exists():
+            # Fallback for Docker: /app/dashboard/
+            dashboard_path = Path("/app/dashboard/shadow_dashboard.html")
+        if dashboard_path.exists():
+            content = dashboard_path.read_text()
+            return HTMLResponse(content=content)
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Dashboard not found"},
+        )
 
     return app
