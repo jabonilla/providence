@@ -28,14 +28,18 @@ from providence.schemas.enums import (
 )
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.payloads import (
+    AlphaVantageEarningsPayload,
     CdsPayload,
+    FactorReturnsPayload,
     FilingPayload,
     FilingType,
+    FundFlowPayload,
     MacroEconomicPayload,
     MacroYieldPayload,
     NewsPayload,
     OptionsPayload,
     PricePayload,
+    YFinanceFundamentalsPayload,
 )
 from providence.schemas.decision import (
     ActiveInvalidation,
@@ -128,14 +132,18 @@ __all__ = [
     # Market State
     "MarketStateFragment",
     # Payloads
+    "AlphaVantageEarningsPayload",
     "CdsPayload",
+    "FactorReturnsPayload",
     "FilingPayload",
     "FilingType",
+    "FundFlowPayload",
     "MacroEconomicPayload",
     "MacroYieldPayload",
     "NewsPayload",
     "OptionsPayload",
     "PricePayload",
+    "YFinanceFundamentalsPayload",
     # Belief
     "Belief",
     "BeliefMetadata",

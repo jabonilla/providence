@@ -191,3 +191,112 @@ class MacroEconomicPayload(BaseModel):
     source_series_id: str = Field(..., description="Source series ID (e.g., FRED series like 'CPIAUCSL')")
     observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")
     revision_number: int = Field(default=0, description="Revision number for data releases")
+
+
+# ─── Phase 20: Extended Data Sources ─────────────────────────────────
+
+
+class YFinanceFundamentalsPayload(BaseModel):
+    """Fundamentals payload from yfinance for DataType.YFINANCE_FUNDAMENTALS.
+
+    Produced by: PERCEPT-YFINANCE
+    Source: yfinance library (Yahoo Finance)
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    ticker: str = Field(..., description="Stock ticker symbol")
+    market_cap: Optional[float] = Field(default=None, description="Market capitalization in USD")
+    enterprise_value: Optional[float] = Field(default=None, description="Enterprise value in USD")
+    trailing_pe: Optional[float] = Field(default=None, description="Trailing P/E ratio")
+    forward_pe: Optional[float] = Field(default=None, description="Forward P/E ratio")
+    peg_ratio: Optional[float] = Field(default=None, description="PEG ratio")
+    price_to_book: Optional[float] = Field(default=None, description="Price-to-book ratio")
+    price_to_sales: Optional[float] = Field(default=None, description="Price-to-sales ratio")
+    profit_margin: Optional[float] = Field(default=None, description="Profit margin as decimal")
+    operating_margin: Optional[float] = Field(default=None, description="Operating margin as decimal")
+    roe: Optional[float] = Field(default=None, description="Return on equity as decimal")
+    roa: Optional[float] = Field(default=None, description="Return on assets as decimal")
+    revenue: Optional[float] = Field(default=None, description="Total revenue in USD")
+    revenue_growth: Optional[float] = Field(default=None, description="Revenue growth rate as decimal")
+    earnings_growth: Optional[float] = Field(default=None, description="Earnings growth rate as decimal")
+    debt_to_equity: Optional[float] = Field(default=None, description="Debt-to-equity ratio")
+    current_ratio: Optional[float] = Field(default=None, description="Current ratio")
+    free_cash_flow: Optional[float] = Field(default=None, description="Free cash flow in USD")
+    dividend_yield: Optional[float] = Field(default=None, description="Dividend yield as decimal")
+    beta: Optional[float] = Field(default=None, description="Beta coefficient")
+    fifty_two_week_high: Optional[float] = Field(default=None, description="52-week high price")
+    fifty_two_week_low: Optional[float] = Field(default=None, description="52-week low price")
+    avg_volume: Optional[int] = Field(default=None, description="Average trading volume")
+    shares_outstanding: Optional[int] = Field(default=None, description="Total shares outstanding")
+    institutional_holders_pct: Optional[float] = Field(default=None, description="Institutional ownership pct")
+    short_ratio: Optional[float] = Field(default=None, description="Short interest ratio")
+    sector: Optional[str] = Field(default=None, description="GICS sector")
+    industry: Optional[str] = Field(default=None, description="Industry classification")
+    observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")
+
+
+class AlphaVantageEarningsPayload(BaseModel):
+    """Earnings data payload from Alpha Vantage for DataType.ALPHAVANTAGE_EARNINGS.
+
+    Produced by: PERCEPT-ALPHAVANTAGE
+    Source: Alpha Vantage API (free tier)
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    ticker: str = Field(..., description="Stock ticker symbol")
+    fiscal_date_ending: str = Field(..., description="Fiscal period end date YYYY-MM-DD")
+    reported_eps: Optional[float] = Field(default=None, description="Reported EPS")
+    estimated_eps: Optional[float] = Field(default=None, description="Analyst consensus estimated EPS")
+    surprise: Optional[float] = Field(default=None, description="EPS surprise (reported - estimated)")
+    surprise_pct: Optional[float] = Field(default=None, description="EPS surprise percentage")
+    reported_date: Optional[str] = Field(default=None, description="Earnings report date YYYY-MM-DD")
+    revenue: Optional[float] = Field(default=None, description="Reported revenue in USD")
+    estimated_revenue: Optional[float] = Field(default=None, description="Estimated revenue in USD")
+    revenue_surprise: Optional[float] = Field(default=None, description="Revenue surprise in USD")
+    gross_profit: Optional[float] = Field(default=None, description="Gross profit in USD")
+    ebitda: Optional[float] = Field(default=None, description="EBITDA in USD")
+    net_income: Optional[float] = Field(default=None, description="Net income in USD")
+    observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")
+
+
+class FactorReturnsPayload(BaseModel):
+    """Fama-French factor returns payload for DataType.FACTOR_RETURNS.
+
+    Produced by: PERCEPT-FACTORS
+    Source: Kenneth French Data Library via pandas-datareader
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    date: str = Field(..., description="Factor date in YYYY-MM-DD format")
+    mkt_rf: float = Field(..., description="Market excess return (Mkt-RF)")
+    smb: float = Field(..., description="Small Minus Big factor")
+    hml: float = Field(..., description="High Minus Low (value) factor")
+    rmw: Optional[float] = Field(default=None, description="Robust Minus Weak (profitability) factor")
+    cma: Optional[float] = Field(default=None, description="Conservative Minus Aggressive (investment) factor")
+    rf: float = Field(..., description="Risk-free rate")
+    mom: Optional[float] = Field(default=None, description="Momentum factor (UMD)")
+    dataset: str = Field(default="F-F_Research_Data_5_Factors_2x3_daily", description="Source dataset name")
+
+
+class FundFlowPayload(BaseModel):
+    """Fund flow and transaction payload for DataType.FUND_FLOW.
+
+    Produced by: PERCEPT-FUNDFLOW
+    Source: Plaid API (institutional transaction aggregation)
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    account_id: str = Field(..., description="Anonymized account identifier")
+    flow_date: str = Field(..., description="Transaction date in YYYY-MM-DD format")
+    net_flow: float = Field(..., description="Net flow amount in USD (positive=inflow, negative=outflow)")
+    inflows: float = Field(..., ge=0, description="Total inflows in USD")
+    outflows: float = Field(..., ge=0, description="Total outflows in USD (stored as positive)")
+    transaction_count: int = Field(..., ge=0, description="Number of transactions")
+    category: str = Field(default="INVESTMENT", description="Flow category (INVESTMENT, TRANSFER, DIVIDEND, etc.)")
+    institution_name: Optional[str] = Field(default=None, description="Financial institution name")
+    top_tickers: list[str] = Field(default_factory=list, description="Top tickers by flow volume")
+    observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")

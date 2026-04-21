@@ -97,9 +97,15 @@ def build_state(
         skip_adaptive=skip_adaptive,
     )
 
-    # Config
+    # Config — check both providence/config/ and project-root config/
     config_path = Path(__file__).parent.parent / "config" / "agents.yaml"
-    config_registry = AgentConfigRegistry.from_yaml(config_path)
+    if not config_path.exists():
+        config_path = Path(__file__).parent.parent.parent / "config" / "agents.yaml"
+    if config_path.exists():
+        config_registry = AgentConfigRegistry.from_yaml(config_path)
+    else:
+        logger.warning("agents.yaml not found, using empty config registry")
+        config_registry = AgentConfigRegistry()
 
     # Watchlist: check both providence/config/ and project-root config/
     watchlist_path = Path(__file__).parent.parent / "config" / "watchlist.yaml"
@@ -173,11 +179,36 @@ def main() -> None:
         skip_perception=args.skip_perception,
         skip_adaptive=args.skip_adaptive,
     )
-    state = build_state(
-        data_dir=args.data_dir,
-        skip_perception=args.skip_perception,
-        skip_adaptive=args.skip_adaptive,
-    )
+    try:
+        state = build_state(
+            data_dir=args.data_dir,
+            skip_perception=args.skip_perception,
+            skip_adaptive=args.skip_adaptive,
+        )
+    except Exception as exc:
+        logger.error("Failed to build application state", error=str(exc))
+        # Create minimal state so the server can at least start and report health
+        state = AppState()
+        logger.warning("Starting with minimal state — most endpoints will return errors")
+
+    # Auto-seed demo data if stores are empty (first deploy)
+    if state.fragment_store.count() == 0:
+        try:
+            from providence.api.routes.seed import (
+                _seed_fragments, _seed_beliefs, _seed_runs,
+                _seed_shadow_signals, _seed_portfolio,
+            )
+            logger.info("Auto-seeding demo data (first startup)")
+            _seed_fragments(state)
+            _seed_beliefs(state)
+            _seed_runs(state)
+            _seed_shadow_signals(state)
+            _seed_portfolio(state)
+            logger.info("Auto-seed complete",
+                        fragments=state.fragment_store.count(),
+                        beliefs=state.belief_store.count())
+        except Exception as exc:
+            logger.warning("Auto-seed failed (non-fatal)", error=str(exc))
 
     # Create app
     app = create_app(state=state)
