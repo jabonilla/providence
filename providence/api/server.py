@@ -144,7 +144,15 @@ def build_state(
         run_store=run_store,
     )
 
-    return AppState(
+    # Conversation store + chat engine
+    from providence.services.chat_engine import ChatEngine
+    from providence.services.conversation_store import ConversationStore
+
+    conv_path = data_dir / "conversations.jsonl" if data_dir else None
+    conversation_store = ConversationStore(persist_path=conv_path)
+
+    # Build AppState first, then create ChatEngine (it needs the state reference)
+    state = AppState(
         fragment_store=fragment_store,
         belief_store=belief_store,
         run_store=run_store,
@@ -152,12 +160,16 @@ def build_state(
         agent_registry=registry,
         health_service=health_service,
         runner=runner,
+        conversation_store=conversation_store,
         config_registry=config_registry,
         watchlist=watchlist,
         portfolio_tracker=portfolio_tracker,
         order_manager=order_manager,
         extra={"data_dir": str(data_dir) if data_dir else None},
     )
+    state.chat_engine = ChatEngine(state)
+
+    return state
 
 
 def main() -> None:

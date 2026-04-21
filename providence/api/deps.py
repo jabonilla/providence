@@ -15,6 +15,8 @@ from providence.config.watchlist import Watchlist
 from providence.orchestration.runner import ProvidenceRunner
 from providence.portfolio.order_manager import OrderManager
 from providence.portfolio.tracker import PortfolioTracker
+from providence.services.chat_engine import ChatEngine
+from providence.services.conversation_store import ConversationStore
 from providence.services.health import HealthService
 from providence.services.shadow_execution import ShadowSignalStore
 from providence.storage.belief_store import BeliefStore
@@ -47,6 +49,10 @@ class AppState:
     # Services
     health_service: Optional[HealthService] = None
     runner: Optional[ProvidenceRunner] = None
+
+    # Chat
+    conversation_store: Optional[ConversationStore] = None
+    chat_engine: Optional[ChatEngine] = None
 
     # Config
     config_registry: Optional[AgentConfigRegistry] = None

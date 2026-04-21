@@ -385,6 +385,64 @@ class RegimeStateResponse(BaseModel):
     timestamp: str = Field(description="When this regime was computed")
 
 
+# ── Chat ──────────────────────────────────────────────────────────
+
+class ChatMessageRequest(BaseModel):
+    """Request to send a chat message."""
+
+    message: str = Field(min_length=1, max_length=2000, description="User message text")
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="Existing conversation ID. If null, a new conversation is created.",
+    )
+
+
+class ChatCitation(BaseModel):
+    """A structured citation referencing a Providence resource."""
+
+    type: str = Field(description="Resource type: position, belief, regime, agent, pipeline")
+    id: str = Field(description="Resource identifier")
+    label: str = Field(description="Human-readable label")
+    url: str = Field(description="API URL to the cited resource")
+
+
+class ChatMessageResponse(BaseModel):
+    """Response from the chat engine."""
+
+    response: str = Field(description="Natural language response text")
+    citations: list[ChatCitation] = Field(default_factory=list)
+    conversation_id: str = Field(description="Conversation ID (new or existing)")
+    timestamp: datetime
+
+
+class ConversationMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str = Field(description="Message role: user or assistant")
+    content: str
+    citations: list[ChatCitation] = Field(default_factory=list)
+    timestamp: datetime
+
+
+class ConversationSummary(BaseModel):
+    """Summary of a conversation for listing."""
+
+    id: str
+    title: str
+    message_count: int
+    last_message_at: Optional[datetime] = None
+    created_at: datetime
+
+
+class ConversationDetail(BaseModel):
+    """Full conversation with message history."""
+
+    id: str
+    title: str
+    messages: list[ConversationMessage]
+    created_at: datetime
+
+
 # ── Generic ─────────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):
