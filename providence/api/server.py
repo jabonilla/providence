@@ -151,6 +151,15 @@ def build_state(
     conv_path = data_dir / "conversations.jsonl" if data_dir else None
     conversation_store = ConversationStore(persist_path=conv_path)
 
+    # Agent weights + preferences stores
+    from providence.config.agent_weights import AgentWeightStore
+    from providence.config.agent_preferences import AgentPreferencesStore
+
+    weights_path = data_dir / "agent_weights.jsonl" if data_dir else None
+    agent_weight_store = AgentWeightStore(persist_path=weights_path)
+    prefs_path = data_dir / "agent_preferences.jsonl" if data_dir else None
+    agent_preferences_store = AgentPreferencesStore(persist_path=prefs_path)
+
     # Build AppState first, then create ChatEngine (it needs the state reference)
     state = AppState(
         fragment_store=fragment_store,
@@ -165,6 +174,8 @@ def build_state(
         watchlist=watchlist,
         portfolio_tracker=portfolio_tracker,
         order_manager=order_manager,
+        agent_weight_store=agent_weight_store,
+        agent_preferences_store=agent_preferences_store,
         extra={"data_dir": str(data_dir) if data_dir else None},
     )
     state.chat_engine = ChatEngine(state)

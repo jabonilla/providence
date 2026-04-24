@@ -473,6 +473,76 @@ class DocumentUploadResponse(BaseModel):
     message: str
 
 
+# ── Agent Weights ──────────────────────────────────────────────────
+
+class AgentWeightResponse(BaseModel):
+    """Current agent synthesis weights."""
+
+    weights: dict[str, float]
+    is_default: bool = True
+
+
+class AgentWeightUpdateRequest(BaseModel):
+    """Request to update agent weights."""
+
+    weights: dict[str, float]
+
+
+# ── Agent Preferences ─────────────────────────────────────────────
+
+class AgentPreferencesResponse(BaseModel):
+    """Agent configuration preferences."""
+
+    agent_id: str
+    time_horizon_days: int = 30
+    risk_threshold: float = 0.5
+    regime_sensitivity: float = 1.0
+    sector_filters: list[str] = Field(default_factory=list)
+    enabled: bool = True
+
+
+class AgentPreferencesUpdateRequest(BaseModel):
+    """Partial update for agent preferences."""
+
+    time_horizon_days: Optional[int] = None
+    risk_threshold: Optional[float] = None
+    regime_sensitivity: Optional[float] = None
+    sector_filters: Optional[list[str]] = None
+    enabled: Optional[bool] = None
+
+
+# ── Account Tiers ─────────────────────────────────────────────────
+
+class TierLimitsResponse(BaseModel):
+    """Resource limits for a tier."""
+
+    max_agents: int
+    max_positions: int
+    custom_weights: bool
+    custom_config: bool
+    api_access: bool
+    max_watchlist: int
+    shadow_mode: bool
+    paper_trading: bool
+    live_trading: bool
+    doc_uploads_per_day: int
+
+
+class TierInfoResponse(BaseModel):
+    """Tier with its limits."""
+
+    tier: str
+    limits: TierLimitsResponse
+
+
+class AccountInfoResponse(BaseModel):
+    """Current user account info."""
+
+    user_id: str
+    tier: str
+    limits: TierLimitsResponse
+
+
 # ── Generic ─────────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):

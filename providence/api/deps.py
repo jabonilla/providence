@@ -11,6 +11,8 @@ from typing import Any, Optional
 
 from providence.agents.base import BaseAgent
 from providence.config.agent_config import AgentConfigRegistry
+from providence.config.agent_preferences import AgentPreferencesStore
+from providence.config.agent_weights import AgentWeightStore
 from providence.config.watchlist import Watchlist
 from providence.orchestration.runner import ProvidenceRunner
 from providence.portfolio.order_manager import OrderManager
@@ -57,6 +59,10 @@ class AppState:
     # Config
     config_registry: Optional[AgentConfigRegistry] = None
     watchlist: Optional[Watchlist] = None
+
+    # Phase 2: Customization
+    agent_weight_store: Optional[AgentWeightStore] = None
+    agent_preferences_store: Optional[AgentPreferencesStore] = None
 
     # Extra metadata
     extra: dict[str, Any] = field(default_factory=dict)
