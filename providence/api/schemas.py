@@ -406,8 +406,25 @@ class ChatCitation(BaseModel):
     url: str = Field(description="API URL to the cited resource")
 
 
+class ChatMessageInResponse(BaseModel):
+    """Single message returned in a chat response."""
+
+    id: str = Field(description="Unique message ID")
+    role: str = Field(description="Message role: user or assistant")
+    content: str = Field(description="Message text content")
+    citations: list[ChatCitation] = Field(default_factory=list)
+    timestamp: datetime
+
+
+class ChatSendResponse(BaseModel):
+    """Response from sending a chat message."""
+
+    message: ChatMessageInResponse
+    conversation_id: str = Field(description="Conversation ID (new or existing)")
+
+
 class ChatMessageResponse(BaseModel):
-    """Response from the chat engine."""
+    """Response from the chat engine (legacy shape, kept for compatibility)."""
 
     response: str = Field(description="Natural language response text")
     citations: list[ChatCitation] = Field(default_factory=list)
@@ -441,6 +458,19 @@ class ConversationDetail(BaseModel):
     title: str
     messages: list[ConversationMessage]
     created_at: datetime
+
+
+# ── Document Upload ──────────────────────────────────────────────────
+
+class DocumentUploadResponse(BaseModel):
+    """Response from document upload."""
+
+    status: str
+    filename: str
+    fragment_id: str
+    content_type: str
+    text_length: int
+    message: str
 
 
 # ── Generic ─────────────────────────────────────────────────────────

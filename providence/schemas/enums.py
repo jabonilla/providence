@@ -65,6 +65,7 @@ class DataType(str, Enum):
     ALPHAVANTAGE_EARNINGS = "ALPHAVANTAGE_EARNINGS"
     FACTOR_RETURNS = "FACTOR_RETURNS"
     FUND_FLOW = "FUND_FLOW"
+    USER_DOCUMENT = "USER_DOCUMENT"
 
 
 class StatisticalRegime(str, Enum):

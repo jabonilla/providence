@@ -156,14 +156,31 @@ class ChatEngine:
             return Intent.POSITIONS
         return Intent.GENERAL
 
-    def process(self, message: str) -> tuple[str, list[dict[str, Any]]]:
+    def process(
+        self,
+        message: str,
+        *,
+        conversation_history: list[dict[str, Any]] | None = None,
+    ) -> tuple[str, list[dict[str, Any]]]:
         """Process a user message and return (response_text, citations).
+
+        Args:
+            message: The user's message text.
+            conversation_history: Optional list of prior messages in the
+                conversation (each dict with 'role', 'content', 'timestamp').
+                Stored for future LLM-based responses but not yet used in
+                intent classification.
 
         Returns:
             Tuple of (natural language response, list of citation dicts)
         """
         intent = self.classify_intent(message)
-        logger.debug("Chat intent classified", intent=intent.value, message=message[:80])
+        logger.debug(
+            "Chat intent classified",
+            intent=intent.value,
+            message=message[:80],
+            history_length=len(conversation_history) if conversation_history else 0,
+        )
 
         handler = {
             Intent.PORTFOLIO: self._handle_portfolio,
