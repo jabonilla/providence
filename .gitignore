@@ -40,3 +40,4 @@ htmlcov/
 data/
 *.parquet
 *.feather
+.claude/worktrees/
