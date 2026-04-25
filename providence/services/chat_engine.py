@@ -12,8 +12,10 @@ from enum import Enum
 from typing import Any
 
 import structlog
+from typing import TYPE_CHECKING
 
-from providence.api.deps import AppState
+if TYPE_CHECKING:
+    from providence.api.deps import AppState
 
 logger = structlog.get_logger()
 

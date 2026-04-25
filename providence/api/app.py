@@ -304,29 +304,37 @@ def create_app(
     app.include_router(seed.router, prefix=api_prefix)
     app.include_router(chat.router, prefix=api_prefix)
 
-    # ── Root endpoint ───────────────────────────────────────────────
-    portal_port = os.environ.get("PORTAL_PORT", "3000")
+    # ── Marketing site (public root) ────────────────────────────────
+    def _read_ui_kit(relative_path: str) -> str | None:
+        base = Path(__file__).parent.parent.parent
+        candidates = [
+            base / relative_path,
+            Path("/app") / relative_path,
+        ]
+        for p in candidates:
+            if p.exists():
+                return p.read_text()
+        return None
 
-    @app.get("/")
-    async def root():
-        return {
-            "name": "Providence API",
-            "version": version,
-            "docs": "/docs",
-            "health": f"{api_prefix}/health",
-            "portal": f"http://localhost:{portal_port}",
-        }
+    @app.get("/", include_in_schema=False)
+    async def marketing_site():
+        """Serve the public-facing marketing site."""
+        content = _read_ui_kit("ui_kits/marketing/index.html")
+        if content:
+            return HTMLResponse(content=content)
+        # Fallback JSON for API clients
+        return JSONResponse({"name": "Providence API", "version": version, "docs": "/docs"})
+
+    @app.get("/marketing", include_in_schema=False)
+    async def marketing_alias():
+        return RedirectResponse(url="/", status_code=301)
 
     # ── Shadow Dashboard (self-contained HTML) ─────────────────────
     @app.get("/dashboard", include_in_schema=False)
     async def dashboard():
         """Serve the shadow mode monitoring dashboard."""
-        dashboard_path = Path(__file__).parent.parent.parent / "dashboard" / "shadow_dashboard.html"
-        if not dashboard_path.exists():
-            # Fallback for Docker: /app/dashboard/
-            dashboard_path = Path("/app/dashboard/shadow_dashboard.html")
-        if dashboard_path.exists():
-            content = dashboard_path.read_text()
+        content = _read_ui_kit("dashboard/shadow_dashboard.html")
+        if content:
             return HTMLResponse(content=content)
         return JSONResponse(
             status_code=404,

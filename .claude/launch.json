@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "providence-api",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "providence.api.server", "--port", "8000", "--skip-perception", "--skip-adaptive", "--log-level", "warning"],
+      "port": 8000
+    }
+  ]
+}
