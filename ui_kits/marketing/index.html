@@ -769,6 +769,186 @@ img { display: block; }
   margin-top: 22px;
 }
 
+/* ─── Waitlist Modal ─────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(33,33,33,.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease);
+}
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  transform: translateY(16px);
+  transition: transform 220ms var(--ease);
+}
+.modal-backdrop.open .modal {
+  transform: translateY(0);
+}
+.modal-header {
+  padding: 28px 28px 0;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.modal-header .kicker { margin-bottom: 8px; }
+.modal-header h2 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  letter-spacing: -.02em;
+  line-height: 1;
+  font-weight: 400;
+}
+.modal-close {
+  background: none;
+  border: 1px solid var(--hairline);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-400);
+  font-size: 18px;
+  line-height: 1;
+  transition: border-color 140ms var(--ease), color 140ms var(--ease);
+  margin-top: 2px;
+}
+.modal-close:hover { border-color: var(--ink); color: var(--ink); }
+.modal-body { padding: 24px 28px 28px; }
+.form-row { margin-bottom: 18px; }
+.form-row label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--ink-600);
+  margin-bottom: 6px;
+}
+.form-row input,
+.form-row select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ink-200);
+  background: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 140ms var(--ease);
+  appearance: none;
+  border-radius: 0;
+}
+.form-row input:focus,
+.form-row select:focus { border-color: var(--cobalt); }
+.form-row input::placeholder { color: var(--ink-400); }
+.form-row select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8a8a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+.form-error {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--audit-red);
+  margin-top: 5px;
+  display: none;
+}
+.form-row.invalid .form-error { display: block; }
+.form-row.invalid input,
+.form-row.invalid select { border-color: var(--audit-red); }
+.btn-submit {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  padding: 14px 22px;
+  background: var(--cobalt);
+  color: var(--paper);
+  border: 1px solid var(--cobalt);
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 140ms var(--ease);
+  position: relative;
+}
+.btn-submit:hover:not(:disabled) { background: var(--cobalt-700); }
+.btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+.btn-submit .spinner {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(252,252,252,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+.btn-submit.loading .spinner { display: block; }
+.modal-success {
+  display: none;
+  padding: 40px 28px;
+  text-align: center;
+}
+.modal-success.show { display: block; }
+.modal-form.hide { display: none; }
+.success-mark {
+  width: 48px;
+  height: 48px;
+  background: var(--cobalt);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.success-mark svg { display: block; }
+.modal-success h3 {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -.02em;
+  margin-bottom: 10px;
+}
+.modal-success p {
+  font-size: 14px;
+  color: var(--ink-600);
+  line-height: 1.55;
+  max-width: 340px;
+  margin: 0 auto;
+}
+.modal-note {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  margin-top: 6px;
+  text-align: center;
+}
+
 /* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .agent-grid { grid-template-columns: repeat(4, 1fr); }
@@ -1127,7 +1307,71 @@ img { display: block; }
   </div>
 </footer>
 
+<!-- WAITLIST MODAL -->
+<div class="modal-backdrop" id="waitlistBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <span class="kicker">+ Early access · Q2 2026</span>
+        <h2 id="modalTitle">Join the waitlist.</h2>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-form" id="modalForm">
+        <form id="waitlistForm" novalidate>
+          <div class="form-row" id="row-name">
+            <label for="wl-name">Full name</label>
+            <input type="text" id="wl-name" name="name" placeholder="Your name" autocomplete="name"/>
+            <div class="form-error">Name is required</div>
+          </div>
+          <div class="form-row" id="row-email">
+            <label for="wl-email">Email address</label>
+            <input type="email" id="wl-email" name="email" placeholder="you@example.com" autocomplete="email"/>
+            <div class="form-error">A valid email is required</div>
+          </div>
+          <div class="form-row" id="row-background">
+            <label for="wl-background">Investing background</label>
+            <select id="wl-background" name="background">
+              <option value="" disabled selected>Select one…</option>
+              <option value="individual">Individual / retail investor</option>
+              <option value="professional">Professional / institutional</option>
+              <option value="family-office">Family office</option>
+              <option value="fund-manager">Fund manager</option>
+              <option value="curious">Just curious</option>
+            </select>
+            <div class="form-error">Please select an option</div>
+          </div>
+          <button type="submit" class="btn-submit" id="submitBtn">
+            Request access →
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="modal-note" style="margin-top:14px;">No spam. Updates when access opens.</div>
+      </div>
+
+      <div class="modal-success" id="modalSuccess">
+        <div class="success-mark">
+          <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+            <path d="M1.5 8L8 14.5L20.5 1.5" stroke="#fcfcfc" stroke-width="2" stroke-linecap="square"/>
+          </svg>
+        </div>
+        <h3>You're on the list.</h3>
+        <p>We'll reach out when early access opens. Providence is currently in Phase B — shadow mode.</p>
+        <div class="modal-note" style="margin-top:14px;">REF.PL-2026 · NEXUS-LOFI v1.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── TODO: paste your Formspree endpoint here ──────────────────────
+// Get it from: formspree.io/dashboard → your form → copy endpoint
+// It looks like: https://formspree.io/f/xpwzgkqr
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+// ─────────────────────────────────────────────────────────────────
+
 // Nav scroll shadow
 const nav = document.getElementById('topnav');
 window.addEventListener('scroll', () => {
@@ -1143,8 +1387,95 @@ const observer = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.12 });
-
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Waitlist modal ────────────────────────────────────────────────
+const backdrop  = document.getElementById('waitlistBackdrop');
+const modalClose = document.getElementById('modalClose');
+const form       = document.getElementById('waitlistForm');
+const submitBtn  = document.getElementById('submitBtn');
+const modalForm  = document.getElementById('modalForm');
+const modalSuccess = document.getElementById('modalSuccess');
+
+function openModal() {
+  backdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('wl-name').focus();
+}
+function closeModal() {
+  backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Wire every waitlist button
+document.querySelectorAll('a[href="#waitlist-form"]').forEach(btn => {
+  btn.addEventListener('click', e => { e.preventDefault(); openModal(); });
+});
+
+modalClose.addEventListener('click', closeModal);
+backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Validation
+function validate() {
+  let ok = true;
+  const name  = document.getElementById('wl-name');
+  const email = document.getElementById('wl-email');
+  const bg    = document.getElementById('wl-background');
+
+  document.getElementById('row-name').classList.toggle('invalid', !name.value.trim());
+  if (!name.value.trim()) ok = false;
+
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+  document.getElementById('row-email').classList.toggle('invalid', !emailOk);
+  if (!emailOk) ok = false;
+
+  document.getElementById('row-background').classList.toggle('invalid', !bg.value);
+  if (!bg.value) ok = false;
+
+  return ok;
+}
+
+// Submission
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!validate()) return;
+
+  submitBtn.disabled = true;
+  submitBtn.classList.add('loading');
+
+  try {
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name:       document.getElementById('wl-name').value.trim(),
+        email:      document.getElementById('wl-email').value.trim(),
+        background: document.getElementById('wl-background').value,
+      }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      modalForm.classList.add('hide');
+      modalSuccess.classList.add('show');
+    } else {
+      throw new Error(data?.errors?.[0]?.message || 'Submission failed');
+    }
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('loading');
+    submitBtn.textContent = 'Try again →';
+    console.error('Formspree error:', err);
+  }
+});
+
+// Clear validation state on input
+['wl-name','wl-email','wl-background'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    document.getElementById('row-' + id.replace('wl-','')).classList.remove('invalid');
+  });
+});
 </script>
 </body>
 </html>
