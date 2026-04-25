@@ -21,6 +21,7 @@ from providence.services.chat_engine import ChatEngine
 from providence.services.conversation_store import ConversationStore
 from providence.services.health import HealthService
 from providence.services.shadow_execution import ShadowSignalStore
+from providence.services.usage_tracker import UsageTracker
 from providence.storage.belief_store import BeliefStore
 from providence.storage.fragment_store import FragmentStore
 from providence.storage.run_store import RunStore
@@ -63,6 +64,9 @@ class AppState:
     # Phase 2: Customization
     agent_weight_store: Optional[AgentWeightStore] = None
     agent_preferences_store: Optional[AgentPreferencesStore] = None
+
+    # Phase 3: Usage tracking
+    usage_tracker: Optional[UsageTracker] = None
 
     # Extra metadata
     extra: dict[str, Any] = field(default_factory=dict)

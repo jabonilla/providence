@@ -154,11 +154,16 @@ def build_state(
     # Agent weights + preferences stores
     from providence.config.agent_weights import AgentWeightStore
     from providence.config.agent_preferences import AgentPreferencesStore
+    from providence.services.usage_tracker import UsageTracker
 
     weights_path = data_dir / "agent_weights.jsonl" if data_dir else None
     agent_weight_store = AgentWeightStore(persist_path=weights_path)
     prefs_path = data_dir / "agent_preferences.jsonl" if data_dir else None
     agent_preferences_store = AgentPreferencesStore(persist_path=prefs_path)
+
+    # Usage tracker
+    usage_path = data_dir / "usage_events.jsonl" if data_dir else None
+    usage_tracker = UsageTracker(persist_path=usage_path)
 
     # Build AppState first, then create ChatEngine (it needs the state reference)
     state = AppState(
@@ -176,6 +181,7 @@ def build_state(
         order_manager=order_manager,
         agent_weight_store=agent_weight_store,
         agent_preferences_store=agent_preferences_store,
+        usage_tracker=usage_tracker,
         extra={"data_dir": str(data_dir) if data_dir else None},
     )
     state.chat_engine = ChatEngine(state)
