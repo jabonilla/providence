@@ -792,12 +792,21 @@ img { display: block; }
 <!-- NAV -->
 <nav class="topnav" id="topnav">
   <div class="nav-brand">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="12" stroke="#212121" stroke-width="1"/>
-      <circle cx="14" cy="14" r="7" stroke="#0052c9" stroke-width="0.75"/>
-      <circle cx="14" cy="14" r="2.5" fill="#0052c9"/>
-      <circle cx="26" cy="14" r="1.2" fill="#0052c9"/>
-      <circle cx="14" cy="2" r="1.2" fill="#212121"/>
+    <!-- Providence mark — cobalt square, concentric circles, crosshair (mark-primary) -->
+    <svg width="28" height="28" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#0052c9"/>
+      <g fill="none" stroke="#fcfcfc" stroke-width="6">
+        <circle cx="100" cy="100" r="62"/>
+        <circle cx="100" cy="100" r="43"/>
+        <circle cx="100" cy="100" r="24"/>
+      </g>
+      <circle cx="100" cy="100" r="9" fill="#fcfcfc"/>
+      <g stroke="#fcfcfc" stroke-width="6">
+        <line x1="100" y1="16" x2="100" y2="38"/>
+        <line x1="100" y1="162" x2="100" y2="184"/>
+        <line x1="16" y1="100" x2="38" y2="100"/>
+        <line x1="162" y1="100" x2="184" y2="100"/>
+      </g>
     </svg>
     Providence
   </div>
@@ -807,7 +816,7 @@ img { display: block; }
     <a href="#moat">Security</a>
     <a href="#gate">Pricing</a>
   </div>
-  <a class="nav-cta" href="#cta">Request early access →</a>
+  <a class="nav-cta" href="#waitlist-form" target="_blank" rel="noopener">Join the waitlist →</a>
 </nav>
 
 <!-- HERO -->
@@ -837,7 +846,7 @@ img { display: block; }
       <h1>Hedge fund power,<br/>for <em>everyone.</em></h1>
       <p class="sub">Institutional-grade investing used to require $2 million and 18 months. Providence gives any individual that same power — 39 AI agents, 7 subsystems, full audit trail — in a week.</p>
       <div class="cta-group">
-        <a class="btn-primary" href="#cta">Request early access →</a>
+        <a class="btn-primary" href="#waitlist-form" target="_blank" rel="noopener">Join the waitlist →</a>
         <a class="btn-ghost" href="#how">See how it works</a>
       </div>
     </div>
@@ -1075,7 +1084,7 @@ img { display: block; }
   </svg>
   <h2 class="reveal">The intelligence to invest<br/>like a hedge fund <em>already exists.</em><br/>Now so does the access.</h2>
   <div class="cta-right reveal" data-delay="2">
-    <a class="btn-white">Request early access →</a>
+    <a class="btn-white" href="#waitlist-form" target="_blank" rel="noopener">Join the waitlist →</a>
     <div class="note">Early access · Q2 2026</div>
   </div>
 </section>
