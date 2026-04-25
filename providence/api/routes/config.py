@@ -21,6 +21,7 @@ from providence.api.schemas import (
 from providence.config.account_tiers import TIER_LIMITS, AccountTier, get_tier_limits
 from providence.config.agent_preferences import AgentPreferences
 from providence.config.agent_weights import DEFAULT_WEIGHTS
+from providence.config.watchlist import Watchlist, WatchlistEntry
 
 router = APIRouter(prefix="/config", tags=["config"])
 
@@ -51,6 +52,120 @@ async def get_watchlist() -> WatchlistResponse:
         entries=entries,
         active_tickers=state.watchlist.tickers,
     )
+
+
+@router.post("/watchlist/entries", response_model=WatchlistEntryResponse)
+async def add_watchlist_entry(
+    ticker: str,
+    sector: str = "",
+    priority: int = 1,
+    tags: list[str] | None = None,
+) -> WatchlistEntryResponse:
+    """Add a ticker to the watchlist."""
+    state = get_state()
+    if state.watchlist is None:
+        state.watchlist = Watchlist.default()
+
+    # Check for duplicate
+    existing_tickers = [e.ticker for e in state.watchlist.entries]
+    if ticker.upper() in existing_tickers:
+        raise HTTPException(status_code=409, detail="Ticker already in watchlist")
+
+    new_entry = WatchlistEntry(
+        ticker=ticker.upper(),
+        sector=sector,
+        enabled=True,
+        priority=priority,
+        tags=tuple(tags) if tags else (),
+    )
+
+    # Rebuild watchlist with new entry (frozen dataclass)
+    state.watchlist = Watchlist(
+        entries=state.watchlist.entries + (new_entry,),
+        name=state.watchlist.name,
+        max_positions=state.watchlist.max_positions,
+    )
+
+    return WatchlistEntryResponse(
+        ticker=new_entry.ticker,
+        sector=new_entry.sector,
+        enabled=new_entry.enabled,
+        priority=new_entry.priority,
+        tags=list(new_entry.tags),
+    )
+
+
+@router.put("/watchlist/entries/{ticker}")
+async def update_watchlist_entry(
+    ticker: str,
+    sector: str | None = None,
+    priority: int | None = None,
+    enabled: bool | None = None,
+    tags: list[str] | None = None,
+) -> WatchlistEntryResponse:
+    """Update a watchlist entry."""
+    state = get_state()
+    if state.watchlist is None:
+        raise HTTPException(status_code=404, detail="Watchlist not configured")
+
+    ticker_upper = ticker.upper()
+    found = False
+    new_entries = []
+    updated_entry = None
+
+    for e in state.watchlist.entries:
+        if e.ticker == ticker_upper:
+            found = True
+            updated_entry = WatchlistEntry(
+                ticker=e.ticker,
+                sector=sector if sector is not None else e.sector,
+                enabled=enabled if enabled is not None else e.enabled,
+                priority=priority if priority is not None else e.priority,
+                tags=tuple(tags) if tags is not None else e.tags,
+            )
+            new_entries.append(updated_entry)
+        else:
+            new_entries.append(e)
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Ticker not in watchlist")
+
+    state.watchlist = Watchlist(
+        entries=tuple(new_entries),
+        name=state.watchlist.name,
+        max_positions=state.watchlist.max_positions,
+    )
+
+    return WatchlistEntryResponse(
+        ticker=updated_entry.ticker,
+        sector=updated_entry.sector,
+        enabled=updated_entry.enabled,
+        priority=updated_entry.priority,
+        tags=list(updated_entry.tags),
+    )
+
+
+@router.delete("/watchlist/entries/{ticker}")
+async def remove_watchlist_entry(ticker: str):
+    """Remove a ticker from the watchlist."""
+    state = get_state()
+    if state.watchlist is None:
+        raise HTTPException(status_code=404, detail="Watchlist not configured")
+
+    ticker_upper = ticker.upper()
+    original_count = len(state.watchlist.entries)
+    new_entries = tuple(e for e in state.watchlist.entries if e.ticker != ticker_upper)
+
+    if len(new_entries) == original_count:
+        raise HTTPException(status_code=404, detail="Ticker not in watchlist")
+
+    state.watchlist = Watchlist(
+        entries=new_entries,
+        name=state.watchlist.name,
+        max_positions=state.watchlist.max_positions,
+    )
+
+    return {"status": "ok", "ticker": ticker_upper, "remaining": len(new_entries)}
 
 
 # ── Agent Weights ──────────────────────────────────────────────────
