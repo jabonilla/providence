@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from providence.api.deps import AppState, get_state, set_state
-from providence.api.routes import agents, chat, config, health, keys, perception, pipeline, portfolio, regime, seed, shadow, stores, usage
+from providence.api.routes import agents, chat, config, documents, health, keys, perception, pipeline, portfolio, regime, seed, shadow, stores, usage
 from providence.api.security import (
     RateLimitMiddleware,
     RequestSizeLimitMiddleware,
@@ -210,7 +210,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=bool(origins and origins != ["*"]),
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "X-API-Key", "Authorization"],
     )
 
@@ -303,6 +303,7 @@ def create_app(
     app.include_router(perception.router, prefix=api_prefix)
     app.include_router(seed.router, prefix=api_prefix)
     app.include_router(chat.router, prefix=api_prefix)
+    app.include_router(documents.router, prefix=api_prefix)
     app.include_router(usage.router, prefix=api_prefix)
 
     # ── Root endpoint ───────────────────────────────────────────────
