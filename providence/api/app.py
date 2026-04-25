@@ -25,6 +25,7 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from providence.api.deps import AppState, get_state, set_state
 from providence.api.routes import agents, chat, config, health, keys, perception, pipeline, portfolio, regime, seed, shadow, stores
@@ -340,5 +341,12 @@ def create_app(
             status_code=404,
             content={"error": "Dashboard not found"},
         )
+
+    # ── Static assets for UI kits ───────────────────────────────────
+    _assets_base = Path(__file__).parent.parent.parent / "ui_kits"
+    if not _assets_base.exists():
+        _assets_base = Path("/app/ui_kits")
+    if _assets_base.exists():
+        app.mount("/static", StaticFiles(directory=str(_assets_base)), name="static")
 
     return app
