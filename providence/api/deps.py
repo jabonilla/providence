@@ -7,7 +7,7 @@ and injected into route handlers via FastAPI Depends().
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from providence.agents.base import BaseAgent
 from providence.config.agent_config import AgentConfigRegistry
@@ -17,7 +17,6 @@ from providence.config.watchlist import Watchlist
 from providence.orchestration.runner import ProvidenceRunner
 from providence.portfolio.order_manager import OrderManager
 from providence.portfolio.tracker import PortfolioTracker
-from providence.services.chat_engine import ChatEngine
 from providence.services.conversation_store import ConversationStore
 from providence.services.health import HealthService
 from providence.services.shadow_execution import ShadowSignalStore
@@ -25,6 +24,9 @@ from providence.services.usage_tracker import UsageTracker
 from providence.storage.belief_store import BeliefStore
 from providence.storage.fragment_store import FragmentStore
 from providence.storage.run_store import RunStore
+
+if TYPE_CHECKING:
+    from providence.services.chat_engine import ChatEngine
 
 
 @dataclass
