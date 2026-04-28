@@ -52,6 +52,24 @@ def _load_stored_keys(data_dir: Path | None) -> None:
             logger.warning("Failed to load stored API keys", error=str(e))
 
 
+def _log_startup_status(state: AppState) -> None:
+    """Log a summary of what's available at startup for diagnostics."""
+    checks = {
+        "agents": len(state.agent_registry) if state.agent_registry else 0,
+        "fragments": state.fragment_store.count() if state.fragment_store else 0,
+        "beliefs": state.belief_store.count() if state.belief_store else 0,
+        "runs": state.run_store.count() if state.run_store else 0,
+        "shadow_signals": state.shadow_signal_store.count() if state.shadow_signal_store else 0,
+        "has_health_service": state.health_service is not None,
+        "has_runner": state.runner is not None,
+        "has_portfolio": state.portfolio_tracker is not None,
+        "has_chat_engine": state.chat_engine is not None,
+        "has_watchlist": state.watchlist is not None,
+    }
+    status = "READY" if checks["agents"] > 0 and checks["fragments"] > 0 else "DEGRADED"
+    logger.info("Startup validation", status=status, **checks)
+
+
 def build_state(
     *,
     data_dir: Path | None = None,
@@ -221,7 +239,7 @@ def main() -> None:
         logger.warning("Starting with minimal state — most endpoints will return errors")
 
     # Auto-seed demo data if stores are empty (first deploy)
-    if state.fragment_store.count() == 0:
+    if state.fragment_store and state.fragment_store.count() == 0:
         try:
             from providence.api.routes.seed import (
                 _seed_fragments, _seed_beliefs, _seed_runs,
@@ -238,6 +256,9 @@ def main() -> None:
                         beliefs=state.belief_store.count())
         except Exception as exc:
             logger.warning("Auto-seed failed (non-fatal)", error=str(exc))
+
+    # Startup validation log
+    _log_startup_status(state)
 
     # Create app
     app = create_app(state=state)
