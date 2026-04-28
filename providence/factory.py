@@ -34,6 +34,7 @@ from providence.agents.cognition import (
     CognitCrossSec,
     CognitEvent,
     CognitFundamental,
+    CognitKronos,
     CognitMacro,
     CognitNarrative,
     CognitTechnical,
@@ -103,6 +104,7 @@ logger = structlog.get_logger()
 # Frozen agents that take ZERO constructor arguments
 _FROZEN_NO_ARGS: dict[str, type[BaseAgent]] = {
     "COGNIT-TECHNICAL": CognitTechnical,
+    "COGNIT-KRONOS": CognitKronos,
     "REGIME-STAT": RegimeStat,
     "REGIME-SECTOR": RegimeSector,
     "REGIME-MISMATCH": RegimeMismatch,

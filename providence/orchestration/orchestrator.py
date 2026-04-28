@@ -30,6 +30,7 @@ logger = structlog.get_logger()
 COGNITION_AGENTS = [
     "COGNIT-FUNDAMENTAL",
     "COGNIT-TECHNICAL",
+    "COGNIT-KRONOS",
     "COGNIT-NARRATIVE",
     "COGNIT-MACRO",
     "COGNIT-EVENT",
