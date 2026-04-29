@@ -66,6 +66,42 @@ def seed_fragments(store: FragmentStore, base_time: datetime) -> None:
     """Create PRICE_OHLCV and SENTIMENT_NEWS fragments for each ticker across runs."""
     print("  Seeding fragments...")
     count = 0
+
+    # --- Historical daily price data (60 trading days) for forecast support ---
+    # The forecast endpoint requires 20+ PRICE_OHLCV fragments per ticker.
+    # Seed 60 daily candles so any horizon (5-60 days) has sufficient history.
+    history_days = 60
+    for ticker in TICKERS:
+        base_price = PRICES[ticker]
+        price = base_price
+        for day_offset in range(history_days, 0, -1):
+            ts = base_time - timedelta(days=day_offset)
+            daily_return = random.gauss(0.0005, 0.015)
+            price = round(price * (1 + daily_return), 2)
+            intraday_vol = abs(random.gauss(0, 0.008))
+            payload = {
+                "open": round(price * (1 - intraday_vol * 0.3), 2),
+                "high": round(price * (1 + intraday_vol), 2),
+                "low": round(price * (1 - intraday_vol), 2),
+                "close": price,
+                "volume": random.randint(5_000_000, 50_000_000),
+                "vwap": round(price * (1 + random.gauss(0, 0.001)), 2),
+            }
+            frag = MarketStateFragment(
+                agent_id="PERCEPT-PRICE",
+                timestamp=ts,
+                source_timestamp=ts - timedelta(minutes=5),
+                entity=ticker,
+                data_type=DataType.PRICE_OHLCV,
+                source_hash=_hash(payload),
+                payload=payload,
+            )
+            store.append(frag)
+            count += 1
+        # Update base price to match end of history for run-level fragments
+        PRICES[ticker] = price
+
+    # --- Per-run fragments (pipeline cycle data) ---
     for run_idx in range(NUM_RUNS):
         ts = base_time + timedelta(hours=run_idx * 6)
         for ticker in TICKERS:

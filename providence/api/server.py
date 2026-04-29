@@ -238,8 +238,15 @@ def main() -> None:
         state = AppState()
         logger.warning("Starting with minimal state — most endpoints will return errors")
 
-    # Auto-seed demo data if stores are empty (first deploy)
-    if state.fragment_store and state.fragment_store.count() == 0:
+    # Auto-seed demo data if stores are empty or have insufficient data
+    # (e.g. old seed with only 12 fragments per ticker — forecast needs 20+)
+    needs_seed = (
+        state.fragment_store and (
+            state.fragment_store.count() == 0
+            or state.fragment_store.count() < 200  # 8 tickers × 60 days = 480 minimum
+        )
+    )
+    if needs_seed:
         try:
             from providence.api.routes.seed import (
                 _seed_fragments, _seed_beliefs, _seed_runs,

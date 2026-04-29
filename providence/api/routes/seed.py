@@ -52,10 +52,43 @@ def _seed_fragments(state) -> int:
     count = 0
     now = datetime.now(timezone.utc)
 
+    # --- Historical daily price data (60 trading days) for forecast support ---
+    # The forecast endpoint requires 20+ PRICE_OHLCV fragments per ticker.
+    history_days = 60
+    price_tracker = dict(PRICES)  # mutable copy
+    for ticker in TICKERS:
+        price = price_tracker[ticker]
+        for day_offset in range(history_days, 0, -1):
+            ts = now - timedelta(days=day_offset)
+            daily_return = random.gauss(0.0005, 0.015)
+            price = round(price * (1 + daily_return), 2)
+            intraday_vol = abs(random.gauss(0, 0.008))
+            payload = {
+                "ticker": ticker,
+                "open": round(price * (1 - intraday_vol * 0.3), 2),
+                "high": round(price * (1 + intraday_vol), 2),
+                "low": round(price * (1 - intraday_vol), 2),
+                "close": price,
+                "volume": random.randint(10_000_000, 80_000_000),
+                "vwap": round(price * (1 + random.gauss(0, 0.001)), 2),
+            }
+            frag = MarketStateFragment(
+                fragment_id=str(uuid4()), agent_id="PERCEPT-PRICE",
+                timestamp=ts, source_timestamp=ts,
+                version=_hash(payload), entity=ticker,
+                data_type=DataType.PRICE_OHLCV, schema_version="1.0.0",
+                source_hash=_hash({"source": "polygon", "ticker": ticker}),
+                validation_status=ValidationStatus.VALID, payload=payload,
+            )
+            store.append(frag)
+            count += 1
+        price_tracker[ticker] = price
+
+    # --- Per-run fragments (pipeline cycle data) ---
     for run_idx in range(NUM_RUNS):
         ts = now - timedelta(hours=NUM_RUNS - run_idx)
         for ticker in TICKERS:
-            price = PRICES[ticker] * (1 + random.uniform(-0.03, 0.03))
+            price = price_tracker[ticker] * (1 + random.uniform(-0.03, 0.03))
             # PRICE fragment
             payload = {
                 "ticker": ticker, "open": round(price * 0.998, 2),

@@ -112,20 +112,79 @@ async def get_forecast(
         }
 
     except ImportError:
-        # Kronos model not installed — return a helpful message
+        # Kronos model not installed — generate a simple trend-based fallback forecast
+        # so the portal always has data to display.
+        import numpy as np
+
+        closes = df["close"].values
+        current_close = float(closes[-1])
+
+        # Simple linear trend extrapolation from recent data
+        lookback = min(20, len(closes))
+        recent = closes[-lookback:]
+        x = np.arange(lookback, dtype=float)
+        slope = float(np.polyfit(x, recent, 1)[0])
+
+        # Daily volatility for candle generation
+        if len(closes) > 1:
+            returns = np.diff(closes) / closes[:-1]
+            daily_vol = float(np.std(returns))
+        else:
+            daily_vol = 0.01
+
+        # Generate predicted candles
+        candles = []
+        prev_close = current_close
+        last_ts = datetime.now(timezone.utc)
+        for i in range(horizon):
+            trend_price = prev_close + slope
+            noise = prev_close * daily_vol * float(np.random.randn() * 0.3)
+            pred_close = round(trend_price + noise, 2)
+            pred_open = round(prev_close + (pred_close - prev_close) * 0.1, 2)
+            pred_high = round(max(pred_open, pred_close) + abs(prev_close * daily_vol * 0.5), 2)
+            pred_low = round(min(pred_open, pred_close) - abs(prev_close * daily_vol * 0.5), 2)
+
+            # Advance by ~1 business day
+            day_offset = 1
+            candidate = last_ts + timedelta(days=day_offset)
+            while candidate.weekday() >= 5:
+                day_offset += 1
+                candidate = last_ts + timedelta(days=day_offset)
+            last_ts = candidate
+
+            candles.append({
+                "timestamp": last_ts.isoformat(),
+                "open": pred_open,
+                "high": pred_high,
+                "low": pred_low,
+                "close": pred_close,
+            })
+            prev_close = pred_close
+
+        # Compute direction and return
+        final_close = candles[-1]["close"]
+        predicted_return = round((final_close / current_close) - 1.0, 6)
+        if predicted_return > 0.005:
+            direction = "UP"
+        elif predicted_return < -0.005:
+            direction = "DOWN"
+        else:
+            direction = "FLAT"
+
+        # Confidence based on trend strength
+        trend_strength = abs(slope) / (current_close * daily_vol) if daily_vol > 0 else 0.5
+        confidence = round(min(0.85, 0.35 + trend_strength * 0.3), 4)
+
         return {
             "ticker": ticker,
-            "model": "NeoQuasar/Kronos-base",
-            "status": "model_not_installed",
-            "message": (
-                "Kronos model is not installed in this environment. "
-                "Install with: git clone https://github.com/shiyu-coder/Kronos.git "
-                "&& pip install -r Kronos/requirements.txt "
-                "&& export KRONOS_HOME=$(pwd)/Kronos"
-            ),
+            "model": "Providence-TrendExtrap-v1",
             "horizon": horizon,
-            "current_close": float(df["close"].iloc[-1]),
-            "data_points_available": len(records),
+            "predicted_direction": direction,
+            "predicted_return": predicted_return,
+            "confidence": confidence,
+            "forecast_timestamp": datetime.now(timezone.utc).isoformat(),
+            "current_close": current_close,
+            "candles": candles,
         }
 
     except Exception as e:
