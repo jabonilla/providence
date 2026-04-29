@@ -41,3 +41,4 @@ data/
 *.parquet
 *.feather
 .claude/worktrees/
+Kronos/
