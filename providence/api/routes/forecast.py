@@ -120,7 +120,8 @@ async def get_forecast(
             "message": (
                 "Kronos model is not installed in this environment. "
                 "Install with: git clone https://github.com/shiyu-coder/Kronos.git "
-                "&& cd Kronos && pip install -r requirements.txt"
+                "&& pip install -r Kronos/requirements.txt "
+                "&& export KRONOS_HOME=$(pwd)/Kronos"
             ),
             "horizon": horizon,
             "current_close": float(df["close"].iloc[-1]),

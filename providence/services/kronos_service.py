@@ -20,8 +20,14 @@ The service handles:
   - Output conversion to structured ForecastResult
 
 Requirements:
-  pip install kronos-model   (or clone + pip install from GitHub)
-  pip install torch pandas
+  1. Clone the Kronos repo:
+     git clone https://github.com/shiyu-coder/Kronos.git
+  2. Install its dependencies:
+     pip install -r Kronos/requirements.txt
+  3. Either:
+     a) Set KRONOS_HOME env var pointing to the cloned directory, OR
+     b) Add Kronos/ to your PYTHONPATH
+  4. pip install torch pandas
 
 Classification: FROZEN infrastructure — no LLM calls, pure model inference.
 """
@@ -108,12 +114,44 @@ class KronosService:
         try:
             from model import Kronos, KronosTokenizer, KronosPredictor
         except ImportError:
-            raise ImportError(
-                "Kronos model not installed. Install with:\n"
-                "  git clone https://github.com/shiyu-coder/Kronos.git\n"
-                "  cd Kronos && pip install -r requirements.txt\n"
-                "Or: pip install kronos-model"
-            )
+            # Kronos isn't pip-installable — try auto-discovering the clone
+            import os
+            import sys
+
+            kronos_home = os.getenv("KRONOS_HOME", "")
+            search_paths = [p for p in [
+                kronos_home,
+                os.path.join(os.getcwd(), "Kronos"),
+                os.path.join(os.path.dirname(__file__), "..", "..", "Kronos"),
+                os.path.expanduser("~/Kronos"),
+            ] if p]
+
+            found = False
+            for path in search_paths:
+                abs_path = os.path.abspath(path)
+                model_init = os.path.join(abs_path, "model", "__init__.py")
+                if os.path.isfile(model_init):
+                    if abs_path not in sys.path:
+                        sys.path.insert(0, abs_path)
+                    logger.info("Found Kronos installation", path=abs_path)
+                    found = True
+                    break
+
+            if found:
+                try:
+                    from model import Kronos, KronosTokenizer, KronosPredictor
+                except ImportError:
+                    found = False
+
+            if not found:
+                raise ImportError(
+                    "Kronos model not found. Install with:\n"
+                    "  git clone https://github.com/shiyu-coder/Kronos.git\n"
+                    "  pip install -r Kronos/requirements.txt\n"
+                    "Then either:\n"
+                    "  export KRONOS_HOME=/path/to/Kronos\n"
+                    "  OR clone into the Providence project root"
+                )
 
         logger.info(
             "Loading Kronos model",
