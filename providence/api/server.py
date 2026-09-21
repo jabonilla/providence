@@ -57,7 +57,7 @@ def _log_startup_status(state: AppState) -> None:
         "fragments": state.fragment_store.count() if state.fragment_store else 0,
         "beliefs": state.belief_store.count() if state.belief_store else 0,
         "runs": state.run_store.count() if state.run_store else 0,
-        "shadow_signals": state.shadow_signal_store.count() if state.shadow_signal_store else 0,
+        "shadow_signals": state.shadow_signal_store.count if state.shadow_signal_store else 0,
         "has_health_service": state.health_service is not None,
         "has_runner": state.runner is not None,
         "has_portfolio": state.portfolio_tracker is not None,
