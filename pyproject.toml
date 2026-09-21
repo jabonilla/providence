@@ -14,6 +14,10 @@ dependencies = [
     "python-dotenv>=1.0",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
+    # Required by the UploadFile routes in api/routes/{documents,chat}.py.
+    # Present in requirements.txt but missing here, so `pip install -e .`
+    # produced an app that could not be imported.
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
