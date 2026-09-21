@@ -42,6 +42,7 @@ NOW = datetime.now(timezone.utc)
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 def _make_context(**metadata_kwargs) -> AgentContext:
     return AgentContext(
         agent_id="TEST",
@@ -108,19 +109,24 @@ def _make_position(
 # parse_exit_response Tests
 # ===========================================================================
 
+
 class TestParseExitResponse:
     def test_valid_response(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.20,
-                "regret_estimate_bps": 15.0,
-                "regret_direction": "MISSED_UPSIDE",
-                "thesis_health_score": 0.85,
-                "rationale": "Thesis healthy.",
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "HOLD",
+                        "exit_confidence": 0.20,
+                        "regret_estimate_bps": 15.0,
+                        "regret_direction": "MISSED_UPSIDE",
+                        "thesis_health_score": 0.85,
+                        "rationale": "Thesis healthy.",
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert len(result) == 1
@@ -129,12 +135,14 @@ class TestParseExitResponse:
         assert result[0]["exit_confidence"] == 0.20
 
     def test_multi_ticker_response(self):
-        raw = json.dumps({
-            "assessments": [
-                {"ticker": "AAPL", "exit_action": "HOLD", "exit_confidence": 0.10},
-                {"ticker": "MSFT", "exit_action": "EXIT", "exit_confidence": 0.85},
-            ],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {"ticker": "AAPL", "exit_action": "HOLD", "exit_confidence": 0.10},
+                    {"ticker": "MSFT", "exit_action": "EXIT", "exit_confidence": 0.85},
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert len(result) == 2
@@ -151,86 +159,114 @@ class TestParseExitResponse:
         assert result is None
 
     def test_invalid_action_defaults_to_hold(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "BUY_MORE",
-                "exit_confidence": 0.50,
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "BUY_MORE",
+                        "exit_confidence": 0.50,
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert result[0]["exit_action"] == "HOLD"
 
     def test_confidence_clamped_to_max(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "EXIT",
-                "exit_confidence": 1.5,
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "EXIT",
+                        "exit_confidence": 1.5,
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert result[0]["exit_confidence"] <= 0.95
 
     def test_negative_confidence_clamped(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": -0.5,
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "HOLD",
+                        "exit_confidence": -0.5,
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert result[0]["exit_confidence"] >= 0.0
 
     def test_negative_regret_clamped(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.2,
-                "regret_estimate_bps": -50.0,
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "HOLD",
+                        "exit_confidence": 0.2,
+                        "regret_estimate_bps": -50.0,
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result[0]["regret_estimate_bps"] >= 0.0
 
     def test_invalid_regret_direction_defaults(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.2,
-                "regret_direction": "WRONG",
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "HOLD",
+                        "exit_confidence": 0.2,
+                        "regret_direction": "WRONG",
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result[0]["regret_direction"] == "MISSED_UPSIDE"
 
     def test_markdown_fences_stripped(self):
-        inner = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "REDUCE",
-                "exit_confidence": 0.60,
-            }],
-        })
+        inner = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "REDUCE",
+                        "exit_confidence": 0.60,
+                    }
+                ],
+            }
+        )
         raw = f"```json\n{inner}\n```"
         result = parse_exit_response(raw)
         assert result is not None
         assert result[0]["exit_action"] == "REDUCE"
 
     def test_json_embedded_in_text(self):
-        inner = json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "EXIT",
-                "exit_confidence": 0.80,
-            }],
-        })
+        inner = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "AAPL",
+                        "exit_action": "EXIT",
+                        "exit_confidence": 0.80,
+                    }
+                ],
+            }
+        )
         raw = f"Here is my analysis: {inner} That's all."
         result = parse_exit_response(raw)
         assert result is not None
@@ -241,25 +277,31 @@ class TestParseExitResponse:
         assert result is None
 
     def test_missing_ticker_skipped(self):
-        raw = json.dumps({
-            "assessments": [
-                {"exit_action": "HOLD", "exit_confidence": 0.2},
-                {"ticker": "MSFT", "exit_action": "EXIT", "exit_confidence": 0.8},
-            ],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {"exit_action": "HOLD", "exit_confidence": 0.2},
+                    {"ticker": "MSFT", "exit_action": "EXIT", "exit_confidence": 0.8},
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result is not None
         assert len(result) == 1
         assert result[0]["ticker"] == "MSFT"
 
     def test_ticker_uppercased(self):
-        raw = json.dumps({
-            "assessments": [{
-                "ticker": "aapl",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.2,
-            }],
-        })
+        raw = json.dumps(
+            {
+                "assessments": [
+                    {
+                        "ticker": "aapl",
+                        "exit_action": "HOLD",
+                        "exit_confidence": 0.2,
+                    }
+                ],
+            }
+        )
         result = parse_exit_response(raw)
         assert result[0]["ticker"] == "AAPL"
 
@@ -267,6 +309,7 @@ class TestParseExitResponse:
 # ===========================================================================
 # apply_renewal_deferral Tests
 # ===========================================================================
+
 
 class TestApplyRenewalDeferral:
     def test_no_renewal_no_change(self):
@@ -349,31 +392,44 @@ class TestApplyRenewalDeferral:
 # compute_thesis_health Tests
 # ===========================================================================
 
+
 class TestComputeThesisHealth:
     def test_all_active(self):
-        beliefs = [_make_belief(conditions=[
-            {"status": "ACTIVE", "ticker": "AAPL"},
-            {"status": "ACTIVE", "ticker": "AAPL"},
-        ])]
+        beliefs = [
+            _make_belief(
+                conditions=[
+                    {"status": "ACTIVE", "ticker": "AAPL"},
+                    {"status": "ACTIVE", "ticker": "AAPL"},
+                ]
+            )
+        ]
         health, triggered, total = compute_thesis_health("AAPL", beliefs)
         assert health == 1.0
         assert triggered == 0
         assert total == 2
 
     def test_one_triggered(self):
-        beliefs = [_make_belief(conditions=[
-            {"status": "ACTIVE", "ticker": "AAPL"},
-            {"status": "TRIGGERED", "ticker": "AAPL"},
-        ])]
+        beliefs = [
+            _make_belief(
+                conditions=[
+                    {"status": "ACTIVE", "ticker": "AAPL"},
+                    {"status": "TRIGGERED", "ticker": "AAPL"},
+                ]
+            )
+        ]
         health, triggered, total = compute_thesis_health("AAPL", beliefs)
         assert health == 0.5
         assert triggered == 1
 
     def test_all_triggered(self):
-        beliefs = [_make_belief(conditions=[
-            {"status": "TRIGGERED", "ticker": "AAPL"},
-            {"status": "TRIGGERED", "ticker": "AAPL"},
-        ])]
+        beliefs = [
+            _make_belief(
+                conditions=[
+                    {"status": "TRIGGERED", "ticker": "AAPL"},
+                    {"status": "TRIGGERED", "ticker": "AAPL"},
+                ]
+            )
+        ]
         health, triggered, total = compute_thesis_health("AAPL", beliefs)
         assert health == 0.0
         assert triggered == 2
@@ -395,19 +451,26 @@ class TestComputeThesisHealth:
 # CognitExit Integration Tests
 # ===========================================================================
 
+
 class TestCognitExit:
     @pytest.mark.asyncio
     async def test_process_valid(self):
         mock_llm = AsyncMock()
-        mock_llm.complete = AsyncMock(return_value=json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.20,
-                "thesis_health_score": 0.85,
-                "rationale": "Healthy thesis.",
-            }],
-        }))
+        mock_llm.complete = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "assessments": [
+                        {
+                            "ticker": "AAPL",
+                            "exit_action": "HOLD",
+                            "exit_confidence": 0.20,
+                            "thesis_health_score": 0.85,
+                            "rationale": "Healthy thesis.",
+                        }
+                    ],
+                }
+            )
+        )
         agent = CognitExit(llm_client=mock_llm)
         ctx = _make_context(
             active_positions=[_make_position()],
@@ -423,13 +486,17 @@ class TestCognitExit:
     @pytest.mark.asyncio
     async def test_process_multi_position(self):
         mock_llm = AsyncMock()
-        mock_llm.complete = AsyncMock(return_value=json.dumps({
-            "assessments": [
-                {"ticker": "AAPL", "exit_action": "HOLD", "exit_confidence": 0.1},
-                {"ticker": "MSFT", "exit_action": "REDUCE", "exit_confidence": 0.6},
-                {"ticker": "TSLA", "exit_action": "EXIT", "exit_confidence": 0.9},
-            ],
-        }))
+        mock_llm.complete = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "assessments": [
+                        {"ticker": "AAPL", "exit_action": "HOLD", "exit_confidence": 0.1},
+                        {"ticker": "MSFT", "exit_action": "REDUCE", "exit_confidence": 0.6},
+                        {"ticker": "TSLA", "exit_action": "EXIT", "exit_confidence": 0.9},
+                    ],
+                }
+            )
+        )
         agent = CognitExit(llm_client=mock_llm)
         ctx = _make_context(
             active_positions=[
@@ -447,14 +514,20 @@ class TestCognitExit:
     @pytest.mark.asyncio
     async def test_process_with_renewal_deferral(self):
         mock_llm = AsyncMock()
-        mock_llm.complete = AsyncMock(return_value=json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "EXIT",
-                "exit_confidence": 0.80,
-                "rationale": "Thesis deteriorating.",
-            }],
-        }))
+        mock_llm.complete = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "assessments": [
+                        {
+                            "ticker": "AAPL",
+                            "exit_action": "EXIT",
+                            "exit_confidence": 0.80,
+                            "rationale": "Thesis deteriorating.",
+                        }
+                    ],
+                }
+            )
+        )
         agent = CognitExit(llm_client=mock_llm)
         ctx = _make_context(
             active_positions=[_make_position()],
@@ -499,13 +572,19 @@ class TestCognitExit:
     @pytest.mark.asyncio
     async def test_content_hash_computed(self):
         mock_llm = AsyncMock()
-        mock_llm.complete = AsyncMock(return_value=json.dumps({
-            "assessments": [{
-                "ticker": "AAPL",
-                "exit_action": "HOLD",
-                "exit_confidence": 0.2,
-            }],
-        }))
+        mock_llm.complete = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "assessments": [
+                        {
+                            "ticker": "AAPL",
+                            "exit_action": "HOLD",
+                            "exit_confidence": 0.2,
+                        }
+                    ],
+                }
+            )
+        )
         agent = CognitExit(llm_client=mock_llm)
         ctx = _make_context(active_positions=[_make_position()])
         result = await agent.process(ctx)
@@ -540,63 +619,114 @@ class TestCognitExitHealth:
 # evaluate_condition Tests
 # ===========================================================================
 
+
 class TestEvaluateCondition:
     def test_gt_breached(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {"rsi_14": 75.0})
         assert result["is_breached"] is True
         assert result["breach_magnitude"] > 0
 
     def test_lt_breached(self):
-        cond = {"metric": "close_price", "operator": "LT", "threshold": 165.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "close_price",
+            "operator": "LT",
+            "threshold": 165.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {"close_price": 150.0})
         assert result["is_breached"] is True
 
     def test_gt_not_breached(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {"rsi_14": 65.0})
         assert result["is_breached"] is False
 
     def test_missing_current_value(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {})
         assert result["is_breached"] is False
         assert result["current_value"] is None
 
     def test_marginal_breach_impact(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         # 71.0 → magnitude = 1/70 ≈ 0.014 (marginal)
         result = evaluate_condition(cond, {"rsi_14": 71.0})
         assert result["is_breached"] is True
         assert result["confidence_impact"] == BREACH_IMPACT_MARGINAL
 
     def test_moderate_breach_impact(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         # 80.0 → magnitude = 10/70 ≈ 0.143 (moderate)
         result = evaluate_condition(cond, {"rsi_14": 80.0})
         assert result["is_breached"] is True
         assert result["confidence_impact"] == BREACH_IMPACT_MODERATE
 
     def test_strong_breach_impact(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         # 90.0 → magnitude = 20/70 ≈ 0.286 (strong)
         result = evaluate_condition(cond, {"rsi_14": 90.0})
         assert result["is_breached"] is True
         assert result["confidence_impact"] == BREACH_IMPACT_STRONG
 
     def test_velocity_computation(self):
-        cond = {"metric": "rsi_14", "operator": "GT", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "GT",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         historical = {"rsi_14": [60.0, 62.0, 64.0, 66.0, 68.0]}
         result = evaluate_condition(cond, {"rsi_14": 68.0}, historical)
         assert result["breach_velocity"] == 2.0  # +2 per day average
 
     def test_unknown_operator(self):
-        cond = {"metric": "rsi_14", "operator": "UNKNOWN", "threshold": 70.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "rsi_14",
+            "operator": "UNKNOWN",
+            "threshold": 70.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {"rsi_14": 75.0})
         assert result["is_breached"] is False
 
     def test_crosses_above_breached(self):
-        cond = {"metric": "price", "operator": "CROSSES_ABOVE", "threshold": 200.0, "condition_id": str(uuid4())}
+        cond = {
+            "metric": "price",
+            "operator": "CROSSES_ABOVE",
+            "threshold": 200.0,
+            "condition_id": str(uuid4()),
+        }
         result = evaluate_condition(cond, {"price": 210.0})
         assert result["is_breached"] is True
 
@@ -609,6 +739,7 @@ class TestEvaluateCondition:
 # ===========================================================================
 # is_approaching Tests
 # ===========================================================================
+
 
 class TestIsApproaching:
     def test_approaching_lt(self):
@@ -635,6 +766,7 @@ class TestIsApproaching:
 # InvalidMon Integration Tests
 # ===========================================================================
 
+
 class TestInvalidMon:
     @pytest.mark.asyncio
     async def test_process_no_breaches(self):
@@ -652,15 +784,19 @@ class TestInvalidMon:
     async def test_process_with_breach(self):
         agent = InvalidMon()
         ctx = _make_context(
-            active_beliefs=[_make_belief(conditions=[
-                {
-                    "condition_id": str(uuid4()),
-                    "metric": "gross_margin_pct",
-                    "operator": "LT",
-                    "threshold": 44.0,
-                    "status": "ACTIVE",
-                },
-            ])],
+            active_beliefs=[
+                _make_belief(
+                    conditions=[
+                        {
+                            "condition_id": str(uuid4()),
+                            "metric": "gross_margin_pct",
+                            "operator": "LT",
+                            "threshold": 44.0,
+                            "status": "ACTIVE",
+                        },
+                    ]
+                )
+            ],
             current_values={"gross_margin_pct": 42.0},
         )
         result = await agent.process(ctx)
@@ -672,15 +808,19 @@ class TestInvalidMon:
     async def test_triggered_conditions_skipped(self):
         agent = InvalidMon()
         ctx = _make_context(
-            active_beliefs=[_make_belief(conditions=[
-                {
-                    "condition_id": str(uuid4()),
-                    "metric": "rsi_14",
-                    "operator": "GT",
-                    "threshold": 70.0,
-                    "status": "TRIGGERED",
-                },
-            ])],
+            active_beliefs=[
+                _make_belief(
+                    conditions=[
+                        {
+                            "condition_id": str(uuid4()),
+                            "metric": "rsi_14",
+                            "operator": "GT",
+                            "threshold": 70.0,
+                            "status": "TRIGGERED",
+                        },
+                    ]
+                )
+            ],
             current_values={"rsi_14": 75.0},
         )
         result = await agent.process(ctx)
@@ -709,15 +849,19 @@ class TestInvalidMon:
         agent = InvalidMon()
         # gross_margin_pct at 44.2, threshold 44.0 → distance = 0.2/44 ≈ 0.45% (approaching)
         ctx = _make_context(
-            active_beliefs=[_make_belief(conditions=[
-                {
-                    "condition_id": str(uuid4()),
-                    "metric": "gross_margin_pct",
-                    "operator": "LT",
-                    "threshold": 44.0,
-                    "status": "ACTIVE",
-                },
-            ])],
+            active_beliefs=[
+                _make_belief(
+                    conditions=[
+                        {
+                            "condition_id": str(uuid4()),
+                            "metric": "gross_margin_pct",
+                            "operator": "LT",
+                            "threshold": 44.0,
+                            "status": "ACTIVE",
+                        },
+                    ]
+                )
+            ],
             current_values={"gross_margin_pct": 44.2},
         )
         result = await agent.process(ctx)
@@ -745,6 +889,7 @@ class TestInvalidMonHealth:
 # ===========================================================================
 # Schema Tests
 # ===========================================================================
+
 
 class TestExitSchemas:
     def test_exit_assessment_frozen(self):

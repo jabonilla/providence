@@ -25,6 +25,7 @@ from providence.schemas.enums import StatisticalRegime, AgentRecommendation
 # LEARN-ATTRIB output
 # ---------------------------------------------------------------------------
 
+
 class AgentAttribution(BaseModel):
     """Performance attribution for a single agent over an evaluation window."""
 
@@ -34,11 +35,15 @@ class AgentAttribution(BaseModel):
     total_beliefs_produced: int = Field(default=0, ge=0)
     beliefs_acted_on: int = Field(default=0, ge=0)
     hit_rate: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Fraction of beliefs where direction was correct",
     )
     avg_confidence: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Average raw_confidence across beliefs",
     )
     avg_return_bps: float = Field(
@@ -54,7 +59,8 @@ class AgentAttribution(BaseModel):
         description="Agent's information ratio (excess return / tracking error)",
     )
     max_drawdown_contribution_bps: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Agent's contribution to max portfolio drawdown (bps)",
     )
     value_added_bps: float = Field(
@@ -117,7 +123,11 @@ class AttributionOutput(BaseModel):
             data = {
                 "agent_id": self.agent_id,
                 "agent_attributions": [
-                    {"agent_id": a.agent_id, "hit_rate": a.hit_rate, "value_added_bps": a.value_added_bps}
+                    {
+                        "agent_id": a.agent_id,
+                        "hit_rate": a.hit_rate,
+                        "value_added_bps": a.value_added_bps,
+                    }
                     for a in self.agent_attributions
                 ],
                 "portfolio_return_bps": self.portfolio_return_bps,
@@ -130,6 +140,7 @@ class AttributionOutput(BaseModel):
 # ---------------------------------------------------------------------------
 # LEARN-CALIB output
 # ---------------------------------------------------------------------------
+
 
 class CalibrationBucket(BaseModel):
     """Calibration analysis for a confidence bucket.
@@ -145,7 +156,9 @@ class CalibrationBucket(BaseModel):
     sample_count: int = Field(default=0, ge=0)
     avg_stated_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     realized_accuracy: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Fraction of beliefs that were directionally correct",
     )
     calibration_error: float = Field(
@@ -153,7 +166,8 @@ class CalibrationBucket(BaseModel):
         description="avg_stated_confidence - realized_accuracy (positive = overconfident)",
     )
     brier_score: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Mean squared difference between confidence and outcome",
     )
 
@@ -166,7 +180,8 @@ class AgentCalibration(BaseModel):
     agent_id: str = Field(...)
     total_beliefs_evaluated: int = Field(default=0, ge=0)
     overall_brier_score: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Overall Brier score (lower = better calibrated)",
     )
     overall_calibration_error: float = Field(
@@ -201,7 +216,8 @@ class CalibrationOutput(BaseModel):
     evaluation_end: datetime = Field(...)
     agent_calibrations: list[AgentCalibration] = Field(default_factory=list)
     system_brier_score: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="System-wide Brier score",
     )
     agents_overconfident: int = Field(default=0, ge=0)
@@ -240,6 +256,7 @@ class CalibrationOutput(BaseModel):
 # LEARN-RETRAIN output
 # ---------------------------------------------------------------------------
 
+
 class RetrainRecommendation(BaseModel):
     """Retraining recommendation for a single agent."""
 
@@ -253,7 +270,8 @@ class RetrainRecommendation(BaseModel):
         description="Retrain priority: LOW, MEDIUM, HIGH, CRITICAL",
     )
     performance_degradation_pct: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Performance degradation vs baseline (%)",
     )
     suggested_changes: list[str] = Field(
@@ -297,7 +315,11 @@ class RetrainOutput(BaseModel):
             data = {
                 "agent_id": self.agent_id,
                 "recommendations": [
-                    {"agent_id": r.agent_id, "needs_retrain": r.needs_retrain, "priority": r.priority}
+                    {
+                        "agent_id": r.agent_id,
+                        "needs_retrain": r.needs_retrain,
+                        "priority": r.priority,
+                    }
                     for r in self.recommendations
                 ],
             }
@@ -309,6 +331,7 @@ class RetrainOutput(BaseModel):
 # ---------------------------------------------------------------------------
 # LEARN-BACKTEST output
 # ---------------------------------------------------------------------------
+
 
 class BacktestPeriod(BaseModel):
     """Results for a single backtest sub-period (e.g., monthly)."""
@@ -356,7 +379,8 @@ class BacktestOutput(BaseModel):
     total_trades: int = Field(default=0, ge=0)
     overall_win_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     profit_factor: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Gross profits / gross losses",
     )
     content_hash: str = Field(default="")
@@ -386,6 +410,7 @@ class BacktestOutput(BaseModel):
 # AGENT SCORECARD output (Spec Section 2.7)
 # ---------------------------------------------------------------------------
 
+
 class ScorecardCalibration(BaseModel):
     """Calibration metrics for agent's confidence predictions."""
 
@@ -398,7 +423,8 @@ class ScorecardCalibration(BaseModel):
     )
     is_overconfident: bool = Field(default=False)
     recommended_adjustment: float = Field(
-        default=1.0, gt=0.0,
+        default=1.0,
+        gt=0.0,
         description="Suggested confidence multiplier",
     )
 

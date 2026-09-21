@@ -189,9 +189,7 @@ class PerceptFactors(BaseAgent[list[MarketStateFragment]]):
         except (ValueError, TypeError):
             return datetime.now(timezone.utc)
 
-    def _create_quarantined_fragment(
-        self, date_str: str, error_msg: str
-    ) -> MarketStateFragment:
+    def _create_quarantined_fragment(self, date_str: str, error_msg: str) -> MarketStateFragment:
         """Step 6: ALERT — Create a quarantined fragment for failed ingestion."""
         return MarketStateFragment(
             fragment_id=uuid4(),

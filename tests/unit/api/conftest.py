@@ -81,14 +81,16 @@ def _make_run(
     now = datetime.now(timezone.utc)
     stages = []
     for i in range(num_stages):
-        stages.append(StageResult(
-            stage_name=f"stage-{i}",
-            agent_id=f"AGENT-{i}",
-            status=StageStatus.SUCCEEDED,
-            started_at=now,
-            finished_at=now,
-            duration_ms=100.0 * (i + 1),
-        ))
+        stages.append(
+            StageResult(
+                stage_name=f"stage-{i}",
+                agent_id=f"AGENT-{i}",
+                status=StageStatus.SUCCEEDED,
+                started_at=now,
+                finished_at=now,
+                duration_ms=100.0 * (i + 1),
+            )
+        )
     return PipelineRun(
         run_id=uuid4(),
         loop_type=loop_type,
@@ -124,9 +126,14 @@ def test_agents():
     agents = {}
     # A few representative agents from each subsystem
     for aid in [
-        "PERCEPT-PRICE", "COGNIT-TECHNICAL", "COGNIT-FUNDAMENTAL",
-        "REGIME-STAT", "DECIDE-OPTIM", "EXEC-VALIDATE",
-        "LEARN-ATTRIB", "GOVERN-CAPITAL",
+        "PERCEPT-PRICE",
+        "COGNIT-TECHNICAL",
+        "COGNIT-FUNDAMENTAL",
+        "REGIME-STAT",
+        "DECIDE-OPTIM",
+        "EXEC-VALIDATE",
+        "LEARN-ATTRIB",
+        "GOVERN-CAPITAL",
     ]:
         agents[aid] = MockAgent(agent_id=aid)
     return agents

@@ -1,4 +1,5 @@
 """Tests for Watchlist at providence/config/watchlist.py."""
+
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -35,21 +36,13 @@ class TestWatchlistEntry:
 
     def test_entry_with_tags(self):
         """WatchlistEntry can have tags."""
-        entry = WatchlistEntry(
-            ticker="AAPL",
-            sector="Tech",
-            tags=("mega_cap", "sp500")
-        )
+        entry = WatchlistEntry(ticker="AAPL", sector="Tech", tags=("mega_cap", "sp500"))
         assert "mega_cap" in entry.tags
         assert "sp500" in entry.tags
 
     def test_entry_with_priority(self):
         """WatchlistEntry can have custom priority."""
-        entry = WatchlistEntry(
-            ticker="AAPL",
-            sector="Tech",
-            priority=2
-        )
+        entry = WatchlistEntry(ticker="AAPL", sector="Tech", priority=2)
         assert entry.priority == 2
 
 

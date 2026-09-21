@@ -3,6 +3,7 @@
 Consumes RoutingPlan from EXEC-ROUTER and GuardianVerdict from EXEC-GUARDIAN,
 then manages order submission, fill tracking, and portfolio reconciliation.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -48,7 +49,7 @@ class ExecutionService:
 
     async def execute_routing_plan(
         self,
-        routing_plan: dict,     # RoutingPlan.model_dump()
+        routing_plan: dict,  # RoutingPlan.model_dump()
         guardian_verdict: dict,  # GuardianVerdict.model_dump()
     ) -> dict[str, Any]:
         """Execute a routing plan, respecting guardian verdict.
@@ -285,9 +286,7 @@ class ExecutionService:
                 try:
                     # Fetch broker status
                     if managed_order.broker_order_id:
-                        broker_order = await self._broker.get_order(
-                            managed_order.broker_order_id
-                        )
+                        broker_order = await self._broker.get_order(managed_order.broker_order_id)
                     else:
                         # Fall back to client_order_id lookup
                         broker_order = await self._broker.get_order_by_client_id(
@@ -427,11 +426,13 @@ class ExecutionService:
                     orphaned=list(orphaned),
                 )
                 for ticker in orphaned:
-                    discrepancies.append({
-                        "type": "orphaned_position",
-                        "ticker": ticker,
-                        "description": f"Position {ticker} on broker but not in portfolio tracker",
-                    })
+                    discrepancies.append(
+                        {
+                            "type": "orphaned_position",
+                            "ticker": ticker,
+                            "description": f"Position {ticker} on broker but not in portfolio tracker",
+                        }
+                    )
 
             positions_synced = list(broker_tickers)
 
@@ -506,9 +507,7 @@ class ExecutionService:
         if flatten_positions:
             try:
                 close_orders = await self._broker.close_all_positions()
-                closed_positions = [
-                    order.get("symbol", "UNKNOWN") for order in close_orders
-                ]
+                closed_positions = [order.get("symbol", "UNKNOWN") for order in close_orders]
                 logger.info(
                     "All positions closed",
                     count=len(closed_positions),

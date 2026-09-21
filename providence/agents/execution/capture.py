@@ -142,9 +142,11 @@ def evaluate_position(
     # Rule: Hard giveback — lost > 50% of peak unrealized gain
     if peak_pnl > 0 and current_pnl < peak_pnl * (1.0 - params["hard_giveback_pct"]):
         return (
-            "CLOSE", 1.0, 0.90,
+            "CLOSE",
+            1.0,
+            0.90,
             f"Hard giveback: current PnL {current_pnl:.4f} lost >"
-            f" {params['hard_giveback_pct']*100:.0f}% of peak {peak_pnl:.4f}",
+            f" {params['hard_giveback_pct'] * 100:.0f}% of peak {peak_pnl:.4f}",
         )
 
     # Rule: Minimum hold period — don't trigger trailing stop before min_hold_days
@@ -161,19 +163,25 @@ def evaluate_position(
 
         if trim_pct >= 1.0:
             return (
-                "CLOSE", 1.0, 0.85,
+                "CLOSE",
+                1.0,
+                0.85,
                 f"Trailing stop breached at stage {trim_stage} — full close",
             )
         else:
             return (
-                "TRIM", trim_pct, 0.70,
-                f"Trailing stop breached — trim {trim_pct*100:.0f}% of remaining (stage {trim_stage})",
+                "TRIM",
+                trim_pct,
+                0.70,
+                f"Trailing stop breached — trim {trim_pct * 100:.0f}% of remaining (stage {trim_stage})",
             )
 
     # Rule: Trailing stop active but not breached
     if stop_state.is_active:
         return (
-            "HOLD", 0.0, 0.0,
+            "HOLD",
+            0.0,
+            0.0,
             f"Trailing stop active, PnL {current_pnl:.4f} above trigger {stop_state.trigger_level:.4f}",
         )
 
@@ -257,14 +265,16 @@ class ExecCapture(BaseAgent[CaptureOutput]):
                         days_held=int(pos.get("days_held", 0)),
                         trim_stage=int(pos.get("trim_stage", 0)),
                     )
-                    decisions.append(CaptureDecision(
-                        ticker=ticker,
-                        action="CLOSE",
-                        trim_pct=1.0,
-                        exit_confidence=1.0,
-                        reason="System HALTED — mandatory close",
-                        trailing_stop=stop_state,
-                    ))
+                    decisions.append(
+                        CaptureDecision(
+                            ticker=ticker,
+                            action="CLOSE",
+                            trim_pct=1.0,
+                            exit_confidence=1.0,
+                            reason="System HALTED — mandatory close",
+                            trailing_stop=stop_state,
+                        )
+                    )
                 return CaptureOutput(
                     agent_id=self.agent_id,
                     timestamp=datetime.now(timezone.utc),
@@ -287,17 +297,21 @@ class ExecCapture(BaseAgent[CaptureOutput]):
 
                 stop_state = compute_trailing_stop(pos, params)
                 action, trim_pct, exit_conf, reason = evaluate_position(
-                    pos, stop_state, params,
+                    pos,
+                    stop_state,
+                    params,
                 )
 
-                decisions.append(CaptureDecision(
-                    ticker=stop_state.ticker,
-                    action=action,
-                    trim_pct=round(trim_pct, 4),
-                    exit_confidence=round(exit_conf, 4),
-                    reason=reason,
-                    trailing_stop=stop_state,
-                ))
+                decisions.append(
+                    CaptureDecision(
+                        ticker=stop_state.ticker,
+                        action=action,
+                        trim_pct=round(trim_pct, 4),
+                        exit_confidence=round(exit_conf, 4),
+                        reason=reason,
+                        trailing_stop=stop_state,
+                    )
+                )
 
                 if action == "HOLD":
                     held += 1

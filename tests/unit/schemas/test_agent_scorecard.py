@@ -323,7 +323,9 @@ class TestAgentScorecardNested:
         scorecard = _make_scorecard(
             regime_performance={
                 "LOW_VOL_TRENDING": RegimePerformance(hit_rate=0.70, avg_pnl=40.0, sharpe=0.60),
-                "HIGH_VOL_MEAN_REVERTING": RegimePerformance(hit_rate=0.55, avg_pnl=15.0, sharpe=0.25),
+                "HIGH_VOL_MEAN_REVERTING": RegimePerformance(
+                    hit_rate=0.55, avg_pnl=15.0, sharpe=0.25
+                ),
             }
         )
         assert len(scorecard.regime_performance) == 2
@@ -362,7 +364,9 @@ class TestAgentScorecardNested:
             ),
             regime_performance={
                 "LOW_VOL_TRENDING": RegimePerformance(hit_rate=0.75, avg_pnl=55.0, sharpe=0.85),
-                "HIGH_VOL_MEAN_REVERTING": RegimePerformance(hit_rate=0.65, avg_pnl=30.0, sharpe=0.55),
+                "HIGH_VOL_MEAN_REVERTING": RegimePerformance(
+                    hit_rate=0.65, avg_pnl=30.0, sharpe=0.55
+                ),
                 "CRISIS_DISLOCATION": RegimePerformance(hit_rate=0.60, avg_pnl=20.0, sharpe=0.35),
             },
             conflict_record=ConflictRecord(

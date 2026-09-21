@@ -65,11 +65,15 @@ class NarrativeRegimeOverlay(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     label: str = Field(
-        ..., min_length=1, max_length=200,
+        ...,
+        min_length=1,
+        max_length=200,
         description="LLM-generated narrative regime label",
     )
     confidence: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Confidence in the narrative assessment",
     )
     key_signals: list[str] = Field(
@@ -105,9 +109,7 @@ class RegimeStateObject(BaseModel):
     timestamp: datetime = Field(..., description="When this regime was classified")
     context_window_hash: str = Field(..., description="Hash of input context for reproducibility")
 
-    statistical_regime: StatisticalRegime = Field(
-        ..., description="The classified regime state"
-    )
+    statistical_regime: StatisticalRegime = Field(..., description="The classified regime state")
     regime_confidence: float = Field(
         ..., ge=0.0, le=1.0, description="Confidence in the classified regime"
     )

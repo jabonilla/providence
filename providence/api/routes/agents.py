@@ -13,21 +13,36 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 
 # Valid filter values
 _VALID_SUBSYSTEMS = {
-    "perception", "cognition", "regime", "decision",
-    "execution", "exit", "learning", "governance",
+    "perception",
+    "cognition",
+    "regime",
+    "decision",
+    "execution",
+    "exit",
+    "learning",
+    "governance",
 }
 _VALID_CLASSIFICATIONS = {"FROZEN", "ADAPTIVE", "PERCEPTION"}
 
 # Classification maps — mirrors factory.py constants
 _ADAPTIVE_IDS = {
-    "COGNIT-FUNDAMENTAL", "COGNIT-MACRO", "COGNIT-EVENT",
-    "COGNIT-NARRATIVE", "COGNIT-CROSSSEC", "COGNIT-EXIT",
-    "REGIME-NARR", "DECIDE-SYNTH",
+    "COGNIT-FUNDAMENTAL",
+    "COGNIT-MACRO",
+    "COGNIT-EVENT",
+    "COGNIT-NARRATIVE",
+    "COGNIT-CROSSSEC",
+    "COGNIT-EXIT",
+    "REGIME-NARR",
+    "DECIDE-SYNTH",
 }
 
 _PERCEPTION_IDS = {
-    "PERCEPT-PRICE", "PERCEPT-FILING", "PERCEPT-NEWS",
-    "PERCEPT-OPTIONS", "PERCEPT-CDS", "PERCEPT-MACRO",
+    "PERCEPT-PRICE",
+    "PERCEPT-FILING",
+    "PERCEPT-NEWS",
+    "PERCEPT-OPTIONS",
+    "PERCEPT-CDS",
+    "PERCEPT-MACRO",
 }
 
 _SUBSYSTEM_MAP = {
@@ -85,13 +100,15 @@ async def list_agents(
         if classification and cls != classification:
             continue
 
-        agents.append(AgentInfoResponse(
-            agent_id=agent.agent_id,
-            agent_type=agent.agent_type,
-            version=agent.version,
-            subsystem=sub,
-            classification=cls,
-        ))
+        agents.append(
+            AgentInfoResponse(
+                agent_id=agent.agent_id,
+                agent_type=agent.agent_type,
+                version=agent.version,
+                subsystem=sub,
+                classification=cls,
+            )
+        )
 
     return agents
 

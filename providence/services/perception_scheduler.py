@@ -4,6 +4,7 @@ Runs perception agents for each ticker in the watchlist, managing
 rate limits and scheduling. Produces MarketStateFragments that feed
 into the main analysis pipeline.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -41,8 +42,8 @@ class PerceptionScheduler:
         watchlist: Watchlist,
         *,
         inter_ticker_delay: float = 2.0,  # seconds between tickers (rate limiting)
-        inter_agent_delay: float = 1.0,    # seconds between agents per ticker
-        max_concurrent_agents: int = 3,    # max concurrent agent runs per ticker
+        inter_agent_delay: float = 1.0,  # seconds between agents per ticker
+        max_concurrent_agents: int = 3,  # max concurrent agent runs per ticker
     ):
         """Initialize the PerceptionScheduler.
 
@@ -511,12 +512,8 @@ class PerceptionScheduler:
             "total_tickers": len(self._watchlist.entries),
             "enabled_tickers": enabled_count,
             "max_positions": self._watchlist.max_positions,
-            "sector_distribution": {
-                sector: len(entries)
-                for sector, entries in by_sector.items()
-            },
+            "sector_distribution": {sector: len(entries) for sector, entries in by_sector.items()},
             "priority_distribution": {
-                priority: len(self._watchlist.by_priority(priority))
-                for priority in [1, 2, 3]
+                priority: len(self._watchlist.by_priority(priority)) for priority in [1, 2, 3]
             },
         }

@@ -94,9 +94,7 @@ def validate_position(
 
     # Check: minimum confidence
     if confidence < limits["min_confidence"]:
-        reasons.append(
-            f"Confidence {confidence:.2f} below minimum {limits['min_confidence']:.2f}"
-        )
+        reasons.append(f"Confidence {confidence:.2f} below minimum {limits['min_confidence']:.2f}")
         return False, reasons, 0.0
 
     # Check: position weight
@@ -220,7 +218,10 @@ class ExecValidate(BaseAgent[ValidatedProposal]):
                     continue
 
                 approved, reasons, adjusted = validate_position(
-                    pos, limits, sector_totals, cumulative_gross,
+                    pos,
+                    limits,
+                    sector_totals,
+                    cumulative_gross,
                 )
 
                 ticker = pos.get("ticker", "UNKNOWN")
@@ -243,17 +244,19 @@ class ExecValidate(BaseAgent[ValidatedProposal]):
                 except (ValueError, TypeError):
                     source_uuid = uuid4()
 
-                results.append(ValidationResult(
-                    ticker=ticker,
-                    action=action,
-                    direction=direction,
-                    target_weight=float(pos.get("target_weight", 0.0)),
-                    confidence=float(pos.get("confidence", 0.0)),
-                    source_intent_id=source_uuid,
-                    approved=approved,
-                    rejection_reasons=reasons,
-                    adjusted_weight=adjusted,
-                ))
+                results.append(
+                    ValidationResult(
+                        ticker=ticker,
+                        action=action,
+                        direction=direction,
+                        target_weight=float(pos.get("target_weight", 0.0)),
+                        confidence=float(pos.get("confidence", 0.0)),
+                        source_intent_id=source_uuid,
+                        approved=approved,
+                        rejection_reasons=reasons,
+                        adjusted_weight=adjusted,
+                    )
+                )
 
                 if approved:
                     approved_count += 1

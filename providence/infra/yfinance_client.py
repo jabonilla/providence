@@ -47,6 +47,7 @@ class YFinanceClient:
         if self._yf is None:
             try:
                 import yfinance as yf
+
                 self._yf = yf
             except ImportError as e:
                 raise ExternalAPIError(
@@ -73,9 +74,7 @@ class YFinanceClient:
         stock = yf.Ticker(ticker)
         info = stock.info or {}
         if not info or info.get("regularMarketPrice") is None:
-            raise DataIngestionError(
-                message=f"No fundamental data returned for {ticker}"
-            )
+            raise DataIngestionError(message=f"No fundamental data returned for {ticker}")
         return info
 
     async def get_fundamentals(self, ticker: str) -> dict[str, Any]:
@@ -110,7 +109,7 @@ class YFinanceClient:
                     service="yfinance",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
         raise last_error or ExternalAPIError(
@@ -135,16 +134,18 @@ class YFinanceClient:
                 date_str = date_idx.strftime("%Y-%m-%d")
             else:
                 date_str = str(date_idx).split()[0]
-            result.append({
-                "date": date_str,
-                "open": float(row.get("Open", 0.0)),
-                "high": float(row.get("High", 0.0)),
-                "low": float(row.get("Low", 0.0)),
-                "close": float(row.get("Close", 0.0)),
-                "volume": int(row.get("Volume", 0)),
-                "dividends": float(row.get("Dividends", 0.0)),
-                "stock_splits": float(row.get("Stock Splits", 0.0)),
-            })
+            result.append(
+                {
+                    "date": date_str,
+                    "open": float(row.get("Open", 0.0)),
+                    "high": float(row.get("High", 0.0)),
+                    "low": float(row.get("Low", 0.0)),
+                    "close": float(row.get("Close", 0.0)),
+                    "volume": int(row.get("Volume", 0)),
+                    "dividends": float(row.get("Dividends", 0.0)),
+                    "stock_splits": float(row.get("Stock Splits", 0.0)),
+                }
+            )
         return result
 
     async def get_price_history(
@@ -177,7 +178,7 @@ class YFinanceClient:
                     service="yfinance",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
         raise last_error or ExternalAPIError(
@@ -194,13 +195,15 @@ class YFinanceClient:
             return []
         result = []
         for _, row in df.iterrows():
-            result.append({
-                "holder": str(row.get("Holder", "")),
-                "shares": int(row.get("Shares", 0)),
-                "date_reported": str(row.get("Date Reported", "")),
-                "pct_out": float(row.get("% Out", 0.0)) if row.get("% Out") else None,
-                "value": float(row.get("Value", 0.0)) if row.get("Value") else None,
-            })
+            result.append(
+                {
+                    "holder": str(row.get("Holder", "")),
+                    "shares": int(row.get("Shares", 0)),
+                    "date_reported": str(row.get("Date Reported", "")),
+                    "pct_out": float(row.get("% Out", 0.0)) if row.get("% Out") else None,
+                    "value": float(row.get("Value", 0.0)) if row.get("Value") else None,
+                }
+            )
         return result
 
     async def get_institutional_holders(self, ticker: str) -> list[dict[str, Any]]:

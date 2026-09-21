@@ -52,7 +52,10 @@ XBRL_TAG_MAP: dict[str, list[str]] = {
 RATIO_TAGS: dict[str, list[str]] = {
     "current_assets": ["AssetsCurrent"],
     "current_liabilities": ["LiabilitiesCurrent"],
-    "stockholders_equity": ["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"],
+    "stockholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
 }
 

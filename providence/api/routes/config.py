@@ -28,6 +28,7 @@ router = APIRouter(prefix="/config", tags=["config"])
 
 # ── Watchlist ──────────────────────────────────────────────────────
 
+
 @router.get("/watchlist", response_model=WatchlistResponse)
 async def get_watchlist() -> WatchlistResponse:
     """Get the current watchlist configuration."""
@@ -170,6 +171,7 @@ async def remove_watchlist_entry(ticker: str):
 
 # ── Agent Weights ──────────────────────────────────────────────────
 
+
 @router.get("/agent-weights", response_model=AgentWeightResponse)
 async def get_agent_weights() -> AgentWeightResponse:
     """Get current agent synthesis weights."""
@@ -213,6 +215,7 @@ async def reset_agent_weights() -> AgentWeightResponse:
 
 
 # ── Agent Preferences ─────────────────────────────────────────────
+
 
 @router.get("/agent-preferences")
 async def get_all_agent_preferences() -> dict[str, AgentPreferencesResponse]:
@@ -305,6 +308,7 @@ async def update_agent_preferences(
 
 
 # ── Account Tiers ─────────────────────────────────────────────────
+
 
 @router.get("/tiers", response_model=list[TierInfoResponse])
 async def list_tiers() -> list[TierInfoResponse]:

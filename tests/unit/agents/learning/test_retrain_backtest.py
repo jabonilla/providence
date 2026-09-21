@@ -112,6 +112,7 @@ def _make_regime(
 # compute_degradation Tests
 # ===========================================================================
 
+
 class TestComputeDegradation:
     def test_no_degradation(self):
         result = compute_degradation(
@@ -154,6 +155,7 @@ class TestComputeDegradation:
 # determine_priority Tests
 # ===========================================================================
 
+
 class TestDeterminePriority:
     def test_critical(self):
         # Low hit rate AND high Brier → CRITICAL
@@ -183,6 +185,7 @@ class TestDeterminePriority:
 # suggest_changes Tests
 # ===========================================================================
 
+
 class TestSuggestChanges:
     def test_low_hit_rate(self):
         suggestions = suggest_changes(0.30, 0.10, 0.05, False)
@@ -209,12 +212,17 @@ class TestSuggestChanges:
 # evaluate_agent Tests
 # ===========================================================================
 
+
 class TestEvaluateAgent:
     def test_needs_retrain_critical(self):
         result = evaluate_agent(
             "COGNIT-FUNDAMENTAL",
             {"hit_rate": 0.30},
-            {"overall_brier_score": 0.40, "overall_calibration_error": 0.05, "is_overconfident": False},
+            {
+                "overall_brier_score": 0.40,
+                "overall_calibration_error": 0.05,
+                "is_overconfident": False,
+            },
             {},
         )
         assert result["needs_retrain"] is True
@@ -225,7 +233,11 @@ class TestEvaluateAgent:
         result = evaluate_agent(
             "COGNIT-FUNDAMENTAL",
             {"hit_rate": 0.70},
-            {"overall_brier_score": 0.10, "overall_calibration_error": 0.03, "is_overconfident": False},
+            {
+                "overall_brier_score": 0.10,
+                "overall_calibration_error": 0.03,
+                "is_overconfident": False,
+            },
             {"COGNIT-FUNDAMENTAL": {"hit_rate": 0.65}},
         )
         assert result["needs_retrain"] is False
@@ -235,7 +247,11 @@ class TestEvaluateAgent:
         result = evaluate_agent(
             "COGNIT-EXIT",  # ADAPTIVE agent
             {"hit_rate": 0.30},
-            {"overall_brier_score": 0.40, "overall_calibration_error": 0.20, "is_overconfident": True},
+            {
+                "overall_brier_score": 0.40,
+                "overall_calibration_error": 0.20,
+                "is_overconfident": True,
+            },
             {},
         )
         assert not any("FROZEN" in s for s in result["suggested_changes"])
@@ -244,7 +260,11 @@ class TestEvaluateAgent:
         result = evaluate_agent(
             "SOME-FROZEN-AGENT",
             {"hit_rate": 0.30},
-            {"overall_brier_score": 0.40, "overall_calibration_error": 0.20, "is_overconfident": True},
+            {
+                "overall_brier_score": 0.40,
+                "overall_calibration_error": 0.20,
+                "is_overconfident": True,
+            },
             {},
         )
         assert any("FROZEN" in s for s in result["suggested_changes"])
@@ -253,7 +273,11 @@ class TestEvaluateAgent:
         result = evaluate_agent(
             "COGNIT-FUNDAMENTAL",
             {"hit_rate": 0.50},
-            {"overall_brier_score": 0.15, "overall_calibration_error": 0.03, "is_overconfident": False},
+            {
+                "overall_brier_score": 0.15,
+                "overall_calibration_error": 0.03,
+                "is_overconfident": False,
+            },
             {"COGNIT-FUNDAMENTAL": {"hit_rate": 0.80}},  # 37.5% degradation
         )
         assert result["needs_retrain"] is True
@@ -263,6 +287,7 @@ class TestEvaluateAgent:
 # ===========================================================================
 # LearnRetrain Integration Tests
 # ===========================================================================
+
 
 class TestLearnRetrain:
     @pytest.mark.asyncio
@@ -395,6 +420,7 @@ class TestRetrainSchemas:
 # compute_period_metrics Tests
 # ===========================================================================
 
+
 class TestComputePeriodMetrics:
     def test_basic_period(self):
         trades = [
@@ -403,7 +429,10 @@ class TestComputePeriodMetrics:
             _make_trade(30.0, 8),
         ]
         result = compute_period_metrics(
-            trades, BT_START, BT_END, [],
+            trades,
+            BT_START,
+            BT_END,
+            [],
         )
         assert result["return_bps"] == 60.0  # 50 + (-20) + 30
         assert result["trade_count"] == 3
@@ -444,10 +473,15 @@ class TestComputePeriodMetrics:
         regimes = [
             _make_regime(datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat(), "LOW_VOL_TRENDING"),
             _make_regime(datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat(), "LOW_VOL_TRENDING"),
-            _make_regime(datetime(2024, 4, 1, tzinfo=timezone.utc).isoformat(), "HIGH_VOL_MEAN_REV"),
+            _make_regime(
+                datetime(2024, 4, 1, tzinfo=timezone.utc).isoformat(), "HIGH_VOL_MEAN_REV"
+            ),
         ]
         result = compute_period_metrics(
-            [_make_trade()], BT_START, BT_END, regimes,
+            [_make_trade()],
+            BT_START,
+            BT_END,
+            regimes,
         )
         assert result["dominant_regime"] == "LOW_VOL_TRENDING"
 
@@ -460,6 +494,7 @@ class TestComputePeriodMetrics:
 # ===========================================================================
 # compute_profit_factor Tests
 # ===========================================================================
+
 
 class TestComputeProfitFactor:
     def test_profitable(self):
@@ -491,6 +526,7 @@ class TestComputeProfitFactor:
 # ===========================================================================
 # LearnBacktest Integration Tests
 # ===========================================================================
+
 
 class TestLearnBacktest:
     @pytest.mark.asyncio
@@ -555,7 +591,9 @@ class TestLearnBacktest:
     async def test_win_rate(self):
         trades = [
             _make_trade(50.0, exit_timestamp=datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat()),
-            _make_trade(-20.0, exit_timestamp=datetime(2024, 2, 15, tzinfo=timezone.utc).isoformat()),
+            _make_trade(
+                -20.0, exit_timestamp=datetime(2024, 2, 15, tzinfo=timezone.utc).isoformat()
+            ),
             _make_trade(30.0, exit_timestamp=datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat()),
         ]
         agent = LearnBacktest()
@@ -570,8 +608,12 @@ class TestLearnBacktest:
     @pytest.mark.asyncio
     async def test_profit_factor(self):
         trades = [
-            _make_trade(100.0, exit_timestamp=datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat()),
-            _make_trade(-50.0, exit_timestamp=datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat()),
+            _make_trade(
+                100.0, exit_timestamp=datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat()
+            ),
+            _make_trade(
+                -50.0, exit_timestamp=datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat()
+            ),
         ]
         agent = LearnBacktest()
         ctx = _make_context(
@@ -586,9 +628,15 @@ class TestLearnBacktest:
     async def test_sub_period_partitioning(self):
         """Trades spread across multiple 30-day periods."""
         trades = [
-            _make_trade(50.0, exit_timestamp=datetime(2024, 1, 15, tzinfo=timezone.utc).isoformat()),
-            _make_trade(30.0, exit_timestamp=datetime(2024, 3, 15, tzinfo=timezone.utc).isoformat()),
-            _make_trade(-10.0, exit_timestamp=datetime(2024, 5, 15, tzinfo=timezone.utc).isoformat()),
+            _make_trade(
+                50.0, exit_timestamp=datetime(2024, 1, 15, tzinfo=timezone.utc).isoformat()
+            ),
+            _make_trade(
+                30.0, exit_timestamp=datetime(2024, 3, 15, tzinfo=timezone.utc).isoformat()
+            ),
+            _make_trade(
+                -10.0, exit_timestamp=datetime(2024, 5, 15, tzinfo=timezone.utc).isoformat()
+            ),
         ]
         agent = LearnBacktest()
         ctx = _make_context(
@@ -604,8 +652,12 @@ class TestLearnBacktest:
     @pytest.mark.asyncio
     async def test_max_drawdown(self):
         trades = [
-            _make_trade(100.0, exit_timestamp=datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat()),
-            _make_trade(-200.0, exit_timestamp=datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat()),
+            _make_trade(
+                100.0, exit_timestamp=datetime(2024, 2, 1, tzinfo=timezone.utc).isoformat()
+            ),
+            _make_trade(
+                -200.0, exit_timestamp=datetime(2024, 3, 1, tzinfo=timezone.utc).isoformat()
+            ),
             _make_trade(50.0, exit_timestamp=datetime(2024, 4, 1, tzinfo=timezone.utc).isoformat()),
         ]
         agent = LearnBacktest()

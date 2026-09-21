@@ -120,10 +120,7 @@ class AgentConfigRegistry:
         configs: dict[str, AgentConfig] = {}
         for agent_id, agent_data in agents.items():
             consumes_raw = agent_data.get("consumes", [])
-            consumes = [
-                DataType(dt) if isinstance(dt, str) else dt
-                for dt in consumes_raw
-            ]
+            consumes = [DataType(dt) if isinstance(dt, str) else dt for dt in consumes_raw]
             configs[agent_id] = AgentConfig(
                 agent_id=agent_id,
                 consumes=consumes,

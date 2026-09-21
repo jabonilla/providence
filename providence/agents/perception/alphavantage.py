@@ -81,9 +81,7 @@ class PerceptAlphaVantage(BaseAgent[list[MarketStateFragment]]):
         fragments: list[MarketStateFragment] = []
         for ticker in tickers:
             try:
-                ticker_fragments = await self._process_ticker(
-                    ticker, date_str, max_quarters
-                )
+                ticker_fragments = await self._process_ticker(ticker, date_str, max_quarters)
                 fragments.extend(ticker_fragments)
             except Exception as e:
                 self._error_count_24h += 1
@@ -121,9 +119,11 @@ class PerceptAlphaVantage(BaseAgent[list[MarketStateFragment]]):
                 agent_id=self.agent_id,
                 ticker=ticker,
             )
-            return [self._create_quarantined_fragment(
-                ticker, date_str, "No quarterly earnings data returned"
-            )]
+            return [
+                self._create_quarantined_fragment(
+                    ticker, date_str, "No quarterly earnings data returned"
+                )
+            ]
 
         # Optionally fetch income statement for supplemental metrics
         income_data: dict[str, Any] = {}
@@ -175,9 +175,7 @@ class PerceptAlphaVantage(BaseAgent[list[MarketStateFragment]]):
 
         return fragments
 
-    def _validate_quarter(
-        self, quarter: dict[str, Any], ticker: str
-    ) -> ValidationStatus:
+    def _validate_quarter(self, quarter: dict[str, Any], ticker: str) -> ValidationStatus:
         """Step 2: VALIDATE — Check quarterly earnings data completeness."""
         if not quarter or not isinstance(quarter, dict):
             return ValidationStatus.QUARANTINED

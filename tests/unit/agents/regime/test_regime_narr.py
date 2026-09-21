@@ -115,7 +115,13 @@ def _make_price_fragment(
         schema_version="1.0.0",
         source_hash=f"hash-price-{entity}",
         validation_status=ValidationStatus.VALID,
-        payload={"open": close * 0.99, "high": close * 1.01, "low": close * 0.98, "close": close, "volume": 50000000},
+        payload={
+            "open": close * 0.99,
+            "high": close * 1.01,
+            "low": close * 0.98,
+            "close": close,
+            "volume": 50000000,
+        },
     )
 
 
@@ -495,7 +501,10 @@ class TestRegimeNarrPromptBuilding:
         await agent.process(context)
 
         user_prompt = mock_llm.complete.call_args.kwargs.get(
-            "user_prompt", mock_llm.complete.call_args.args[1] if len(mock_llm.complete.call_args.args) > 1 else ""
+            "user_prompt",
+            mock_llm.complete.call_args.args[1]
+            if len(mock_llm.complete.call_args.args) > 1
+            else "",
         )
         assert "NVDA" in user_prompt or "SENTIMENT_NEWS" in user_prompt
 
@@ -509,7 +518,10 @@ class TestRegimeNarrPromptBuilding:
         await agent.process(context)
 
         user_prompt = mock_llm.complete.call_args.kwargs.get(
-            "user_prompt", mock_llm.complete.call_args.args[1] if len(mock_llm.complete.call_args.args) > 1 else ""
+            "user_prompt",
+            mock_llm.complete.call_args.args[1]
+            if len(mock_llm.complete.call_args.args) > 1
+            else "",
         )
         assert "MSFT" in user_prompt or "EARNINGS_CALL" in user_prompt
 
@@ -523,12 +535,13 @@ class TestRegimeNarrPromptBuilding:
         await agent.process(context)
 
         user_prompt = mock_llm.complete.call_args.kwargs.get(
-            "user_prompt", mock_llm.complete.call_args.args[1] if len(mock_llm.complete.call_args.args) > 1 else ""
+            "user_prompt",
+            mock_llm.complete.call_args.args[1]
+            if len(mock_llm.complete.call_args.args) > 1
+            else "",
         )
         # Should contain one of the regime state values
-        has_regime = any(
-            r.value in user_prompt for r in StatisticalRegime
-        )
+        has_regime = any(r.value in user_prompt for r in StatisticalRegime)
         assert has_regime
 
     @pytest.mark.asyncio
@@ -543,7 +556,10 @@ class TestRegimeNarrPromptBuilding:
 
         assert isinstance(result, RegimeStateObject)
         user_prompt = mock_llm.complete.call_args.kwargs.get(
-            "user_prompt", mock_llm.complete.call_args.args[1] if len(mock_llm.complete.call_args.args) > 1 else ""
+            "user_prompt",
+            mock_llm.complete.call_args.args[1]
+            if len(mock_llm.complete.call_args.args) > 1
+            else "",
         )
         assert "No news sentiment data available" in user_prompt
         assert "No earnings call data available" in user_prompt

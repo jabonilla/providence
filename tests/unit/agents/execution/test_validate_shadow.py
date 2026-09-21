@@ -48,28 +48,32 @@ class TestExecValidateShadowMode:
     def test_seed_tier_shadow_mode_approves(self, agent):
         """In SHADOW mode with SEED tier, validation still runs normally
         (shadow signals are recorded, not blocked)."""
-        positions = [{
-            "ticker": "AAPL",
-            "action": "OPEN_LONG",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.70,
-            "sector": "Technology",
-        }]
+        positions = [
+            {
+                "ticker": "AAPL",
+                "action": "OPEN_LONG",
+                "direction": "LONG",
+                "target_weight": 0.05,
+                "confidence": 0.70,
+                "sector": "Technology",
+            }
+        ]
         ctx = _make_context(positions, capital_tier="SEED", system_mode="SHADOW")
         result = self._run(agent.process(ctx))
         assert result.approved_count == 1
 
     def test_seed_tier_live_mode_blocks(self, agent):
         """In LIVE mode with SEED tier, all orders are blocked (HALTED)."""
-        positions = [{
-            "ticker": "AAPL",
-            "action": "OPEN_LONG",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.70,
-            "sector": "Technology",
-        }]
+        positions = [
+            {
+                "ticker": "AAPL",
+                "action": "OPEN_LONG",
+                "direction": "LONG",
+                "target_weight": 0.05,
+                "confidence": 0.70,
+                "sector": "Technology",
+            }
+        ]
         ctx = _make_context(positions, capital_tier="SEED", system_mode="LIVE")
         result = self._run(agent.process(ctx))
         # HALTED mode: min_confidence = 1.0, max_weight = 0.0 → rejected
@@ -79,14 +83,16 @@ class TestExecValidateShadowMode:
 
     def test_growth_tier_live_mode_allows(self, agent):
         """In LIVE mode with GROWTH tier, normal validation applies."""
-        positions = [{
-            "ticker": "AAPL",
-            "action": "OPEN_LONG",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.70,
-            "sector": "Technology",
-        }]
+        positions = [
+            {
+                "ticker": "AAPL",
+                "action": "OPEN_LONG",
+                "direction": "LONG",
+                "target_weight": 0.05,
+                "confidence": 0.70,
+                "sector": "Technology",
+            }
+        ]
         ctx = _make_context(positions, capital_tier="GROWTH", system_mode="LIVE")
         result = self._run(agent.process(ctx))
         assert result.approved_count == 1
@@ -94,28 +100,32 @@ class TestExecValidateShadowMode:
     def test_paper_mode_seed_tier_allows(self, agent):
         """In PAPER mode with SEED tier, validation runs normally
         (paper trading is allowed for SEED)."""
-        positions = [{
-            "ticker": "AAPL",
-            "action": "OPEN_LONG",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.70,
-            "sector": "Technology",
-        }]
+        positions = [
+            {
+                "ticker": "AAPL",
+                "action": "OPEN_LONG",
+                "direction": "LONG",
+                "target_weight": 0.05,
+                "confidence": 0.70,
+                "sector": "Technology",
+            }
+        ]
         ctx = _make_context(positions, capital_tier="SEED", system_mode="PAPER")
         result = self._run(agent.process(ctx))
         assert result.approved_count == 1
 
     def test_invalid_system_mode_defaults_shadow(self, agent):
         """Invalid system mode string falls back to SHADOW."""
-        positions = [{
-            "ticker": "AAPL",
-            "action": "OPEN_LONG",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.70,
-            "sector": "Technology",
-        }]
+        positions = [
+            {
+                "ticker": "AAPL",
+                "action": "OPEN_LONG",
+                "direction": "LONG",
+                "target_weight": 0.05,
+                "confidence": 0.70,
+                "sector": "Technology",
+            }
+        ]
         ctx = _make_context(positions, capital_tier="SEED", system_mode="INVALID")
         result = self._run(agent.process(ctx))
         # SHADOW mode with SEED = normal validation (not halted)

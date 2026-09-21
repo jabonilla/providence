@@ -281,8 +281,8 @@ class TestPerceptPriceErrorHandling:
         """One ticker failing shouldn't prevent others from succeeding."""
         mock_client = AsyncMock(spec=PolygonClient)
         mock_client.get_daily_bars.side_effect = [
-            daily_bars_aapl(),                      # AAPL succeeds
-            Exception("Timeout"),                    # NVDA fails
+            daily_bars_aapl(),  # AAPL succeeds
+            Exception("Timeout"),  # NVDA fails
         ]
         agent = _make_agent(mock_client)
 

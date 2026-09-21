@@ -300,7 +300,9 @@ class TestSectorDivergence:
     def test_adjacent_regime_not_divergence(self):
         """Adjacent regime (distance 1) is NOT counted as divergence."""
         overlays = {
-            "Technology": _make_sector_overlay("Technology", StatisticalRegime.TRANSITION_UNCERTAIN),
+            "Technology": _make_sector_overlay(
+                "Technology", StatisticalRegime.TRANSITION_UNCERTAIN
+            ),
         }
         count = count_sector_divergences(StatisticalRegime.LOW_VOL_TRENDING, overlays)
         assert count == 0
@@ -447,14 +449,18 @@ class TestRegimeMismatch:
         """Diverging narrative with high confidence → risk mode escalation."""
         agent = RegimeMismatch()
         context = _make_context(
-            stat=_make_stat_metadata(regime="LOW_VOL_TRENDING", confidence=0.75, risk_mode="NORMAL"),
+            stat=_make_stat_metadata(
+                regime="LOW_VOL_TRENDING", confidence=0.75, risk_mode="NORMAL"
+            ),
             narr=_make_narr_metadata(alignment="DIVERGES", confidence=0.70),
         )
 
         result = await agent.process(context)
 
         # Mismatch score should be high enough to escalate
-        assert RISK_MODE_SEVERITY[result.system_risk_mode] > RISK_MODE_SEVERITY[SystemRiskMode.NORMAL]
+        assert (
+            RISK_MODE_SEVERITY[result.system_risk_mode] > RISK_MODE_SEVERITY[SystemRiskMode.NORMAL]
+        )
 
     @pytest.mark.asyncio
     async def test_sector_divergence_escalates(self):
@@ -463,11 +469,13 @@ class TestRegimeMismatch:
         context = _make_context(
             stat=_make_stat_metadata(regime="LOW_VOL_TRENDING", risk_mode="NORMAL"),
             narr=_make_narr_metadata(alignment="NEUTRAL", confidence=0.40),
-            sector=_make_sector_metadata(sectors={
-                "Technology": "CRISIS_DISLOCATION",
-                "Financials": "CRISIS_DISLOCATION",
-                "Healthcare": "LOW_VOL_TRENDING",
-            }),
+            sector=_make_sector_metadata(
+                sectors={
+                    "Technology": "CRISIS_DISLOCATION",
+                    "Financials": "CRISIS_DISLOCATION",
+                    "Healthcare": "LOW_VOL_TRENDING",
+                }
+            ),
         )
 
         result = await agent.process(context)

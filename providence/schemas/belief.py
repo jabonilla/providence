@@ -85,7 +85,9 @@ class InvalidationCondition(BaseModel):
     def metric_must_not_be_empty(cls, v: str) -> str:
         """Metric must be a non-empty string specifying a concrete field."""
         if not v.strip():
-            raise ValueError("Metric must be a non-empty string specifying a concrete field to watch")
+            raise ValueError(
+                "Metric must be a non-empty string specifying a concrete field to watch"
+            )
         return v
 
 
@@ -147,7 +149,9 @@ class BeliefObject(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    belief_id: UUID = Field(default_factory=uuid4, description="Unique identifier for this belief set")
+    belief_id: UUID = Field(
+        default_factory=uuid4, description="Unique identifier for this belief set"
+    )
     agent_id: str = Field(..., description="ID of the Research Agent that produced this")
     timestamp: datetime = Field(..., description="When this belief set was produced")
     context_window_hash: str = Field(
@@ -158,7 +162,9 @@ class BeliefObject(BaseModel):
         default_factory=list,
         description="Array of individual beliefs/theses",
     )
-    content_hash: str = Field(default="", description="SHA-256 hash of all beliefs, computed automatically")
+    content_hash: str = Field(
+        default="", description="SHA-256 hash of all beliefs, computed automatically"
+    )
 
     @field_validator("timestamp")
     @classmethod

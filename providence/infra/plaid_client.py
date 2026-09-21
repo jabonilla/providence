@@ -125,7 +125,7 @@ class PlaidClient:
                 response = await client.post(path, json=full_body)
 
                 if response.status_code == 429:
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     logger.warning(
                         "Plaid rate limited — backing off",
                         wait_seconds=wait,
@@ -167,7 +167,7 @@ class PlaidClient:
                     service="plaid",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except httpx.HTTPError as e:
@@ -176,7 +176,7 @@ class PlaidClient:
                     service="plaid",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except (ExternalAPIError, DataIngestionError):

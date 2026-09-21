@@ -104,7 +104,9 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
                     error=str(e),
                 )
                 safe_error = redact_error_message(str(e))
-                fragment = self._create_quarantined_fragment(ticker, date_str, timeframe, safe_error)
+                fragment = self._create_quarantined_fragment(
+                    ticker, date_str, timeframe, safe_error
+                )
                 fragments.append(fragment)
 
         if any(f.validation_status == ValidationStatus.VALID for f in fragments):
@@ -112,9 +114,7 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
 
         return fragments
 
-    async def _process_ticker(
-        self, ticker: str, date: str, timeframe: str
-    ) -> MarketStateFragment:
+    async def _process_ticker(self, ticker: str, date: str, timeframe: str) -> MarketStateFragment:
         """Run the full Perception loop for a single ticker.
 
         Steps: FETCH → VALIDATE → NORMALIZE → VERSION → return fragment.
@@ -254,9 +254,7 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
 
         return fragments
 
-    async def _fetch(
-        self, ticker: str, date: str, timeframe: str
-    ) -> dict[str, Any]:
+    async def _fetch(self, ticker: str, date: str, timeframe: str) -> dict[str, Any]:
         """Step 1: FETCH — Pull raw data from Polygon.io."""
         try:
             if timeframe == "1D":
@@ -317,8 +315,12 @@ class PerceptPrice(BaseAgent[list[MarketStateFragment]]):
         results = raw_data.get("results", [])
         if not results:
             return PricePayload(
-                open=0.0, high=0.0, low=0.0, close=0.0,
-                volume=0, timeframe=timeframe,
+                open=0.0,
+                high=0.0,
+                low=0.0,
+                close=0.0,
+                volume=0,
+                timeframe=timeframe,
             ).model_dump()
 
         bar = results[0] if isinstance(results[0], dict) else {}

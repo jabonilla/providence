@@ -120,12 +120,11 @@ class RegimeStat(BaseAgent[RegimeStateObject]):
             )
 
             # Step 3: CLASSIFY REGIME — HMM forward pass
-            regime, confidence, prob_dict = classify_regime(
-                features, self._hmm_params, self._prior
-            )
+            regime, confidence, prob_dict = classify_regime(features, self._hmm_params, self._prior)
 
             # Update running prior for next classification
             from providence.agents.regime.hmm_model import REGIME_STATES
+
             self._prior = tuple(prob_dict[s.value] for s in REGIME_STATES)
 
             # Step 4: DERIVE RISK MODE

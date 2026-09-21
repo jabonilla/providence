@@ -210,6 +210,7 @@ class Orchestrator:
         for aid, result in zip(valid_ids, results):
             if isinstance(result, Exception):
                 from providence.orchestration.stage import PipelineStage as PS
+
                 sr = PS.make_skipped(aid, aid, f"gather exception: {result}")
                 output.append((aid, sr))
             else:
@@ -247,9 +248,15 @@ class Orchestrator:
         if required_upstream and completed_stages:
             for dep in required_upstream:
                 dep_result = completed_stages.get(dep)
-                if dep_result and hasattr(dep_result, "status") and dep_result.status == StageStatus.FAILED:
+                if (
+                    dep_result
+                    and hasattr(dep_result, "status")
+                    and dep_result.status == StageStatus.FAILED
+                ):
                     return PipelineStage.make_skipped(
-                        agent_id, agent_id, f"Skipped: upstream {dep} failed",
+                        agent_id,
+                        agent_id,
+                        f"Skipped: upstream {dep} failed",
                     )
 
         if fragments is not None:
@@ -309,7 +316,10 @@ class Orchestrator:
         # Stage 1: Cognition (parallel)
         log.info("Running cognition stage (parallel)")
         cog_results = await self._run_parallel_stages(
-            COGNITION_AGENTS, trigger, fragments, meta,
+            COGNITION_AGENTS,
+            trigger,
+            fragments,
+            meta,
         )
         belief_objects = []
         for aid, sr in cog_results:
@@ -322,7 +332,10 @@ class Orchestrator:
         # Stage 2: Regime (parallel: STAT, SECTOR, NARR)
         log.info("Running regime stage (parallel)")
         regime_results = await self._run_parallel_stages(
-            REGIME_PARALLEL_AGENTS, trigger, fragments, meta,
+            REGIME_PARALLEL_AGENTS,
+            trigger,
+            fragments,
+            meta,
         )
         regime_outputs = {}
         for aid, sr in regime_results:
@@ -335,7 +348,9 @@ class Orchestrator:
         # Stage 3: REGIME-MISMATCH (sequential, depends on regime)
         log.info("Running regime mismatch stage")
         mismatch_result = await self._run_sequential_stage(
-            "REGIME-MISMATCH", trigger, meta,
+            "REGIME-MISMATCH",
+            trigger,
+            meta,
             required_upstream=REGIME_PARALLEL_AGENTS,
             completed_stages=completed,
         )
@@ -345,10 +360,7 @@ class Orchestrator:
 
         # Bridge: extract regime_state for downstream decision agents
         # Note: PipelineStage serializes output → dict, so expect dict here
-        if (
-            mismatch_result.status == StageStatus.SUCCEEDED
-            and mismatch_result.output is not None
-        ):
+        if mismatch_result.status == StageStatus.SUCCEEDED and mismatch_result.output is not None:
             mismatch_out = mismatch_result.output
             if isinstance(mismatch_out, dict):
                 meta["regime_state"] = mismatch_out
@@ -364,17 +376,17 @@ class Orchestrator:
         # Stage 4: DECIDE-SYNTH (sequential)
         log.info("Running decision synthesis stage")
         synth_result = await self._run_sequential_stage(
-            "DECIDE-SYNTH", trigger, meta, fragments=fragments,
+            "DECIDE-SYNTH",
+            trigger,
+            meta,
+            fragments=fragments,
         )
         all_results.append(synth_result)
         completed["DECIDE-SYNTH"] = synth_result
         self._inject_output(meta, "synthesis_output", synth_result)
 
         # Bridge: extract position_intents from SynthesisOutput for DECIDE-OPTIM
-        if (
-            synth_result.status == StageStatus.SUCCEEDED
-            and synth_result.output is not None
-        ):
+        if synth_result.status == StageStatus.SUCCEEDED and synth_result.output is not None:
             synth_out = synth_result.output
             # PipelineStage serializes output → dict via model_dump(mode="json")
             if isinstance(synth_out, dict) and "position_intents" in synth_out:
@@ -382,16 +394,16 @@ class Orchestrator:
             elif hasattr(synth_out, "position_intents"):
                 # Fallback: Pydantic model (shouldn't happen, but be safe)
                 meta["position_intents"] = [
-                    intent.model_dump(mode="json")
-                    if hasattr(intent, "model_dump")
-                    else intent
+                    intent.model_dump(mode="json") if hasattr(intent, "model_dump") else intent
                     for intent in synth_out.position_intents
                 ]
 
         # Stage 5: DECIDE-OPTIM (sequential)
         log.info("Running decision optimization stage")
         optim_result = await self._run_sequential_stage(
-            "DECIDE-OPTIM", trigger, meta,
+            "DECIDE-OPTIM",
+            trigger,
+            meta,
             required_upstream=["DECIDE-SYNTH"],
             completed_stages=completed,
         )
@@ -418,7 +430,9 @@ class Orchestrator:
         for exec_aid in EXECUTION_AGENTS:
             deps = [prev_exec] if prev_exec else []
             exec_result = await self._run_sequential_stage(
-                exec_aid, trigger, meta,
+                exec_aid,
+                trigger,
+                meta,
                 required_upstream=deps,
                 completed_stages=completed,
             )
@@ -473,7 +487,10 @@ class Orchestrator:
         SHADOW-EXIT → RENEW-MON.
         """
         return await self._run_sequential_loop(
-            "EXIT", EXIT_AGENTS, metadata, trigger,
+            "EXIT",
+            EXIT_AGENTS,
+            metadata,
+            trigger,
         )
 
     # ------------------------------------------------------------------
@@ -490,7 +507,10 @@ class Orchestrator:
         Sequential: LEARN-ATTRIB → LEARN-CALIB → LEARN-RETRAIN → LEARN-BACKTEST.
         """
         return await self._run_sequential_loop(
-            "LEARNING", LEARNING_AGENTS, metadata, trigger,
+            "LEARNING",
+            LEARNING_AGENTS,
+            metadata,
+            trigger,
         )
 
     # ------------------------------------------------------------------
@@ -508,7 +528,10 @@ class Orchestrator:
         GOVERN-OVERSIGHT → GOVERN-POLICY.
         """
         return await self._run_sequential_loop(
-            "GOVERNANCE", GOVERNANCE_AGENTS, metadata, trigger,
+            "GOVERNANCE",
+            GOVERNANCE_AGENTS,
+            metadata,
+            trigger,
         )
 
     # ------------------------------------------------------------------
@@ -544,7 +567,9 @@ class Orchestrator:
         for aid in agent_ids:
             deps = [prev_agent] if prev_agent else []
             result = await self._run_sequential_stage(
-                aid, trigger, meta,
+                aid,
+                trigger,
+                meta,
                 required_upstream=deps,
                 completed_stages=completed,
             )

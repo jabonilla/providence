@@ -94,7 +94,7 @@ def parse_exit_response(raw: str | dict[str, Any]) -> list[dict[str, Any]] | Non
             if start == -1 or end == -1:
                 return None
             try:
-                parsed = json.loads(text[start:end + 1])
+                parsed = json.loads(text[start : end + 1])
             except json.JSONDecodeError:
                 return None
 
@@ -141,15 +141,17 @@ def parse_exit_response(raw: str | dict[str, Any]) -> list[dict[str, Any]] | Non
 
         rationale = str(a.get("rationale", ""))[:1000]
 
-        results.append({
-            "ticker": ticker.strip().upper(),
-            "exit_action": exit_action,
-            "exit_confidence": round(exit_conf, 4),
-            "regret_estimate_bps": round(regret_bps, 2),
-            "regret_direction": regret_dir,
-            "thesis_health_score": round(health, 4),
-            "rationale": rationale,
-        })
+        results.append(
+            {
+                "ticker": ticker.strip().upper(),
+                "exit_action": exit_action,
+                "exit_confidence": round(exit_conf, 4),
+                "regret_estimate_bps": round(regret_bps, 2),
+                "regret_direction": regret_dir,
+                "thesis_health_score": round(health, 4),
+                "rationale": rationale,
+            }
+        )
 
     return results if results else None
 
@@ -175,8 +177,7 @@ def apply_renewal_deferral(
 
     # Find beliefs for this ticker
     ticker_beliefs = [
-        b for b in active_beliefs
-        if isinstance(b, dict) and b.get("ticker") == ticker
+        b for b in active_beliefs if isinstance(b, dict) and b.get("ticker") == ticker
     ]
 
     # Check if any thesis for this ticker has a pending renewal
@@ -370,7 +371,8 @@ class CognitExit(BaseAgent[ExitOutput]):
                     ticker = pos.get("ticker", "")
                     if ticker and ticker not in health_by_ticker:
                         health_by_ticker[ticker] = compute_thesis_health(
-                            ticker, active_beliefs,
+                            ticker,
+                            active_beliefs,
                         )
 
             # Step 3: BUILD PROMPT
@@ -379,7 +381,10 @@ class CognitExit(BaseAgent[ExitOutput]):
                 "You are an exit assessment analyst.",
             )
             user_prompt = self._build_user_prompt(
-                active_positions, active_beliefs, regime_state, health_by_ticker,
+                active_positions,
+                active_beliefs,
+                regime_state,
+                health_by_ticker,
             )
 
             # Step 4: CALL LLM
@@ -409,7 +414,8 @@ class CognitExit(BaseAgent[ExitOutput]):
 
                 # Enrich with thesis health
                 health, triggered, total = health_by_ticker.get(
-                    ticker, (1.0, 0, 0),
+                    ticker,
+                    (1.0, 0, 0),
                 )
                 assessment_dict["conditions_triggered"] = triggered
                 assessment_dict["conditions_total"] = total
@@ -419,7 +425,9 @@ class CognitExit(BaseAgent[ExitOutput]):
 
                 # Apply renewal deferral
                 assessment_dict = apply_renewal_deferral(
-                    assessment_dict, renewal_state, active_beliefs,
+                    assessment_dict,
+                    renewal_state,
+                    active_beliefs,
                 )
 
                 assessments.append(ExitAssessment(**assessment_dict))

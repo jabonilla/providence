@@ -43,19 +43,13 @@ def _perception_ids() -> set[str]:
 class TestAgentIDCompleteness:
     def test_total_agent_count(self):
         """Every agent group is accounted for in ALL_AGENT_IDS."""
-        total = (
-            len(_FROZEN_NO_ARGS)
-            + len(_ADAPTIVE_LLM)
-            + len(_perception_ids())
-        )
+        total = len(_FROZEN_NO_ARGS) + len(_ADAPTIVE_LLM) + len(_perception_ids())
         assert total == len(ALL_AGENT_IDS)
 
     def test_all_agent_ids_sorted(self):
         assert ALL_AGENT_IDS == sorted(ALL_AGENT_IDS)
         assert len(ALL_AGENT_IDS) == len(set(ALL_AGENT_IDS))
-        assert set(ALL_AGENT_IDS) == (
-            set(_FROZEN_NO_ARGS) | set(_ADAPTIVE_LLM) | _perception_ids()
-        )
+        assert set(ALL_AGENT_IDS) == (set(_FROZEN_NO_ARGS) | set(_ADAPTIVE_LLM) | _perception_ids())
 
     def test_no_duplicate_ids(self):
         all_ids = (
@@ -177,11 +171,7 @@ class TestPerceptionInstantiation:
             skip_perception=True,
             skip_adaptive=True,
         )
-        all_perception = (
-            set(_PERCEPTION_POLYGON)
-            | set(_PERCEPTION_EDGAR)
-            | set(_PERCEPTION_FRED)
-        )
+        all_perception = set(_PERCEPTION_POLYGON) | set(_PERCEPTION_EDGAR) | set(_PERCEPTION_FRED)
         for agent_id in all_perception:
             assert agent_id not in registry
 
@@ -192,11 +182,7 @@ class TestPerceptionInstantiation:
             skip_adaptive=True,
             # No clients provided
         )
-        all_perception = (
-            set(_PERCEPTION_POLYGON)
-            | set(_PERCEPTION_EDGAR)
-            | set(_PERCEPTION_FRED)
-        )
+        all_perception = set(_PERCEPTION_POLYGON) | set(_PERCEPTION_EDGAR) | set(_PERCEPTION_FRED)
         for agent_id in all_perception:
             assert agent_id not in registry
 

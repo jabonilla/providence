@@ -23,6 +23,7 @@ T = TypeVar("T")
 
 class AgentStatus(str, Enum):
     """Health status classification for an agent."""
+
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     UNHEALTHY = "UNHEALTHY"
@@ -67,9 +68,13 @@ class HealthStatus(BaseModel):
     agent_id: str = Field(..., description="ID of the reporting agent")
     status: AgentStatus = Field(..., description="Current health status")
     last_run: Optional[datetime] = Field(default=None, description="Timestamp of last run")
-    last_success: Optional[datetime] = Field(default=None, description="Timestamp of last successful run")
+    last_success: Optional[datetime] = Field(
+        default=None, description="Timestamp of last successful run"
+    )
     error_count_24h: int = Field(default=0, ge=0, description="Errors in the last 24 hours")
-    avg_latency_ms: float = Field(default=0.0, ge=0.0, description="Average processing latency in ms")
+    avg_latency_ms: float = Field(
+        default=0.0, ge=0.0, description="Average processing latency in ms"
+    )
     message: Optional[str] = Field(default=None, description="Optional status message")
 
 

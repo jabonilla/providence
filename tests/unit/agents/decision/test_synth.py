@@ -326,8 +326,7 @@ class TestBuildIntent:
     def test_invalidations_capped_at_five(self):
         raw = dict(VALID_SYNTHESIS_RESPONSE["position_intents"][0])
         raw["active_invalidations"] = [
-            {"metric": f"metric_{i}", "operator": "GT", "threshold": float(i)}
-            for i in range(8)
+            {"metric": f"metric_{i}", "operator": "GT", "threshold": float(i)} for i in range(8)
         ]
         intent = _build_intent(raw)
         assert len(intent.active_invalidations) <= 5
@@ -493,7 +492,11 @@ class TestDecideSynth:
         await agent.process(ctx)
         assert llm.complete.call_count == 1
         call_kwargs = llm.complete.call_args
-        user_prompt = call_kwargs.kwargs.get("user_prompt", "") or call_kwargs[1] if len(call_kwargs) > 1 else ""
+        user_prompt = (
+            call_kwargs.kwargs.get("user_prompt", "") or call_kwargs[1]
+            if len(call_kwargs) > 1
+            else ""
+        )
         # The LLM was called — that's the key check
         assert llm.complete.called
 

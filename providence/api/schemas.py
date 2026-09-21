@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 # ── Health ──────────────────────────────────────────────────────────
 
+
 class AgentHealthResponse(BaseModel):
     """Single agent health status."""
 
@@ -41,6 +42,7 @@ class SystemHealthResponse(BaseModel):
 
 
 # ── Pipeline ────────────────────────────────────────────────────────
+
 
 class StageResultResponse(BaseModel):
     """Single stage execution result."""
@@ -86,6 +88,7 @@ class RunTriggerResponse(BaseModel):
 
 # ── Agents ──────────────────────────────────────────────────────────
 
+
 class AgentInfoResponse(BaseModel):
     """Agent identity and classification."""
 
@@ -97,6 +100,7 @@ class AgentInfoResponse(BaseModel):
 
 
 # ── Fragments ───────────────────────────────────────────────────────
+
 
 class FragmentSummaryResponse(BaseModel):
     """Market state fragment summary (excludes payload for brevity)."""
@@ -125,6 +129,7 @@ class FragmentStoreStatsResponse(BaseModel):
 
 
 # ── Beliefs ─────────────────────────────────────────────────────────
+
 
 class BeliefSummaryResponse(BaseModel):
     """Belief object summary."""
@@ -156,6 +161,7 @@ class BeliefStoreStatsResponse(BaseModel):
 
 # ── Runs ────────────────────────────────────────────────────────────
 
+
 class RunStoreStatsResponse(BaseModel):
     """Run store statistics."""
 
@@ -166,6 +172,7 @@ class RunStoreStatsResponse(BaseModel):
 
 
 # ── Watchlist ───────────────────────────────────────────────────────
+
 
 class WatchlistEntryResponse(BaseModel):
     """Single watchlist entry."""
@@ -187,6 +194,7 @@ class WatchlistResponse(BaseModel):
 
 
 # ── Portfolio ───────────────────────────────────────────────────────
+
 
 class PositionResponse(BaseModel):
     """Single portfolio position."""
@@ -260,6 +268,7 @@ class OrderStatsResponse(BaseModel):
 
 
 # ── Shadow Mode ────────────────────────────────────────────────────
+
 
 class ShadowSignalResponse(BaseModel):
     """Shadow mode trading signal."""
@@ -353,6 +362,7 @@ class BackfillTriggerResponse(BaseModel):
 
 # ── Regime ─────────────────────────────────────────────────────────
 
+
 class SectorRegimeOverlayResponse(BaseModel):
     """Sector-level regime overlay."""
 
@@ -386,6 +396,7 @@ class RegimeStateResponse(BaseModel):
 
 
 # ── Chat ──────────────────────────────────────────────────────────
+
 
 class ChatMessageRequest(BaseModel):
     """Request to send a chat message."""
@@ -462,6 +473,7 @@ class ConversationDetail(BaseModel):
 
 # ── Document Upload ──────────────────────────────────────────────────
 
+
 class DocumentUploadResponse(BaseModel):
     """Response from document upload."""
 
@@ -474,6 +486,7 @@ class DocumentUploadResponse(BaseModel):
 
 
 # ── Agent Weights ──────────────────────────────────────────────────
+
 
 class AgentWeightResponse(BaseModel):
     """Current agent synthesis weights."""
@@ -489,6 +502,7 @@ class AgentWeightUpdateRequest(BaseModel):
 
 
 # ── Agent Preferences ─────────────────────────────────────────────
+
 
 class AgentPreferencesResponse(BaseModel):
     """Agent configuration preferences."""
@@ -512,6 +526,7 @@ class AgentPreferencesUpdateRequest(BaseModel):
 
 
 # ── Account Tiers ─────────────────────────────────────────────────
+
 
 class TierLimitsResponse(BaseModel):
     """Resource limits for a tier."""
@@ -544,6 +559,7 @@ class AccountInfoResponse(BaseModel):
 
 
 # ── Generic ─────────────────────────────────────────────────────────
+
 
 class ErrorResponse(BaseModel):
     """Standard error response."""

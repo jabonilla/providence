@@ -77,6 +77,7 @@ def _make_context(agent_id: str = "MOCK-AGENT") -> AgentContext:
 # Successful Execution Tests
 # ===========================================================================
 
+
 class TestStageSuccess:
     @pytest.mark.asyncio
     async def test_basic_success(self):
@@ -120,6 +121,7 @@ class TestStageSuccess:
 # Timeout Tests
 # ===========================================================================
 
+
 class TestStageTimeout:
     @pytest.mark.asyncio
     async def test_timeout(self):
@@ -133,6 +135,7 @@ class TestStageTimeout:
 # ===========================================================================
 # Error Handling Tests
 # ===========================================================================
+
 
 class TestStageErrors:
     @pytest.mark.asyncio
@@ -165,10 +168,13 @@ class TestStageErrors:
 # Skipped Stage Tests
 # ===========================================================================
 
+
 class TestStageSkipped:
     def test_make_skipped(self):
         result = PipelineStage.make_skipped(
-            "EXEC-ROUTER", "EXEC-ROUTER", "upstream EXEC-VALIDATE failed",
+            "EXEC-ROUTER",
+            "EXEC-ROUTER",
+            "upstream EXEC-VALIDATE failed",
         )
         assert result.status == StageStatus.SKIPPED
         assert result.agent_id == "EXEC-ROUTER"
@@ -180,6 +186,7 @@ class TestStageSkipped:
 # ===========================================================================
 # Properties Tests
 # ===========================================================================
+
 
 class TestStageProperties:
     def test_stage_name(self):

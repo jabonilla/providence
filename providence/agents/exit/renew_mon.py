@@ -257,8 +257,8 @@ class RenewMon(BaseAgent[RenewalMonitorOutput]):
                 days_remaining = max(0, time_horizon - days_elapsed)
 
                 # Compute health
-                health, cond_healthy, cond_breached, cond_approaching = (
-                    compute_belief_health(thesis_id, ticker, conditions_by_thesis)
+                health, cond_healthy, cond_breached, cond_approaching = compute_belief_health(
+                    thesis_id, ticker, conditions_by_thesis
                 )
 
                 # Compute decay
@@ -273,7 +273,9 @@ class RenewMon(BaseAgent[RenewalMonitorOutput]):
 
                 # Determine urgency
                 urgency = determine_renewal_urgency(
-                    days_remaining, health, is_candidate,
+                    days_remaining,
+                    health,
+                    is_candidate,
                 )
 
                 report = BeliefHealthReport(

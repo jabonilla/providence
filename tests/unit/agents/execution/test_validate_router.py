@@ -171,10 +171,12 @@ class TestExecValidate:
     async def test_process_multiple(self):
         agent = ExecValidate()
         ctx = _make_context(
-            proposal=_make_proposal([
-                _make_position("AAPL"),
-                _make_position("JPM", sector="Financials"),
-            ]),
+            proposal=_make_proposal(
+                [
+                    _make_position("AAPL"),
+                    _make_position("JPM", sector="Financials"),
+                ]
+            ),
             regime=_make_regime("NORMAL"),
         )
         result = await agent.process(ctx)

@@ -210,9 +210,7 @@ class TestCognitFundamentalPipeline:
     async def test_belief_has_valid_direction(self, ticker: str):
         """Each belief has a valid direction enum."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 
@@ -224,9 +222,7 @@ class TestCognitFundamentalPipeline:
     async def test_belief_has_valid_magnitude(self, ticker: str):
         """Each belief has a valid magnitude enum."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 
@@ -238,9 +234,7 @@ class TestCognitFundamentalPipeline:
     async def test_confidence_is_reasonable(self, ticker: str):
         """Confidence scores are differentiated (not all 0.5 or all 0.95)."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 
@@ -255,9 +249,7 @@ class TestCognitFundamentalPipeline:
     async def test_has_machine_evaluable_invalidation_conditions(self, ticker: str):
         """Each belief has at least 2 machine-evaluable invalidation conditions."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 
@@ -278,9 +270,7 @@ class TestCognitFundamentalPipeline:
     async def test_evidence_refs_point_to_context_fragments(self, ticker: str):
         """Evidence refs should reference fragment IDs that exist in context."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         context_fragment_ids = {f.fragment_id for f in ctx.fragments}
 
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
@@ -298,9 +288,7 @@ class TestCognitFundamentalPipeline:
     async def test_time_horizon_in_range(self, ticker: str):
         """Time horizon is within 30-180 days per spec."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 
@@ -312,9 +300,7 @@ class TestCognitFundamentalPipeline:
     async def test_belief_has_content_hash(self, ticker: str):
         """BeliefObject has a computed content_hash."""
         svc = _make_context_svc()
-        ctx = svc.assemble_context(
-            "COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker]
-        )
+        ctx = svc.assemble_context("COGNIT-FUNDAMENTAL", "schedule", FRAGMENTS_BY_TICKER[ticker])
         agent = CognitFundamental(llm_client=_make_mock_llm(ticker))
         belief_obj = await agent.process(ctx)
 

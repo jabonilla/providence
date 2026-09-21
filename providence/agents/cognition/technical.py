@@ -36,7 +36,13 @@ from providence.agents.cognition.technical_indicators import (
     compute_all_signals,
 )
 from providence.exceptions import AgentProcessingError
-from providence.schemas.belief import Belief, BeliefMetadata, BeliefObject, EvidenceRef, InvalidationCondition
+from providence.schemas.belief import (
+    Belief,
+    BeliefMetadata,
+    BeliefObject,
+    EvidenceRef,
+    InvalidationCondition,
+)
 from providence.schemas.enums import (
     ComparisonOperator,
     ConditionStatus,
@@ -303,7 +309,12 @@ class CognitTechnical(BaseAgent[BeliefObject]):
         # Determine time horizon based on signals
         if signals.golden_cross or signals.death_cross:
             time_horizon_days = 30  # Trend-following
-        elif signals.rsi_oversold or signals.rsi_overbought or signals.price_below_lower_bb or signals.price_above_upper_bb:
+        elif (
+            signals.rsi_oversold
+            or signals.rsi_overbought
+            or signals.price_below_lower_bb
+            or signals.price_above_upper_bb
+        ):
             time_horizon_days = 10  # Mean reversion
         else:
             time_horizon_days = 20  # Default
@@ -322,9 +333,7 @@ class CognitTechnical(BaseAgent[BeliefObject]):
             )
 
         # Create invalidation conditions
-        invalidation_conditions = self._create_invalidation_conditions(
-            direction, signals
-        )
+        invalidation_conditions = self._create_invalidation_conditions(direction, signals)
 
         # Create BeliefMetadata
         metadata = BeliefMetadata(

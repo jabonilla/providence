@@ -144,7 +144,7 @@ class AlpacaClient:
 
                 # Handle rate limiting
                 if response.status_code == 429:
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     logger.debug(
                         "alpaca_rate_limited",
                         path=path,
@@ -218,7 +218,7 @@ class AlpacaClient:
                     error=str(e),
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except httpx.HTTPError as e:
@@ -233,7 +233,7 @@ class AlpacaClient:
                     error=str(e),
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except (ExternalAPIError, DataIngestionError):
@@ -328,9 +328,7 @@ class AlpacaClient:
             params={"client_order_id": client_order_id},
         )
 
-    async def list_orders(
-        self, status: str = "open", limit: int = 100
-    ) -> list[dict[str, Any]]:
+    async def list_orders(self, status: str = "open", limit: int = 100) -> list[dict[str, Any]]:
         """List orders with optional filtering.
 
         Args:

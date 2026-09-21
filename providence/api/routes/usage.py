@@ -89,14 +89,18 @@ async def check_usage_limits(
 
     # Check doc uploads
     allowed_docs, remaining_docs = state.usage_tracker.check_limit(
-        user_id, "doc_upload", limits.doc_uploads_per_day,
+        user_id,
+        "doc_upload",
+        limits.doc_uploads_per_day,
     )
     result["usage_today"]["doc_uploads"] = limits.doc_uploads_per_day - remaining_docs
     result["allowed"]["doc_uploads"] = allowed_docs
 
     # Check chat messages (100/day for all tiers for now)
     allowed_chat, remaining_chat = state.usage_tracker.check_limit(
-        user_id, "chat_message", 100,
+        user_id,
+        "chat_message",
+        100,
     )
     result["usage_today"]["chat_messages"] = 100 - remaining_chat
     result["allowed"]["chat_messages"] = allowed_chat
@@ -109,7 +113,9 @@ async def check_usage_limits(
         "FUND": 1000,
     }.get(tier.value, 5)
     allowed_runs, remaining_runs = state.usage_tracker.check_limit(
-        user_id, "pipeline_run", max_runs,
+        user_id,
+        "pipeline_run",
+        max_runs,
     )
     result["usage_today"]["pipeline_runs"] = max_runs - remaining_runs
     result["allowed"]["pipeline_runs"] = allowed_runs

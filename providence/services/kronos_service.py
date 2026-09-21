@@ -54,7 +54,7 @@ class CandleForecast:
     low: float
     close: float
     # Probabilistic bounds (from multiple samples)
-    close_low: float | None = None   # 10th percentile
+    close_low: float | None = None  # 10th percentile
     close_high: float | None = None  # 90th percentile
 
 
@@ -64,11 +64,11 @@ class ForecastResult:
 
     ticker: str
     model_name: str
-    horizon: int                          # number of candles forecasted
-    candles: list[CandleForecast]         # forecasted candle sequence
-    predicted_return: float               # close[-1] / input_close[-1] - 1
-    predicted_direction: str              # "UP" | "DOWN" | "FLAT"
-    confidence: float                     # based on sample agreement (0-1)
+    horizon: int  # number of candles forecasted
+    candles: list[CandleForecast]  # forecasted candle sequence
+    predicted_return: float  # close[-1] / input_close[-1] - 1
+    predicted_direction: str  # "UP" | "DOWN" | "FLAT"
+    confidence: float  # based on sample agreement (0-1)
     forecast_timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -119,12 +119,16 @@ class KronosService:
             import sys
 
             kronos_home = os.getenv("KRONOS_HOME", "")
-            search_paths = [p for p in [
-                kronos_home,
-                os.path.join(os.getcwd(), "Kronos"),
-                os.path.join(os.path.dirname(__file__), "..", "..", "Kronos"),
-                os.path.expanduser("~/Kronos"),
-            ] if p]
+            search_paths = [
+                p
+                for p in [
+                    kronos_home,
+                    os.path.join(os.getcwd(), "Kronos"),
+                    os.path.join(os.path.dirname(__file__), "..", "..", "Kronos"),
+                    os.path.expanduser("~/Kronos"),
+                ]
+                if p
+            ]
 
             found = False
             for path in search_paths:
@@ -207,13 +211,11 @@ class KronosService:
             raise ValueError(f"Missing required columns: {missing}")
 
         if len(ohlcv_data) < 20:
-            raise ValueError(
-                f"Need at least 20 candles for prediction, got {len(ohlcv_data)}"
-            )
+            raise ValueError(f"Need at least 20 candles for prediction, got {len(ohlcv_data)}")
 
         # Truncate to max_context if needed
         if len(ohlcv_data) > self._max_context:
-            ohlcv_data = ohlcv_data.iloc[-self._max_context:]
+            ohlcv_data = ohlcv_data.iloc[-self._max_context :]
 
         # Extract timestamps
         if isinstance(ohlcv_data.index, pd.DatetimeIndex):
@@ -222,19 +224,27 @@ class KronosService:
             x_timestamps = pd.to_datetime(ohlcv_data["timestamp"]).reset_index(drop=True)
         else:
             # Generate synthetic timestamps (daily)
-            x_timestamps = pd.date_range(
-                end=datetime.now(timezone.utc),
-                periods=len(ohlcv_data),
-                freq="B",  # business days
-            ).to_series().reset_index(drop=True)
+            x_timestamps = (
+                pd.date_range(
+                    end=datetime.now(timezone.utc),
+                    periods=len(ohlcv_data),
+                    freq="B",  # business days
+                )
+                .to_series()
+                .reset_index(drop=True)
+            )
 
         # Generate future timestamps
         last_ts = x_timestamps.iloc[-1]
-        y_timestamps = pd.date_range(
-            start=last_ts + pd.Timedelta(days=1),
-            periods=horizon,
-            freq="B",
-        ).to_series().reset_index(drop=True)
+        y_timestamps = (
+            pd.date_range(
+                start=last_ts + pd.Timedelta(days=1),
+                periods=horizon,
+                freq="B",
+            )
+            .to_series()
+            .reset_index(drop=True)
+        )
 
         # Prepare input DataFrame (reset index for Kronos)
         input_df = ohlcv_data[list(required_cols)].reset_index(drop=True)
@@ -324,13 +334,15 @@ class KronosService:
             # Fallback: create neutral forecast
             for i in range(horizon):
                 ts = y_timestamps.iloc[i] if i < len(y_timestamps) else datetime.now(timezone.utc)
-                candles.append(CandleForecast(
-                    timestamp=ts,
-                    open=input_close,
-                    high=input_close,
-                    low=input_close,
-                    close=input_close,
-                ))
+                candles.append(
+                    CandleForecast(
+                        timestamp=ts,
+                        open=input_close,
+                        high=input_close,
+                        low=input_close,
+                        close=input_close,
+                    )
+                )
 
         # Compute directional signal
         final_close = candles[-1].close

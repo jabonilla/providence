@@ -36,19 +36,37 @@ logger = structlog.get_logger()
 # US market holidays (approximate, covers major ones)
 US_HOLIDAYS = {
     # 2025
-    date(2025, 1, 1), date(2025, 1, 20), date(2025, 2, 17),
-    date(2025, 4, 18), date(2025, 5, 26), date(2025, 6, 19),
-    date(2025, 7, 4), date(2025, 9, 1), date(2025, 11, 27),
+    date(2025, 1, 1),
+    date(2025, 1, 20),
+    date(2025, 2, 17),
+    date(2025, 4, 18),
+    date(2025, 5, 26),
+    date(2025, 6, 19),
+    date(2025, 7, 4),
+    date(2025, 9, 1),
+    date(2025, 11, 27),
     date(2025, 12, 25),
     # 2026
-    date(2026, 1, 1), date(2026, 1, 19), date(2026, 2, 16),
-    date(2026, 4, 3), date(2026, 5, 25), date(2026, 6, 19),
-    date(2026, 7, 3), date(2026, 9, 7), date(2026, 11, 26),
+    date(2026, 1, 1),
+    date(2026, 1, 19),
+    date(2026, 2, 16),
+    date(2026, 4, 3),
+    date(2026, 5, 25),
+    date(2026, 6, 19),
+    date(2026, 7, 3),
+    date(2026, 9, 7),
+    date(2026, 11, 26),
     date(2026, 12, 25),
     # 2027
-    date(2027, 1, 1), date(2027, 1, 18), date(2027, 2, 15),
-    date(2027, 4, 2), date(2027, 5, 31), date(2027, 6, 18),
-    date(2027, 7, 5), date(2027, 9, 6), date(2027, 11, 25),
+    date(2027, 1, 1),
+    date(2027, 1, 18),
+    date(2027, 2, 15),
+    date(2027, 4, 2),
+    date(2027, 5, 31),
+    date(2027, 6, 18),
+    date(2027, 7, 5),
+    date(2027, 9, 6),
+    date(2027, 11, 25),
     date(2027, 12, 24),
 }
 
@@ -213,9 +231,7 @@ class PriceBackfillService:
 
         return candidates
 
-    def _build_price_requests(
-        self, signals: list[ShadowSignal]
-    ) -> set[tuple[str, str]]:
+    def _build_price_requests(self, signals: list[ShadowSignal]) -> set[tuple[str, str]]:
         """Build unique (ticker, date_str) pairs needed for backfill.
 
         For each signal, computes the target dates for each horizon
@@ -239,9 +255,7 @@ class PriceBackfillService:
 
         return requests
 
-    async def _fetch_prices(
-        self, requests: set[tuple[str, str]]
-    ) -> dict[tuple[str, str], float]:
+    async def _fetch_prices(self, requests: set[tuple[str, str]]) -> dict[tuple[str, str], float]:
         """Fetch closing prices for all (ticker, date) pairs.
 
         Returns a cache mapping (ticker, date_str) → closing_price.

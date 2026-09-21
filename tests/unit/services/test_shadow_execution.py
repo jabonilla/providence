@@ -16,6 +16,7 @@ from providence.services.shadow_execution import ShadowExecutionService, ShadowS
 # ShadowSignalStore tests
 # ---------------------------------------------------------------------------
 
+
 class TestShadowSignalStore:
     """Tests for ShadowSignalStore (append-only, indexed, persistent)."""
 
@@ -56,15 +57,33 @@ class TestShadowSignalStore:
         run1 = uuid4()
         run2 = uuid4()
 
-        s1 = ShadowSignal(run_id=run1, ticker="AAPL", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.05,
-                           confidence=0.7, approved=True)
-        s2 = ShadowSignal(run_id=run1, ticker="MSFT", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.04,
-                           confidence=0.6, approved=True)
-        s3 = ShadowSignal(run_id=run2, ticker="AAPL", action=Action.CLOSE,
-                           direction=Direction.NEUTRAL, target_weight=0.0,
-                           confidence=0.5, approved=False)
+        s1 = ShadowSignal(
+            run_id=run1,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+        )
+        s2 = ShadowSignal(
+            run_id=run1,
+            ticker="MSFT",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.04,
+            confidence=0.6,
+            approved=True,
+        )
+        s3 = ShadowSignal(
+            run_id=run2,
+            ticker="AAPL",
+            action=Action.CLOSE,
+            direction=Direction.NEUTRAL,
+            target_weight=0.0,
+            confidence=0.5,
+            approved=False,
+        )
 
         store.append(s1)
         store.append(s2)
@@ -77,12 +96,24 @@ class TestShadowSignalStore:
         store = ShadowSignalStore()
         run_id = uuid4()
 
-        s1 = ShadowSignal(run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.05,
-                           confidence=0.7, approved=True)
-        s2 = ShadowSignal(run_id=run_id, ticker="AAPL", action=Action.ADJUST,
-                           direction=Direction.LONG, target_weight=0.03,
-                           confidence=0.6, approved=True)
+        s1 = ShadowSignal(
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+        )
+        s2 = ShadowSignal(
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.ADJUST,
+            direction=Direction.LONG,
+            target_weight=0.03,
+            confidence=0.6,
+            approved=True,
+        )
 
         store.append(s1)
         store.append(s2)
@@ -94,12 +125,24 @@ class TestShadowSignalStore:
         store = ShadowSignalStore()
         run_id = uuid4()
 
-        s1 = ShadowSignal(run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.05,
-                           confidence=0.7, approved=True)
-        s2 = ShadowSignal(run_id=run_id, ticker="MSFT", action=Action.OPEN_SHORT,
-                           direction=Direction.SHORT, target_weight=0.04,
-                           confidence=0.6, approved=True)
+        s1 = ShadowSignal(
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+        )
+        s2 = ShadowSignal(
+            run_id=run_id,
+            ticker="MSFT",
+            action=Action.OPEN_SHORT,
+            direction=Direction.SHORT,
+            target_weight=0.04,
+            confidence=0.6,
+            approved=True,
+        )
 
         store.append(s1)
         store.append(s2)
@@ -115,12 +158,26 @@ class TestShadowSignalStore:
         # Write signals
         store1 = ShadowSignalStore(persist_path=signal_path)
         run_id = uuid4()
-        s1 = ShadowSignal(run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.05,
-                           confidence=0.75, approved=True, adjusted_weight=0.05)
-        s2 = ShadowSignal(run_id=run_id, ticker="GOOGL", action=Action.OPEN_SHORT,
-                           direction=Direction.SHORT, target_weight=0.04,
-                           confidence=0.65, approved=True, adjusted_weight=0.04)
+        s1 = ShadowSignal(
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.75,
+            approved=True,
+            adjusted_weight=0.05,
+        )
+        s2 = ShadowSignal(
+            run_id=run_id,
+            ticker="GOOGL",
+            action=Action.OPEN_SHORT,
+            direction=Direction.SHORT,
+            target_weight=0.04,
+            confidence=0.65,
+            approved=True,
+            adjusted_weight=0.04,
+        )
         store1.append(s1)
         store1.append(s2)
         assert store1.count == 2
@@ -135,13 +192,25 @@ class TestShadowSignalStore:
         store = ShadowSignalStore()
         run_id = uuid4()
 
-        s1 = ShadowSignal(run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.05,
-                           confidence=0.7, approved=True)
-        s2 = ShadowSignal(run_id=run_id, ticker="MSFT", action=Action.OPEN_LONG,
-                           direction=Direction.LONG, target_weight=0.04,
-                           confidence=0.3, approved=False,
-                           rejection_reasons=["Confidence below minimum"])
+        s1 = ShadowSignal(
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+        )
+        s2 = ShadowSignal(
+            run_id=run_id,
+            ticker="MSFT",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.04,
+            confidence=0.3,
+            approved=False,
+            rejection_reasons=["Confidence below minimum"],
+        )
 
         store.append(s1)
         store.append(s2)
@@ -171,6 +240,7 @@ class TestShadowSignalStore:
 # ---------------------------------------------------------------------------
 # ShadowExecutionService tests
 # ---------------------------------------------------------------------------
+
 
 class TestShadowExecutionService:
     """Tests for ShadowExecutionService.record_signals()."""
@@ -286,16 +356,20 @@ class TestShadowExecutionService:
         svc = ShadowExecutionService(store)
         run_id = uuid4()
 
-        proposal = self._make_validated_proposal(positions=[{
-            "ticker": "AAPL",
-            "action": "INVALID_ACTION",
-            "direction": "LONG",
-            "target_weight": 0.05,
-            "confidence": 0.5,
-            "approved": True,
-            "rejection_reasons": [],
-            "adjusted_weight": 0.05,
-        }])
+        proposal = self._make_validated_proposal(
+            positions=[
+                {
+                    "ticker": "AAPL",
+                    "action": "INVALID_ACTION",
+                    "direction": "LONG",
+                    "target_weight": 0.05,
+                    "confidence": 0.5,
+                    "approved": True,
+                    "rejection_reasons": [],
+                    "adjusted_weight": 0.05,
+                }
+            ]
+        )
 
         summary = svc.record_signals(run_id, proposal)
         assert summary.total_signals == 1
@@ -311,6 +385,7 @@ class TestShadowExecutionService:
 # ---------------------------------------------------------------------------
 # Schema tests
 # ---------------------------------------------------------------------------
+
 
 class TestShadowSchemas:
     """Test shadow mode Pydantic schemas."""

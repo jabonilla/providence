@@ -57,7 +57,13 @@ def _make_price_fragment(
         schema_version="1.0.0",
         source_hash=f"hash-{ticker}-{close}",
         validation_status=ValidationStatus.VALID,
-        payload={"close": close, "volume": volume, "open": close - 1, "high": close + 2, "low": close - 2},
+        payload={
+            "close": close,
+            "volume": volume,
+            "open": close - 1,
+            "high": close + 2,
+            "low": close - 2,
+        },
     )
 
 
@@ -393,7 +399,16 @@ class TestBeliefGeneration:
         belief = result.beliefs[0]
 
         # A very strong trend should produce multiple bullish signals
-        if abs(int(belief.thesis_id.split(":")[0].split("-")[-1] if ":" in belief.thesis_id else belief.thesis_id.rsplit("-", 1)[-1].replace("+", ""))) >= 3:
+        if (
+            abs(
+                int(
+                    belief.thesis_id.split(":")[0].split("-")[-1]
+                    if ":" in belief.thesis_id
+                    else belief.thesis_id.rsplit("-", 1)[-1].replace("+", "")
+                )
+            )
+            >= 3
+        ):
             assert belief.magnitude == Magnitude.LARGE
 
 

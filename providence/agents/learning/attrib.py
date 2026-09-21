@@ -168,7 +168,9 @@ def attribute_agent(
             dd = peak - cumulative
             max_dd = max(max_dd, dd)
 
-    value_added = avg_return - (sum(benchmark_returns) / len(benchmark_returns) if benchmark_returns else 0.0)
+    value_added = avg_return - (
+        sum(benchmark_returns) / len(benchmark_returns) if benchmark_returns else 0.0
+    )
 
     return {
         "agent_id": agent_id,
@@ -281,11 +283,17 @@ class LearnAttrib(BaseAgent[AttributionOutput]):
 
             # Parse evaluation window
             try:
-                eval_start = datetime.fromisoformat(eval_start_str) if eval_start_str else context.timestamp
+                eval_start = (
+                    datetime.fromisoformat(eval_start_str) if eval_start_str else context.timestamp
+                )
             except (ValueError, TypeError):
                 eval_start = context.timestamp
             try:
-                eval_end = datetime.fromisoformat(eval_end_str) if eval_end_str else datetime.now(timezone.utc)
+                eval_end = (
+                    datetime.fromisoformat(eval_end_str)
+                    if eval_end_str
+                    else datetime.now(timezone.utc)
+                )
             except (ValueError, TypeError):
                 eval_end = datetime.now(timezone.utc)
 

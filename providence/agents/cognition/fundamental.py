@@ -207,7 +207,7 @@ class CognitFundamental(BaseAgent[BeliefObject]):
             fragment_ids.append(f"- {frag.fragment_id} ({frag.data_type.value}, {frag.entity})")
 
             # Classify fragments
-            is_primary = (frag.entity == primary_ticker)
+            is_primary = frag.entity == primary_ticker
 
             if frag.data_type in (DataType.FILING_10K, DataType.FILING_10Q, DataType.FILING_8K):
                 if is_primary:
@@ -221,7 +221,9 @@ class CognitFundamental(BaseAgent[BeliefObject]):
                     peer_fragments.append(self._format_fragment(frag))
 
         # Build formatted sections
-        financial_data = "\n\n".join(filing_fragments) if filing_fragments else "No filing data available."
+        financial_data = (
+            "\n\n".join(filing_fragments) if filing_fragments else "No filing data available."
+        )
         price_data = "\n\n".join(price_fragments) if price_fragments else "No price data available."
         peer_data = "\n\n".join(peer_fragments) if peer_fragments else "No peer data available."
         fragment_id_list = "\n".join(fragment_ids) if fragment_ids else "No fragments available."

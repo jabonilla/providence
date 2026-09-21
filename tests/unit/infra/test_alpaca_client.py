@@ -2,6 +2,7 @@
 
 All tests mock httpx — NO real HTTP calls.
 """
+
 import asyncio
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -19,14 +20,18 @@ class TestAlpacaClientInit:
 
     def test_init_default_paper_mode(self):
         """Paper mode should be default."""
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             client = AlpacaClient()
             assert client._paper is True
             assert client._base_url == AlpacaClient.PAPER_URL
 
     def test_init_live_mode(self):
         """Can explicitly set live mode."""
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             client = AlpacaClient(paper=False)
             assert client._paper is False
             assert client._base_url == AlpacaClient.LIVE_URL
@@ -58,13 +63,17 @@ class TestAlpacaClientInit:
 
     def test_init_custom_base_url(self):
         """Can override base URL."""
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             client = AlpacaClient(base_url="https://custom.example.com")
             assert client._base_url == "https://custom.example.com"
 
     def test_init_custom_timeout(self):
         """Can set custom timeout."""
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             client = AlpacaClient(timeout=60.0)
             assert client._timeout == 60.0
 
@@ -75,7 +84,9 @@ class TestAlpacaClientOrders:
     @pytest.fixture
     def client(self):
         """Create a client for testing."""
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             return AlpacaClient()
 
     @pytest.mark.asyncio
@@ -94,13 +105,17 @@ class TestAlpacaClientOrders:
 
             assert result["id"] == "order123"
             assert result["symbol"] == "AAPL"
-            mock_request.assert_called_once_with("POST", "/v2/orders", json={
-                "symbol": "AAPL",
-                "qty": 10,
-                "side": "buy",
-                "type": "market",
-                "time_in_force": "day",
-            })
+            mock_request.assert_called_once_with(
+                "POST",
+                "/v2/orders",
+                json={
+                    "symbol": "AAPL",
+                    "qty": 10,
+                    "side": "buy",
+                    "type": "market",
+                    "time_in_force": "day",
+                },
+            )
 
     @pytest.mark.asyncio
     async def test_submit_order_with_limit_price(self, client):
@@ -108,13 +123,7 @@ class TestAlpacaClientOrders:
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"id": "order123"}
 
-            await client.submit_order(
-                "AAPL",
-                qty=10,
-                side="buy",
-                type="limit",
-                limit_price=150.00
-            )
+            await client.submit_order("AAPL", qty=10, side="buy", type="limit", limit_price=150.00)
 
             call_args = mock_request.call_args
             assert call_args[1]["json"]["limit_price"] == 150.00
@@ -176,7 +185,9 @@ class TestAlpacaClientPositions:
 
     @pytest.fixture
     def client(self):
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             return AlpacaClient()
 
     @pytest.mark.asyncio
@@ -208,9 +219,7 @@ class TestAlpacaClientPositions:
         """get_position returns None on 404."""
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.side_effect = ExternalAPIError(
-                message="Not found",
-                service="alpaca",
-                status_code=404
+                message="Not found", service="alpaca", status_code=404
             )
 
             result = await client.get_position("NONEXISTENT")
@@ -222,9 +231,7 @@ class TestAlpacaClientPositions:
         """get_position raises on non-404 errors."""
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.side_effect = ExternalAPIError(
-                message="Server error",
-                service="alpaca",
-                status_code=500
+                message="Server error", service="alpaca", status_code=500
             )
 
             with pytest.raises(ExternalAPIError):
@@ -258,7 +265,9 @@ class TestAlpacaClientAccount:
 
     @pytest.fixture
     def client(self):
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             return AlpacaClient()
 
     @pytest.mark.asyncio
@@ -284,7 +293,9 @@ class TestAlpacaClientRetry:
 
     @pytest.fixture
     def client(self):
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             return AlpacaClient()
 
     @pytest.mark.asyncio
@@ -370,7 +381,9 @@ class TestAlpacaClientClock:
 
     @pytest.fixture
     def client(self):
-        with patch.dict(os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}):
+        with patch.dict(
+            os.environ, {"ALPACA_API_KEY": "test_key", "ALPACA_SECRET_KEY": "test_secret"}
+        ):
             return AlpacaClient()
 
     @pytest.mark.asyncio

@@ -387,7 +387,9 @@ class TestCognitFundamental:
 
         # Check the user_prompt argument
         call_args = mock_llm.complete.call_args
-        user_prompt = call_args.kwargs.get("user_prompt") or call_args[1] if len(call_args) > 1 else ""
+        user_prompt = (
+            call_args.kwargs.get("user_prompt") or call_args[1] if len(call_args) > 1 else ""
+        )
         # The prompt should contain the fragment UUIDs
         if isinstance(user_prompt, str):
             assert str(FRAG_ID_1) in user_prompt
@@ -402,15 +404,19 @@ class TestCognitFundamental:
         )
         mock_llm = _make_mock_llm(VALID_FUNDAMENTAL_RESPONSE)
         agent = CognitFundamental(llm_client=mock_llm)
-        context = _make_context(fragments=[
-            _make_fragment(fragment_id=FRAG_ID_1),
-            filing_frag,
-        ])
+        context = _make_context(
+            fragments=[
+                _make_fragment(fragment_id=FRAG_ID_1),
+                filing_frag,
+            ]
+        )
 
         await agent.process(context)
 
         call_args = mock_llm.complete.call_args
-        user_prompt = call_args.kwargs.get("user_prompt") or call_args[1] if len(call_args) > 1 else ""
+        user_prompt = (
+            call_args.kwargs.get("user_prompt") or call_args[1] if len(call_args) > 1 else ""
+        )
         if isinstance(user_prompt, str):
             assert "124300000000" in user_prompt
 

@@ -118,12 +118,9 @@ def evaluate_condition(
         hist = historical_values[metric]
         if len(hist) >= 2:
             # trailing 5-day average velocity (or fewer days if less data)
-            window = hist[-min(5, len(hist)):]
+            window = hist[-min(5, len(hist)) :]
             if len(window) >= 2:
-                daily_changes = [
-                    window[i] - window[i - 1]
-                    for i in range(1, len(window))
-                ]
+                daily_changes = [window[i] - window[i - 1] for i in range(1, len(window))]
                 avg_velocity = sum(daily_changes) / len(daily_changes)
                 result["breach_velocity"] = round(avg_velocity, 6)
 
@@ -246,7 +243,9 @@ class InvalidMon(BaseAgent[InvalidationMonitorOutput]):
                         continue
 
                     result = evaluate_condition(
-                        cond, current_values, historical_values,
+                        cond,
+                        current_values,
+                        historical_values,
                     )
 
                     # Parse condition_id
@@ -255,6 +254,7 @@ class InvalidMon(BaseAgent[InvalidationMonitorOutput]):
                         cond_id = UUID(str(cond_id_raw))
                     except (ValueError, TypeError):
                         from uuid import uuid4
+
                         cond_id = uuid4()
 
                     monitored = MonitoredCondition(

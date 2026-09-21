@@ -20,6 +20,7 @@ class ShadowSignal(BaseModel, frozen=True):
     Captures everything the pipeline decided to do so it can be
     compared against actual market outcomes later.
     """
+
     signal_id: UUID = Field(default_factory=uuid4)
     run_id: UUID
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -53,6 +54,7 @@ class ShadowRunSummary(BaseModel, frozen=True):
 
     Aggregates all signals from one pipeline run for reporting.
     """
+
     run_id: UUID
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     system_mode: SystemMode = SystemMode.SHADOW
@@ -72,6 +74,7 @@ class ShadowPerformanceReport(BaseModel, frozen=True):
     Computed by the shadow report generator to evaluate signal quality
     before advancing to paper trading (Launch Plan Phase C criteria).
     """
+
     report_id: UUID = Field(default_factory=uuid4)
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     period_start: Optional[datetime] = None
@@ -97,7 +100,7 @@ class ShadowPerformanceReport(BaseModel, frozen=True):
     avg_signals_per_run: Optional[float] = None
 
     # Phase B success criteria (from Launch Plan)
-    meets_accuracy_threshold: bool = False    # > 55% directional accuracy
-    meets_sharpe_threshold: bool = False      # > 0.5 hypothetical Sharpe
-    meets_stability_threshold: bool = False   # No catastrophic draws
-    ready_for_paper_trading: bool = False     # All criteria met
+    meets_accuracy_threshold: bool = False  # > 55% directional accuracy
+    meets_sharpe_threshold: bool = False  # > 0.5 hypothetical Sharpe
+    meets_stability_threshold: bool = False  # No catastrophic draws
+    ready_for_paper_trading: bool = False  # All criteria met

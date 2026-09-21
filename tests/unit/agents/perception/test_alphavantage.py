@@ -129,7 +129,7 @@ def _income_statement_response_aapl() -> dict:
                 "ebitda": "32000000000",
                 "netIncome": "21500000000",
             },
-        ]
+        ],
     }
 
 

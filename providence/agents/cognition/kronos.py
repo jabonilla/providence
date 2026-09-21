@@ -93,6 +93,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
         """Get or lazily create the KronosService."""
         if self._kronos_service is None:
             from providence.services.kronos_service import KronosService
+
             self._kronos_service = KronosService()
         return self._kronos_service
 
@@ -351,10 +352,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             catalyst_type=None,
         )
 
-        thesis_id = (
-            f"KRONOS-{ticker}-{direction.value}-"
-            f"{forecast.predicted_return:+.3f}"
-        )
+        thesis_id = f"KRONOS-{ticker}-{direction.value}-{forecast.predicted_return:+.3f}"
 
         return Belief(
             thesis_id=thesis_id,
@@ -385,8 +383,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             conditions.append(
                 InvalidationCondition(
                     description=(
-                        f"Price drops below {stop_level:.2f} "
-                        f"(2x forecast magnitude below entry)"
+                        f"Price drops below {stop_level:.2f} (2x forecast magnitude below entry)"
                     ),
                     data_source_agent="PERCEPT-PRICE",
                     metric="close",
@@ -413,8 +410,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             conditions.append(
                 InvalidationCondition(
                     description=(
-                        f"Price rises above {stop_level:.2f} "
-                        f"(2x forecast magnitude above entry)"
+                        f"Price rises above {stop_level:.2f} (2x forecast magnitude above entry)"
                     ),
                     data_source_agent="PERCEPT-PRICE",
                     metric="close",

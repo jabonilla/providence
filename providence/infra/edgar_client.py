@@ -99,7 +99,7 @@ class EdgarClient:
                 response = await client.get(url, params=params or {})
 
                 if response.status_code == 429:
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     await asyncio.sleep(wait)
                     continue
 
@@ -123,7 +123,7 @@ class EdgarClient:
                     service="edgar",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
 
             except httpx.HTTPError as e:
                 last_error = ExternalAPIError(
@@ -131,7 +131,7 @@ class EdgarClient:
                     service="edgar",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
 
             except (ExternalAPIError, DataIngestionError):
                 raise

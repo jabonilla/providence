@@ -9,6 +9,7 @@ from enum import Enum
 
 class Direction(str, Enum):
     """Investment direction for a thesis."""
+
     LONG = "LONG"
     SHORT = "SHORT"
     NEUTRAL = "NEUTRAL"
@@ -16,6 +17,7 @@ class Direction(str, Enum):
 
 class Magnitude(str, Enum):
     """Expected magnitude of a thesis outcome."""
+
     SMALL = "SMALL"
     MODERATE = "MODERATE"
     LARGE = "LARGE"
@@ -23,6 +25,7 @@ class Magnitude(str, Enum):
 
 class ValidationStatus(str, Enum):
     """Validation status for MarketStateFragments."""
+
     VALID = "VALID"
     QUARANTINED = "QUARANTINED"
     PARTIAL = "PARTIAL"
@@ -30,6 +33,7 @@ class ValidationStatus(str, Enum):
 
 class ComparisonOperator(str, Enum):
     """Operators for invalidation condition evaluation."""
+
     GT = "GT"
     LT = "LT"
     EQ = "EQ"
@@ -39,6 +43,7 @@ class ComparisonOperator(str, Enum):
 
 class ConditionStatus(str, Enum):
     """Status of an invalidation condition."""
+
     ACTIVE = "ACTIVE"
     TRIGGERED = "TRIGGERED"
     EXPIRED = "EXPIRED"
@@ -50,6 +55,7 @@ class DataType(str, Enum):
     Each data type corresponds to a specific payload schema and
     is produced by a specific Perception agent.
     """
+
     PRICE_OHLCV = "PRICE_OHLCV"
     FILING_10K = "FILING_10K"
     FILING_10Q = "FILING_10Q"
@@ -74,6 +80,7 @@ class StatisticalRegime(str, Enum):
     Produced by REGIME-STAT (frozen agent) from price volatility,
     yield curve, credit spreads, and macro data.
     """
+
     LOW_VOL_TRENDING = "LOW_VOL_TRENDING"
     HIGH_VOL_MEAN_REVERTING = "HIGH_VOL_MEAN_REVERTING"
     CRISIS_DISLOCATION = "CRISIS_DISLOCATION"
@@ -85,6 +92,7 @@ class SystemRiskMode(str, Enum):
 
     Governs position sizing, exposure limits, and execution guardrails.
     """
+
     NORMAL = "NORMAL"
     CAUTIOUS = "CAUTIOUS"
     DEFENSIVE = "DEFENSIVE"
@@ -93,6 +101,7 @@ class SystemRiskMode(str, Enum):
 
 class MarketCapBucket(str, Enum):
     """Market capitalization classification."""
+
     MEGA = "MEGA"
     LARGE = "LARGE"
     MID = "MID"
@@ -101,6 +110,7 @@ class MarketCapBucket(str, Enum):
 
 class CatalystType(str, Enum):
     """Type of catalyst driving a thesis."""
+
     EARNINGS = "EARNINGS"
     MACRO = "MACRO"
     EVENT = "EVENT"
@@ -112,6 +122,7 @@ class Action(str, Enum):
 
     Produced by DECIDE-OPTIM. Consumed by EXEC-VALIDATE.
     """
+
     OPEN_LONG = "OPEN_LONG"
     OPEN_SHORT = "OPEN_SHORT"
     CLOSE = "CLOSE"
@@ -124,9 +135,10 @@ class CapitalTier(str, Enum):
     Controls system autonomy level, position sizing, and oversight requirements.
     Produced by GOVERN-CAPITAL. Consumed by EXEC-VALIDATE and GOVERN-OVERSIGHT.
     """
-    SEED = "SEED"          # < $10M — shadow mode only, no live execution
-    GROWTH = "GROWTH"      # $10M–$100M — limited execution, tighter guardrails
-    SCALE = "SCALE"        # $100M–$500M — full execution, standard limits
+
+    SEED = "SEED"  # < $10M — shadow mode only, no live execution
+    GROWTH = "GROWTH"  # $10M–$100M — limited execution, tighter guardrails
+    SCALE = "SCALE"  # $100M–$500M — full execution, standard limits
     INSTITUTIONAL = "INSTITUTIONAL"  # > $500M — full execution, enhanced monitoring
 
 
@@ -136,9 +148,10 @@ class MaturityStage(str, Enum):
     Controls whether an agent's outputs are used for live trading.
     Produced by GOVERN-MATURITY. Consumed by DECIDE-SYNTH and EXEC-VALIDATE.
     """
-    SHADOW = "SHADOW"      # Outputs logged but NOT used in live trading
-    LIMITED = "LIMITED"     # Outputs used with reduced confidence weighting (50%)
-    FULL = "FULL"          # Outputs used at full confidence weighting
+
+    SHADOW = "SHADOW"  # Outputs logged but NOT used in live trading
+    LIMITED = "LIMITED"  # Outputs used with reduced confidence weighting (50%)
+    FULL = "FULL"  # Outputs used at full confidence weighting
 
 
 class IncidentSeverity(str, Enum):
@@ -146,8 +159,9 @@ class IncidentSeverity(str, Enum):
 
     Produced by GOVERN-OVERSIGHT. Consumed by human operators.
     """
-    INFO = "INFO"          # Informational — no action required
-    WARNING = "WARNING"    # Attention needed — degradation detected
+
+    INFO = "INFO"  # Informational — no action required
+    WARNING = "WARNING"  # Attention needed — degradation detected
     CRITICAL = "CRITICAL"  # Immediate action required — system risk
 
 
@@ -156,6 +170,7 @@ class ExecutionStatus(str, Enum):
 
     Produced by EXEC-CAPTURE. Records outcome of order execution.
     """
+
     FILLED = "FILLED"
     PARTIAL = "PARTIAL"
     REJECTED = "REJECTED"
@@ -168,6 +183,7 @@ class AgentRecommendation(str, Enum):
     Produced by LEARN-SCORECARD. Determines promotion, retention,
     retraining, or retirement of an agent.
     """
+
     PROMOTE = "PROMOTE"
     MAINTAIN = "MAINTAIN"
     RETRAIN = "RETRAIN"
@@ -182,6 +198,7 @@ class SystemMode(str, Enum):
 
     Progression: SHADOW → PAPER → LIVE (per Launch Plan phases B → C → E/F).
     """
-    SHADOW = "SHADOW"    # Signal-only: no broker interaction, simulated fills from market data
-    PAPER = "PAPER"      # Paper trading: orders submitted to Alpaca paper endpoint
-    LIVE = "LIVE"        # Live trading: orders submitted to Alpaca live endpoint
+
+    SHADOW = "SHADOW"  # Signal-only: no broker interaction, simulated fills from market data
+    PAPER = "PAPER"  # Paper trading: orders submitted to Alpaca paper endpoint
+    LIVE = "LIVE"  # Live trading: orders submitted to Alpaca live endpoint

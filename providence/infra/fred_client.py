@@ -110,7 +110,7 @@ class FredClient:
 
                 if response.status_code == 429:
                     # Rate limited — back off and retry
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     await asyncio.sleep(wait)
                     continue
 
@@ -134,7 +134,7 @@ class FredClient:
                     service="fred",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except httpx.HTTPError as e:
@@ -143,7 +143,7 @@ class FredClient:
                     service="fred",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except (ExternalAPIError, DataIngestionError):
@@ -197,11 +197,11 @@ class FredClient:
         Raises:
             DataIngestionError: If no observations are found.
         """
-        observations = await self.get_series_observations(series_id, "1980-01-01", "2099-12-31", limit=1)
+        observations = await self.get_series_observations(
+            series_id, "1980-01-01", "2099-12-31", limit=1
+        )
         if not observations:
-            raise DataIngestionError(
-                message=f"No observations found for series {series_id}"
-            )
+            raise DataIngestionError(message=f"No observations found for series {series_id}")
         return observations[0]
 
     async def get_treasury_yields(self, date: str) -> dict[str, float]:
@@ -240,9 +240,7 @@ class FredClient:
         # Fetch observations for each series
         for series_id, tenor in series_map.items():
             try:
-                observations = await self.get_series_observations(
-                    series_id, date, date, limit=1
-                )
+                observations = await self.get_series_observations(series_id, date, date, limit=1)
                 if observations:
                     obs = observations[0]
                     value = obs.get("value")

@@ -13,12 +13,15 @@ def __getattr__(name: str):
     """Lazy-load store classes on first attribute access."""
     if name == "FragmentStore":
         from providence.storage.fragment_store import FragmentStore
+
         return FragmentStore
     if name == "BeliefStore":
         from providence.storage.belief_store import BeliefStore
+
         return BeliefStore
     if name == "RunStore":
         from providence.storage.run_store import RunStore
+
         return RunStore
     raise AttributeError(f"module 'providence.storage' has no attribute {name!r}")
 

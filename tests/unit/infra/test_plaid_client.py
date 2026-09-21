@@ -27,11 +27,14 @@ class TestPlaidClientInit:
 
     def test_init_from_env_vars(self):
         """Client should read credentials from environment."""
-        with patch.dict(os.environ, {
-            "PLAID_CLIENT_ID": "env_id",
-            "PLAID_SECRET": "env_secret",
-            "PLAID_ENV": "development",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "PLAID_CLIENT_ID": "env_id",
+                "PLAID_SECRET": "env_secret",
+                "PLAID_ENV": "development",
+            },
+        ):
             client = PlaidClient()
             assert client._client_id == "env_id"
             assert client._secret == "env_secret"
@@ -343,7 +346,10 @@ class TestPlaidClientRequest:
                 with pytest.raises(ExternalAPIError) as exc_info:
                     await client._request("/accounts/get", {"access_token": "token"})
 
-                assert "timeout" in str(exc_info.value).lower() or "failed" in str(exc_info.value).lower()
+                assert (
+                    "timeout" in str(exc_info.value).lower()
+                    or "failed" in str(exc_info.value).lower()
+                )
 
         await client.close()
 

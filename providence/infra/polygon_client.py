@@ -103,7 +103,7 @@ class PolygonClient:
 
                 if response.status_code == 429:
                     # Rate limited — back off and retry
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     await asyncio.sleep(wait)
                     continue
 
@@ -127,7 +127,7 @@ class PolygonClient:
                     service="polygon",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except httpx.HTTPError as e:
@@ -136,7 +136,7 @@ class PolygonClient:
                     service="polygon",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except (ExternalAPIError, DataIngestionError):

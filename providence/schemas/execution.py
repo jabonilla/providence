@@ -20,6 +20,7 @@ from providence.schemas.enums import Action, Direction, SystemRiskMode, Executio
 # EXEC-VALIDATE output
 # ---------------------------------------------------------------------------
 
+
 class ValidationResult(BaseModel):
     """Result of pre-trade validation for a single proposed position.
 
@@ -40,7 +41,9 @@ class ValidationResult(BaseModel):
         description="Reasons for rejection (empty if approved)",
     )
     adjusted_weight: float = Field(
-        default=0.0, ge=0.0, le=0.20,
+        default=0.0,
+        ge=0.0,
+        le=0.20,
         description="Weight after constraint adjustments (may differ from target)",
     )
 
@@ -90,6 +93,7 @@ class ValidatedProposal(BaseModel):
 # EXEC-ROUTER output
 # ---------------------------------------------------------------------------
 
+
 class RoutedOrder(BaseModel):
     """A single order with routing metadata.
 
@@ -115,7 +119,8 @@ class RoutedOrder(BaseModel):
     )
     time_horizon_days: int = Field(default=60, gt=0)
     max_slippage_bps: int = Field(
-        default=50, ge=0,
+        default=50,
+        ge=0,
         description="Maximum acceptable slippage in basis points",
     )
 
@@ -163,6 +168,7 @@ class RoutingPlan(BaseModel):
 # EXEC-GUARDIAN output
 # ---------------------------------------------------------------------------
 
+
 class GuardianCheck(BaseModel):
     """Result of kill-switch / circuit-breaker check for a single order."""
 
@@ -207,10 +213,7 @@ class GuardianVerdict(BaseModel):
             data = {
                 "agent_id": self.agent_id,
                 "system_halt": self.system_halt,
-                "checks": [
-                    {"ticker": c.ticker, "approved": c.approved}
-                    for c in self.checks
-                ],
+                "checks": [{"ticker": c.ticker, "approved": c.approved} for c in self.checks],
             }
             serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
             object.__setattr__(self, "content_hash", hashlib.sha256(serialized).hexdigest())
@@ -220,6 +223,7 @@ class GuardianVerdict(BaseModel):
 # ---------------------------------------------------------------------------
 # EXEC-CAPTURE output
 # ---------------------------------------------------------------------------
+
 
 class TrailingStopState(BaseModel):
     """Per-position trailing stop state.
@@ -232,7 +236,9 @@ class TrailingStopState(BaseModel):
 
     ticker: str = Field(...)
     is_active: bool = Field(default=False, description="Whether trailing stop is activated")
-    peak_unrealized_pnl: float = Field(default=0.0, description="Peak unrealized PnL (high water mark)")
+    peak_unrealized_pnl: float = Field(
+        default=0.0, description="Peak unrealized PnL (high water mark)"
+    )
     current_unrealized_pnl: float = Field(default=0.0, description="Current unrealized PnL")
     trail_pct: float = Field(default=0.30, description="Trail percentage (0.20 or 0.30)")
     trigger_level: float = Field(default=0.0, description="PnL level that triggers exit")
@@ -247,19 +253,25 @@ class CaptureDecision(BaseModel):
 
     ticker: str = Field(...)
     action: str = Field(
-        ..., description="HOLD, TRIM, or CLOSE",
+        ...,
+        description="HOLD, TRIM, or CLOSE",
     )
     trim_pct: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Percentage of REMAINING position to trim",
     )
     exit_confidence: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Confidence in exit decision",
     )
     reason: str = Field(default="", description="Reason for the decision")
     trailing_stop: TrailingStopState = Field(
-        ..., description="Current trailing stop state",
+        ...,
+        description="Current trailing stop state",
     )
 
 
@@ -308,6 +320,7 @@ class CaptureOutput(BaseModel):
 # EXECUTION REPORT output (Spec Section 2.6)
 # ---------------------------------------------------------------------------
 
+
 class ExecutionReport(BaseModel):
     """Complete execution report for a filled/partial/rejected position.
 
@@ -328,9 +341,7 @@ class ExecutionReport(BaseModel):
     benchmark_price: float = Field(..., gt=0.0, description="Arrival price for slippage calc")
     slippage_bps: float = Field(..., ge=0.0, description="Basis points")
     market_impact_bps: float = Field(..., ge=0.0, description="Estimated permanent impact")
-    execution_algo: str = Field(
-        ..., description="TWAP_15, VWAP_30, LIMIT, or MARKET"
-    )
+    execution_algo: str = Field(..., description="TWAP_15, VWAP_30, LIMIT, or MARKET")
     execution_duration_ms: int = Field(..., ge=0)
     venue: str = Field(..., description="Exchange or venue name")
     fees_bps: float = Field(..., ge=0.0)

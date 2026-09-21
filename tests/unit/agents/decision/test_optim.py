@@ -451,7 +451,9 @@ class TestDecideOptim:
         agent = DecideOptim()
         intents = [_make_intent(f"T{i}", "LONG", 0.70) for i in range(10)]
         # Use known tickers for sector mapping
-        for i, t in enumerate(["AAPL", "MSFT", "GOOG", "AMZN", "JPM", "GS", "JNJ", "PFE", "XOM", "CVX"]):
+        for i, t in enumerate(
+            ["AAPL", "MSFT", "GOOG", "AMZN", "JPM", "GS", "JNJ", "PFE", "XOM", "CVX"]
+        ):
             intents[i]["ticker"] = t
         ctx = _make_context(intents=intents, regime=_make_regime("NORMAL"))
         result = await agent.process(ctx)

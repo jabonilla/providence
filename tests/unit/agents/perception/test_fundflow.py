@@ -184,9 +184,24 @@ class TestPerceptFundFlowProcess:
         mock_client = AsyncMock(spec=PlaidClient)
         mock_client.get_investment_transactions.return_value = {
             "investment_transactions": [
-                {"account_id": "acct1", "date": "2026-02-01", "amount": 100.0, "security_id": "sec1"},
-                {"account_id": "acct1", "date": "2026-02-01", "amount": 50.0, "security_id": "sec1"},
-                {"account_id": "acct1", "date": "2026-02-01", "amount": -30.0, "security_id": "sec1"},
+                {
+                    "account_id": "acct1",
+                    "date": "2026-02-01",
+                    "amount": 100.0,
+                    "security_id": "sec1",
+                },
+                {
+                    "account_id": "acct1",
+                    "date": "2026-02-01",
+                    "amount": 50.0,
+                    "security_id": "sec1",
+                },
+                {
+                    "account_id": "acct1",
+                    "date": "2026-02-01",
+                    "amount": -30.0,
+                    "security_id": "sec1",
+                },
             ],
             "accounts": [{"account_id": "acct1"}],
             "securities": [{"security_id": "sec1", "ticker_symbol": "AAPL"}],
@@ -284,16 +299,20 @@ class TestPerceptFundFlowProcess:
         securities = []
         for i in range(15):
             ticker = f"TK{i:02d}"
-            transactions.append({
-                "account_id": "acct1",
-                "date": "2026-02-01",
-                "amount": 100.0 * (15 - i),  # Descending volumes
-                "security_id": f"sec{i}",
-            })
-            securities.append({
-                "security_id": f"sec{i}",
-                "ticker_symbol": ticker,
-            })
+            transactions.append(
+                {
+                    "account_id": "acct1",
+                    "date": "2026-02-01",
+                    "amount": 100.0 * (15 - i),  # Descending volumes
+                    "security_id": f"sec{i}",
+                }
+            )
+            securities.append(
+                {
+                    "security_id": f"sec{i}",
+                    "ticker_symbol": ticker,
+                }
+            )
 
         mock_client.get_investment_transactions.return_value = {
             "investment_transactions": transactions,

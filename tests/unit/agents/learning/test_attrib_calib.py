@@ -91,6 +91,7 @@ def _make_position(
 # compute_hit_rate Tests
 # ===========================================================================
 
+
 class TestComputeHitRate:
     def test_all_correct_long(self):
         beliefs = [
@@ -131,6 +132,7 @@ class TestComputeHitRate:
 # compute_information_ratio Tests
 # ===========================================================================
 
+
 class TestInformationRatio:
     def test_positive_excess(self):
         returns = [10.0, 20.0, 15.0, 25.0]
@@ -153,6 +155,7 @@ class TestInformationRatio:
 # ===========================================================================
 # attribute_agent Tests
 # ===========================================================================
+
 
 class TestAttributeAgent:
     def test_basic_attribution(self):
@@ -177,6 +180,7 @@ class TestAttributeAgent:
 # attribute_ticker Tests
 # ===========================================================================
 
+
 class TestAttributeTicker:
     def test_basic_ticker(self):
         positions = [
@@ -196,6 +200,7 @@ class TestAttributeTicker:
 # ===========================================================================
 # LearnAttrib Integration Tests
 # ===========================================================================
+
 
 class TestLearnAttrib:
     @pytest.mark.asyncio
@@ -266,6 +271,7 @@ class TestLearnAttribHealth:
 # compute_brier_score Tests
 # ===========================================================================
 
+
 class TestBrierScore:
     def test_perfect_prediction(self):
         assert compute_brier_score(1.0, True) == 0.0
@@ -284,6 +290,7 @@ class TestBrierScore:
 # ===========================================================================
 # calibrate_bucket Tests
 # ===========================================================================
+
 
 class TestCalibrateBucket:
     def test_perfect_calibration(self):
@@ -322,6 +329,7 @@ class TestCalibrateBucket:
 # calibrate_agent Tests
 # ===========================================================================
 
+
 class TestCalibrateAgent:
     def test_overconfident_agent(self):
         beliefs = [
@@ -346,6 +354,7 @@ class TestCalibrateAgent:
 # ===========================================================================
 # LearnCalib Integration Tests
 # ===========================================================================
+
 
 class TestLearnCalib:
     @pytest.mark.asyncio
@@ -424,6 +433,7 @@ class TestLearnCalibHealth:
 # Schema Tests
 # ===========================================================================
 
+
 class TestLearningSchemas:
     def test_agent_attribution_frozen(self):
         aa = AgentAttribution(agent_id="TEST", hit_rate=0.65)
@@ -442,8 +452,10 @@ class TestLearningSchemas:
 
     def test_calibration_bucket_frozen(self):
         cb = CalibrationBucket(
-            bucket_lower=0.0, bucket_upper=0.2,
-            sample_count=10, avg_stated_confidence=0.1,
+            bucket_lower=0.0,
+            bucket_upper=0.2,
+            sample_count=10,
+            avg_stated_confidence=0.1,
         )
         with pytest.raises(Exception):
             cb.sample_count = 20

@@ -193,8 +193,8 @@ class TestYFinanceClientGetFundamentals:
         # Should have 2 sleep calls (MAX_RETRIES - 1)
         assert len(sleep_times) == 2
         # Backoff should be 1.0 * 2^0 = 1.0, 1.0 * 2^1 = 2.0
-        assert sleep_times[0] == client.RETRY_BACKOFF_BASE * (2 ** 0)
-        assert sleep_times[1] == client.RETRY_BACKOFF_BASE * (2 ** 1)
+        assert sleep_times[0] == client.RETRY_BACKOFF_BASE * (2**0)
+        assert sleep_times[1] == client.RETRY_BACKOFF_BASE * (2**1)
 
 
 class TestYFinanceClientGetPriceHistory:
@@ -209,15 +209,18 @@ class TestYFinanceClientGetPriceHistory:
         # Create a mock DataFrame (pandas ships with yfinance — optional here)
         pd = pytest.importorskip("pandas")
         dates = pd.date_range("2025-02-01", periods=3)
-        df = pd.DataFrame({
-            "Open": [185.0, 186.0, 187.0],
-            "High": [187.0, 188.0, 189.0],
-            "Low": [184.0, 185.0, 186.0],
-            "Close": [186.0, 187.0, 188.0],
-            "Volume": [50_000_000, 51_000_000, 52_000_000],
-            "Dividends": [0.0, 0.0, 0.0],
-            "Stock Splits": [0.0, 0.0, 0.0],
-        }, index=dates)
+        df = pd.DataFrame(
+            {
+                "Open": [185.0, 186.0, 187.0],
+                "High": [187.0, 188.0, 189.0],
+                "Low": [184.0, 185.0, 186.0],
+                "Close": [186.0, 187.0, 188.0],
+                "Volume": [50_000_000, 51_000_000, 52_000_000],
+                "Dividends": [0.0, 0.0, 0.0],
+                "Stock Splits": [0.0, 0.0, 0.0],
+            },
+            index=dates,
+        )
 
         mock_ticker.history.return_value = df
         mock_yf.Ticker.return_value = mock_ticker
@@ -299,9 +302,7 @@ class TestYFinanceClientGetPriceHistory:
                 }
             ]
             with patch.object(client, "_rate_limit", new_callable=AsyncMock):
-                result = await client.get_price_history(
-                    "AAPL", period="1y", interval="1wk"
-                )
+                result = await client.get_price_history("AAPL", period="1y", interval="1wk")
 
         assert len(result) >= 1
         mock_thread.assert_called_once()
@@ -322,13 +323,15 @@ class TestYFinanceClientGetInstitutionalHolders:
         mock_ticker = MagicMock()
 
         pd = pytest.importorskip("pandas")
-        df = pd.DataFrame({
-            "Holder": ["BlackRock Inc.", "Vanguard Group"],
-            "Shares": [1_000_000, 900_000],
-            "Date Reported": ["2025-02-01", "2025-02-01"],
-            "% Out": [5.0, 4.5],
-            "Value": [185_000_000, 168_300_000],
-        })
+        df = pd.DataFrame(
+            {
+                "Holder": ["BlackRock Inc.", "Vanguard Group"],
+                "Shares": [1_000_000, 900_000],
+                "Date Reported": ["2025-02-01", "2025-02-01"],
+                "% Out": [5.0, 4.5],
+                "Value": [185_000_000, 168_300_000],
+            }
+        )
         mock_ticker.institutional_holders = df
         mock_yf.Ticker.return_value = mock_ticker
 

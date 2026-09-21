@@ -136,11 +136,7 @@ def filing_missing_xbrl() -> dict:
         "period_of_report": "2025-12-31",
         "cik": "0000320193",
         "company_name": "Apple Inc.",
-        "xbrl_data": {
-            "facts": {
-                "us-gaap": {}
-            }
-        },
+        "xbrl_data": {"facts": {"us-gaap": {}}},
     }
 
 

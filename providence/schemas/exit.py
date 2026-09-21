@@ -25,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 # COGNIT-EXIT output
 # ---------------------------------------------------------------------------
 
+
 class ExitAssessment(BaseModel):
     """Per-position exit assessment from COGNIT-EXIT.
 
@@ -38,14 +39,18 @@ class ExitAssessment(BaseModel):
 
     ticker: str = Field(..., description="Ticker being assessed")
     exit_action: str = Field(
-        ..., description="Recommended action: HOLD, REDUCE, or EXIT",
+        ...,
+        description="Recommended action: HOLD, REDUCE, or EXIT",
     )
     exit_confidence: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Confidence that position should be exited",
     )
     regret_estimate_bps: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="Estimated regret of exiting now in basis points",
     )
     regret_direction: str = Field(
@@ -53,15 +58,19 @@ class ExitAssessment(BaseModel):
         description="Direction of regret: MISSED_UPSIDE or SUFFERED_GIVEBACK",
     )
     thesis_health_score: float = Field(
-        default=1.0, ge=0.0, le=1.0,
+        default=1.0,
+        ge=0.0,
+        le=1.0,
         description="Overall thesis health (1.0 = fully healthy)",
     )
     conditions_triggered: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Number of invalidation conditions triggered",
     )
     conditions_total: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Total number of invalidation conditions",
     )
     renewal_pending: bool = Field(
@@ -69,11 +78,14 @@ class ExitAssessment(BaseModel):
         description="Whether a thesis renewal is pending for this position",
     )
     renewal_asymmetry: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Renewal asymmetry score (>0.5 defers CLOSE)",
     )
     rationale: str = Field(
-        default="", description="LLM-generated rationale for exit assessment",
+        default="",
+        description="LLM-generated rationale for exit assessment",
     )
 
 
@@ -127,6 +139,7 @@ class ExitOutput(BaseModel):
 # INVALID-MON output
 # ---------------------------------------------------------------------------
 
+
 class MonitoredCondition(BaseModel):
     """Result of monitoring a single invalidation condition."""
 
@@ -142,7 +155,8 @@ class MonitoredCondition(BaseModel):
     current_value: Optional[float] = Field(default=None)
     is_breached: bool = Field(default=False, description="Whether condition is breached")
     breach_magnitude: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="|current - threshold| / |threshold| (0 = at threshold)",
     )
     breach_velocity: float = Field(
@@ -150,7 +164,9 @@ class MonitoredCondition(BaseModel):
         description="Rate of approach per day (trailing 5-day avg)",
     )
     confidence_impact: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Suggested confidence reduction (0.0-1.0)",
     )
 
@@ -173,7 +189,8 @@ class InvalidationMonitorOutput(BaseModel):
     total_conditions: int = Field(default=0, ge=0)
     conditions_breached: int = Field(default=0, ge=0)
     conditions_approaching: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Conditions within 10% of threshold",
     )
     content_hash: str = Field(default="")
@@ -209,6 +226,7 @@ class InvalidationMonitorOutput(BaseModel):
 # THESIS-RENEW output
 # ---------------------------------------------------------------------------
 
+
 class RenewalCandidate(BaseModel):
     """A thesis eligible for renewal with updated parameters."""
 
@@ -226,7 +244,9 @@ class RenewalCandidate(BaseModel):
     renewed_horizon_days: int = Field(..., gt=0)
     renewal_reason: str = Field(default="", description="Why the thesis is being renewed")
     asymmetry_score: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Upside asymmetry score (>0.5 favors renewal)",
     )
     conditions_healthy: int = Field(default=0, ge=0)
@@ -285,6 +305,7 @@ class ThesisRenewalOutput(BaseModel):
 # SHADOW-EXIT output
 # ---------------------------------------------------------------------------
 
+
 class ShadowExitSignal(BaseModel):
     """Shadow exit tracking for a single position.
 
@@ -296,17 +317,21 @@ class ShadowExitSignal(BaseModel):
 
     ticker: str = Field(...)
     cognit_exit_action: str = Field(
-        ..., description="COGNIT-EXIT recommendation: HOLD, REDUCE, EXIT",
+        ...,
+        description="COGNIT-EXIT recommendation: HOLD, REDUCE, EXIT",
     )
     capture_action: str = Field(
-        ..., description="EXEC-CAPTURE decision: HOLD, TRIM, CLOSE",
+        ...,
+        description="EXEC-CAPTURE decision: HOLD, TRIM, CLOSE",
     )
     signals_agree: bool = Field(
         default=False,
         description="Whether both systems agree on exit direction",
     )
     exit_probability: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Combined exit probability",
     )
     divergence_reason: str = Field(
@@ -314,7 +339,8 @@ class ShadowExitSignal(BaseModel):
         description="Why signals diverge (empty if they agree)",
     )
     days_in_shadow: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Days this position has been in shadow-exit state",
     )
 
@@ -369,6 +395,7 @@ class ShadowExitOutput(BaseModel):
 # RENEW-MON output
 # ---------------------------------------------------------------------------
 
+
 class BeliefHealthReport(BaseModel):
     """Health report for a single active belief/thesis."""
 
@@ -378,18 +405,23 @@ class BeliefHealthReport(BaseModel):
     ticker: str = Field(...)
     agent_id: str = Field(..., description="Agent that produced the thesis")
     health_score: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Overall belief health (1.0 = fully healthy)",
     )
     conditions_healthy: int = Field(default=0, ge=0)
     conditions_breached: int = Field(default=0, ge=0)
     conditions_approaching: int = Field(default=0, ge=0)
     days_remaining: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Days remaining on thesis time horizon",
     )
     confidence_decay: float = Field(
-        default=0.0, ge=0.0, le=1.0,
+        default=0.0,
+        ge=0.0,
+        le=1.0,
         description="Time-based confidence decay factor",
     )
     is_renewal_candidate: bool = Field(

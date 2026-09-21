@@ -66,7 +66,13 @@ def _make_price_fragment(
         schema_version="1.0.0",
         source_hash=f"hash-price-{entity}-{hours_ago}",
         validation_status=ValidationStatus.VALID,
-        payload={"open": close * 0.99, "high": close * 1.01, "low": close * 0.98, "close": close, "volume": 50000000},
+        payload={
+            "open": close * 0.99,
+            "high": close * 1.01,
+            "low": close * 0.98,
+            "close": close,
+            "volume": 50000000,
+        },
     )
 
 
@@ -194,7 +200,7 @@ class TestRegimeFeatureExtraction:
 
     def test_realized_vol_from_calm_prices(self):
         """Calm prices produce low realized volatility."""
-        prices = [100.0 * (1.0005 ** i) for i in range(25)]
+        prices = [100.0 * (1.0005**i) for i in range(25)]
         vol = compute_realized_vol(prices, window=20)
         assert vol is not None
         assert vol < 0.15  # Low vol
@@ -232,11 +238,11 @@ class TestRegimeFeatureExtraction:
     def test_extract_features_with_all_data_types(self):
         """Feature extraction works with all fragment types."""
         frags = (
-            _make_calm_price_series(n=25) +
-            [_make_yield_curve_fragment(spread_2s10s=100.0)] +
-            [_make_cds_fragment(spread_bps=80.0)] +
-            [_make_options_fragment(implied_vol=0.15)] +
-            [_make_macro_economic_fragment(value=2.8)]
+            _make_calm_price_series(n=25)
+            + [_make_yield_curve_fragment(spread_2s10s=100.0)]
+            + [_make_cds_fragment(spread_bps=80.0)]
+            + [_make_options_fragment(implied_vol=0.15)]
+            + [_make_macro_economic_fragment(value=2.8)]
         )
         features = extract_regime_features(frags)
         assert features.realized_vol_20d is not None
@@ -312,11 +318,16 @@ class TestHMMModel:
 
     def test_derive_risk_mode_defensive(self):
         """CRISIS_DISLOCATION with moderate confidence → DEFENSIVE."""
-        assert derive_risk_mode(StatisticalRegime.CRISIS_DISLOCATION, 0.7) == SystemRiskMode.DEFENSIVE
+        assert (
+            derive_risk_mode(StatisticalRegime.CRISIS_DISLOCATION, 0.7) == SystemRiskMode.DEFENSIVE
+        )
 
     def test_derive_risk_mode_cautious(self):
         """HIGH_VOL_MEAN_REVERTING → CAUTIOUS."""
-        assert derive_risk_mode(StatisticalRegime.HIGH_VOL_MEAN_REVERTING, 0.6) == SystemRiskMode.CAUTIOUS
+        assert (
+            derive_risk_mode(StatisticalRegime.HIGH_VOL_MEAN_REVERTING, 0.6)
+            == SystemRiskMode.CAUTIOUS
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -374,9 +385,9 @@ class TestRegimeStat:
         """Agent works with mixed price and macro fragments."""
         agent = RegimeStat()
         frags = (
-            _make_calm_price_series(n=30) +
-            [_make_yield_curve_fragment(spread_2s10s=120.0)] +
-            [_make_cds_fragment(spread_bps=75.0)]
+            _make_calm_price_series(n=30)
+            + [_make_yield_curve_fragment(spread_2s10s=120.0)]
+            + [_make_cds_fragment(spread_bps=75.0)]
         )
         context = _make_context(fragments=frags)
 

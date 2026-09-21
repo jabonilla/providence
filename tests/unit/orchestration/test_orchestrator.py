@@ -98,6 +98,7 @@ def _all_main_agents() -> list[str]:
 # Main Loop Tests
 # ===========================================================================
 
+
 class TestMainLoop:
     @pytest.mark.asyncio
     async def test_all_stages_succeed(self):
@@ -162,7 +163,8 @@ class TestMainLoop:
 
         run = await orch.run_main_loop(fragments=[])
         router_result = next(
-            (s for s in run.stage_results if s.agent_id == "EXEC-ROUTER"), None,
+            (s for s in run.stage_results if s.agent_id == "EXEC-ROUTER"),
+            None,
         )
         assert router_result is not None
         assert router_result.status == StageStatus.SKIPPED
@@ -202,6 +204,7 @@ class TestMainLoop:
 # Exit Loop Tests
 # ===========================================================================
 
+
 class TestExitLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -235,6 +238,7 @@ class TestExitLoop:
 # Learning Loop Tests
 # ===========================================================================
 
+
 class TestLearningLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -257,6 +261,7 @@ class TestLearningLoop:
 # Governance Loop Tests
 # ===========================================================================
 
+
 class TestGovernanceLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -271,6 +276,7 @@ class TestGovernanceLoop:
 # ===========================================================================
 # PipelineRun Model Tests
 # ===========================================================================
+
 
 class TestPipelineRunModel:
     @pytest.mark.asyncio
@@ -302,6 +308,7 @@ class TestPipelineRunModel:
 # ===========================================================================
 # ProvidenceRunner Tests
 # ===========================================================================
+
 
 class TestProvidenceRunner:
     @pytest.mark.asyncio

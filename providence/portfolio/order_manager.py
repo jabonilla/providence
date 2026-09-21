@@ -10,6 +10,7 @@ Order States:
 Each transition is logged immutably. Failed orders can be retried
 up to MAX_RETRIES times with exponential backoff.
 """
+
 from __future__ import annotations
 
 import json
@@ -28,14 +29,14 @@ logger = structlog.get_logger()
 
 
 class OrderStatus(str, Enum):
-    PENDING = "PENDING"          # Created, not yet submitted to broker
-    SUBMITTED = "SUBMITTED"       # Sent to broker, awaiting fill
+    PENDING = "PENDING"  # Created, not yet submitted to broker
+    SUBMITTED = "SUBMITTED"  # Sent to broker, awaiting fill
     PARTIALLY_FILLED = "PARTIALLY_FILLED"
-    FILLED = "FILLED"            # Completely filled
-    CANCELLED = "CANCELLED"       # Cancelled by us or broker
-    REJECTED = "REJECTED"         # Broker rejected
-    EXPIRED = "EXPIRED"          # Time-in-force expired
-    FAILED = "FAILED"            # Unrecoverable error
+    FILLED = "FILLED"  # Completely filled
+    CANCELLED = "CANCELLED"  # Cancelled by us or broker
+    REJECTED = "REJECTED"  # Broker rejected
+    EXPIRED = "EXPIRED"  # Time-in-force expired
+    FAILED = "FAILED"  # Unrecoverable error
 
 
 class OrderSide(str, Enum):
@@ -131,9 +132,9 @@ class ManagedOrder:
 
     @property
     def can_retry(self) -> bool:
-        return (
-            self.retry_count < self.max_retries
-            and self.status in (OrderStatus.FAILED, OrderStatus.REJECTED)
+        return self.retry_count < self.max_retries and self.status in (
+            OrderStatus.FAILED,
+            OrderStatus.REJECTED,
         )
 
     def transition_to(
@@ -157,9 +158,7 @@ class ManagedOrder:
         if self.status not in VALID_TRANSITIONS or new_status not in VALID_TRANSITIONS.get(
             self.status, set()
         ):
-            raise ValueError(
-                f"Invalid transition: {self.status.value} -> {new_status.value}"
-            )
+            raise ValueError(f"Invalid transition: {self.status.value} -> {new_status.value}")
 
         # Record transition
         transition_record = {
@@ -251,20 +250,28 @@ class ManagedOrder:
             time_in_force=data["time_in_force"],
             qty=Decimal(data["qty"]) if data.get("qty") is not None else None,
             notional=Decimal(data["notional"]) if data.get("notional") is not None else None,
-            limit_price=Decimal(data["limit_price"]) if data.get("limit_price") is not None else None,
+            limit_price=Decimal(data["limit_price"])
+            if data.get("limit_price") is not None
+            else None,
             stop_price=Decimal(data["stop_price"]) if data.get("stop_price") is not None else None,
             status=OrderStatus(data["status"]),
             filled_qty=Decimal(data.get("filled_qty", "0")),
             filled_avg_price=Decimal(data.get("filled_avg_price", "0")),
-            source_intent_id=UUID(data["source_intent_id"]) if data.get("source_intent_id") else None,
+            source_intent_id=UUID(data["source_intent_id"])
+            if data.get("source_intent_id")
+            else None,
             execution_strategy=data.get("execution_strategy", "MARKET"),
             target_weight=data.get("target_weight", 0.0),
             confidence=data.get("confidence", 0.0),
             max_slippage_bps=data.get("max_slippage_bps", 50),
             created_at=datetime.fromisoformat(data["created_at"]),
-            submitted_at=datetime.fromisoformat(data["submitted_at"]) if data.get("submitted_at") else None,
+            submitted_at=datetime.fromisoformat(data["submitted_at"])
+            if data.get("submitted_at")
+            else None,
             filled_at=datetime.fromisoformat(data["filled_at"]) if data.get("filled_at") else None,
-            cancelled_at=datetime.fromisoformat(data["cancelled_at"]) if data.get("cancelled_at") else None,
+            cancelled_at=datetime.fromisoformat(data["cancelled_at"])
+            if data.get("cancelled_at")
+            else None,
             retry_count=data.get("retry_count", 0),
             max_retries=data.get("max_retries", 3),
             last_error=data.get("last_error"),
@@ -728,9 +735,7 @@ class OrderManager:
         with self._lock:
             counts = {}
             for status in OrderStatus:
-                counts[status.value] = sum(
-                    1 for o in self._orders.values() if o.status == status
-                )
+                counts[status.value] = sum(1 for o in self._orders.values() if o.status == status)
             counts["total"] = len(self._orders)
             counts["active"] = sum(1 for o in self._orders.values() if o.is_active)
             return counts

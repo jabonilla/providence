@@ -96,15 +96,17 @@ class MockCognitionAgent(BaseAgent[dict]):
 
 
 PERCEPTION_AGENTS = [
-    "PERCEPT-PRICE", "PERCEPT-FILING", "PERCEPT-NEWS",
-    "PERCEPT-OPTIONS", "PERCEPT-CDS", "PERCEPT-MACRO",
+    "PERCEPT-PRICE",
+    "PERCEPT-FILING",
+    "PERCEPT-NEWS",
+    "PERCEPT-OPTIONS",
+    "PERCEPT-CDS",
+    "PERCEPT-MACRO",
 ]
 
 
 # Agents driven by the orchestrator loops (perception runs outside them).
-ORCHESTRATED_AGENTS = (
-    ALL_MAIN_AGENTS + EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS
-)
+ORCHESTRATED_AGENTS = ALL_MAIN_AGENTS + EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS
 
 
 def _build_registry() -> dict[str, BaseAgent]:
@@ -125,7 +127,9 @@ def _build_registry() -> dict[str, BaseAgent]:
     return registry
 
 
-def _make_fragment(entity: str = "AAPL", data_type: DataType = DataType.PRICE_OHLCV) -> MarketStateFragment:
+def _make_fragment(
+    entity: str = "AAPL", data_type: DataType = DataType.PRICE_OHLCV
+) -> MarketStateFragment:
     return MarketStateFragment(
         fragment_id=uuid4(),
         agent_id="PERCEPT-PRICE",
@@ -495,11 +499,6 @@ class TestAgentCountVerification:
     def test_registry_agent_ids_match_groups(self):
         """Every agent in group constants should be in the registry."""
         registry = _build_registry()
-        all_group_agents = (
-            ALL_MAIN_AGENTS
-            + EXIT_AGENTS
-            + LEARNING_AGENTS
-            + GOVERNANCE_AGENTS
-        )
+        all_group_agents = ALL_MAIN_AGENTS + EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS
         for aid in all_group_agents:
             assert aid in registry, f"Agent {aid} missing from registry"

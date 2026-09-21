@@ -53,6 +53,7 @@ def _get_order_manager():
 
 # ── Snapshot ────────────────────────────────────────────────────────
 
+
 @router.get("/snapshot", response_model=PortfolioSnapshotResponse)
 async def get_snapshot() -> PortfolioSnapshotResponse:
     """Get current portfolio snapshot."""
@@ -97,6 +98,7 @@ async def get_snapshot() -> PortfolioSnapshotResponse:
 
 
 # ── Positions ───────────────────────────────────────────────────────
+
 
 @router.get("/positions", response_model=list[PositionResponse])
 async def list_positions() -> list[PositionResponse]:
@@ -150,6 +152,7 @@ async def get_position(ticker: str) -> PositionResponse:
 
 
 # ── Orders ──────────────────────────────────────────────────────────
+
 
 @router.get("/orders", response_model=list[OrderResponse])
 async def list_orders(
@@ -255,6 +258,7 @@ async def get_order_stats() -> OrderStatsResponse:
 
 
 # ── History ─────────────────────────────────────────────────────────
+
 
 @router.get("/history", response_model=list[PortfolioSnapshotResponse])
 async def get_snapshot_history(

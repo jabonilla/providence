@@ -13,10 +13,10 @@ from enum import Enum
 class AccountTier(str, Enum):
     """User account tier levels."""
 
-    EXPLORER = "EXPLORER"      # Free tier
-    INVESTOR = "INVESTOR"      # Basic paid
-    PRO = "PRO"                # Professional
-    FUND = "FUND"              # Institutional
+    EXPLORER = "EXPLORER"  # Free tier
+    INVESTOR = "INVESTOR"  # Basic paid
+    PRO = "PRO"  # Professional
+    FUND = "FUND"  # Institutional
 
 
 @dataclass(frozen=True)

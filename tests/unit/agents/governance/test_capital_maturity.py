@@ -55,6 +55,7 @@ def _make_context(**metadata_kwargs) -> AgentContext:
 # classify_tier Tests
 # ===========================================================================
 
+
 class TestClassifyTier:
     def test_seed(self):
         assert classify_tier(0.0) == CapitalTier.SEED
@@ -79,6 +80,7 @@ class TestClassifyTier:
 # ===========================================================================
 # get_tier_constraints Tests
 # ===========================================================================
+
 
 class TestGetTierConstraints:
     def test_seed_no_execution(self):
@@ -112,6 +114,7 @@ class TestGetTierConstraints:
 # compute_headroom Tests
 # ===========================================================================
 
+
 class TestComputeHeadroom:
     def test_seed_halfway(self):
         headroom = compute_headroom(5_000_000.0, CapitalTier.SEED)
@@ -132,6 +135,7 @@ class TestComputeHeadroom:
 # ===========================================================================
 # GovernCapital Integration Tests
 # ===========================================================================
+
 
 class TestGovernCapital:
     @pytest.mark.asyncio
@@ -200,51 +204,75 @@ class TestGovernCapitalHealth:
 # evaluate_promotion Tests
 # ===========================================================================
 
+
 class TestEvaluatePromotion:
     def test_shadow_eligible(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.SHADOW, 45,
-            {"hit_rate": 0.60}, {"overall_brier_score": 0.20}, {},
+            "AGENT-A",
+            MaturityStage.SHADOW,
+            45,
+            {"hit_rate": 0.60},
+            {"overall_brier_score": 0.20},
+            {},
         )
         assert result["promotion_eligible"] is True
         assert result["confidence_weight"] == 0.0
 
     def test_shadow_too_early(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.SHADOW, 15,
-            {"hit_rate": 0.60}, {"overall_brier_score": 0.20}, {},
+            "AGENT-A",
+            MaturityStage.SHADOW,
+            15,
+            {"hit_rate": 0.60},
+            {"overall_brier_score": 0.20},
+            {},
         )
         assert result["promotion_eligible"] is False
         assert any("more days" in b for b in result["promotion_blockers"])
 
     def test_shadow_low_hit_rate(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.SHADOW, 45,
-            {"hit_rate": 0.35}, {"overall_brier_score": 0.20}, {},
+            "AGENT-A",
+            MaturityStage.SHADOW,
+            45,
+            {"hit_rate": 0.35},
+            {"overall_brier_score": 0.20},
+            {},
         )
         assert result["promotion_eligible"] is False
         assert any("hit rate" in b.lower() for b in result["promotion_blockers"])
 
     def test_shadow_high_brier(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.SHADOW, 45,
-            {"hit_rate": 0.60}, {"overall_brier_score": 0.40}, {},
+            "AGENT-A",
+            MaturityStage.SHADOW,
+            45,
+            {"hit_rate": 0.60},
+            {"overall_brier_score": 0.40},
+            {},
         )
         assert result["promotion_eligible"] is False
         assert any("brier" in b.lower() for b in result["promotion_blockers"])
 
     def test_limited_eligible(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.LIMITED, 90,
-            {"hit_rate": 0.65}, {"overall_brier_score": 0.15}, {},
+            "AGENT-A",
+            MaturityStage.LIMITED,
+            90,
+            {"hit_rate": 0.65},
+            {"overall_brier_score": 0.15},
+            {},
         )
         assert result["promotion_eligible"] is True
         assert result["confidence_weight"] == 0.5
 
     def test_limited_critical_retrain_blocks(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.LIMITED, 90,
-            {"hit_rate": 0.65}, {"overall_brier_score": 0.15},
+            "AGENT-A",
+            MaturityStage.LIMITED,
+            90,
+            {"hit_rate": 0.65},
+            {"overall_brier_score": 0.15},
             {"priority": "CRITICAL"},
         )
         assert result["promotion_eligible"] is False
@@ -252,16 +280,24 @@ class TestEvaluatePromotion:
 
     def test_full_no_promotion(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.FULL, 180,
-            {"hit_rate": 0.70}, {"overall_brier_score": 0.10}, {},
+            "AGENT-A",
+            MaturityStage.FULL,
+            180,
+            {"hit_rate": 0.70},
+            {"overall_brier_score": 0.10},
+            {},
         )
         assert result["promotion_eligible"] is False  # Already at top
         assert result["confidence_weight"] == 1.0
 
     def test_multiple_blockers(self):
         result = evaluate_promotion(
-            "AGENT-A", MaturityStage.SHADOW, 10,
-            {"hit_rate": 0.30}, {"overall_brier_score": 0.40}, {},
+            "AGENT-A",
+            MaturityStage.SHADOW,
+            10,
+            {"hit_rate": 0.30},
+            {"overall_brier_score": 0.40},
+            {},
         )
         assert result["promotion_eligible"] is False
         assert len(result["promotion_blockers"]) == 3
@@ -270,6 +306,7 @@ class TestEvaluatePromotion:
 # ===========================================================================
 # GovernMaturity Integration Tests
 # ===========================================================================
+
 
 class TestGovernMaturity:
     @pytest.mark.asyncio
@@ -317,18 +354,22 @@ class TestGovernMaturity:
     @pytest.mark.asyncio
     async def test_content_hash(self):
         agent = GovernMaturity()
-        ctx = _make_context(agent_maturity_state=[
-            {"agent_id": "A", "current_stage": "SHADOW", "days_in_stage": 10},
-        ])
+        ctx = _make_context(
+            agent_maturity_state=[
+                {"agent_id": "A", "current_stage": "SHADOW", "days_in_stage": 10},
+            ]
+        )
         result = await agent.process(ctx)
         assert len(result.content_hash) == 64
 
     @pytest.mark.asyncio
     async def test_invalid_stage_defaults_shadow(self):
         agent = GovernMaturity()
-        ctx = _make_context(agent_maturity_state=[
-            {"agent_id": "A", "current_stage": "INVALID", "days_in_stage": 10},
-        ])
+        ctx = _make_context(
+            agent_maturity_state=[
+                {"agent_id": "A", "current_stage": "INVALID", "days_in_stage": 10},
+            ]
+        )
         result = await agent.process(ctx)
         assert result.agent_records[0].current_stage == MaturityStage.SHADOW
 
@@ -350,12 +391,16 @@ class TestGovernMaturityHealth:
 # Schema Tests
 # ===========================================================================
 
+
 class TestGovernanceSchemas:
     def test_tier_constraints_frozen(self):
         tc = TierConstraints(
-            max_position_weight=0.10, max_gross_exposure=1.20,
-            max_single_sector_pct=0.30, min_confidence_threshold=0.60,
-            live_execution_enabled=True, max_positions=30,
+            max_position_weight=0.10,
+            max_gross_exposure=1.20,
+            max_single_sector_pct=0.30,
+            min_confidence_threshold=0.60,
+            live_execution_enabled=True,
+            max_positions=30,
         )
         with pytest.raises(Exception):
             tc.max_positions = 50
@@ -373,14 +418,17 @@ class TestGovernanceSchemas:
 
     def test_maturity_record_frozen(self):
         mr = AgentMaturityRecord(
-            agent_id="TEST", current_stage=MaturityStage.SHADOW,
+            agent_id="TEST",
+            current_stage=MaturityStage.SHADOW,
         )
         with pytest.raises(Exception):
             mr.current_stage = MaturityStage.FULL
 
     def test_maturity_output_hash(self):
         mo = MaturityGateOutput(
-            agent_id="TEST", timestamp=NOW, context_window_hash="test",
+            agent_id="TEST",
+            timestamp=NOW,
+            context_window_hash="test",
         )
         assert mo.content_hash != ""
 

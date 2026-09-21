@@ -143,7 +143,7 @@ class AnthropicClient:
 
                     if response.status_code >= 500:
                         # Server error — retry with jitter (inside semaphore)
-                        wait = 2 ** attempt + random.uniform(0.5, 1.5)
+                        wait = 2**attempt + random.uniform(0.5, 1.5)
                         logger.warning(
                             "Anthropic API server error",
                             status_code=response.status_code,

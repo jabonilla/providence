@@ -187,8 +187,8 @@ class TestPerceptNewsErrorHandling:
         """One ticker failing shouldn't prevent others from succeeding."""
         mock_client = AsyncMock(spec=PolygonClient)
         mock_client.get_ticker_news.side_effect = [
-            _articles(news_aapl()),                      # AAPL succeeds
-            Exception("Timeout"),             # MSFT fails
+            _articles(news_aapl()),  # AAPL succeeds
+            Exception("Timeout"),  # MSFT fails
         ]
         agent = _make_agent(mock_client)
 

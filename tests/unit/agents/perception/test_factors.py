@@ -106,9 +106,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.01,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.0}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.0}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -132,9 +130,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.01,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.0}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.0}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -158,9 +154,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.02,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.5}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.5}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -230,9 +224,7 @@ class TestPerceptFactorsProcess:
             }
         ]
         # No momentum data for 2026-02-01
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-02", "mom": 2.1}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-02", "mom": 2.1}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()

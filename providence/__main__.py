@@ -93,9 +93,7 @@ def _parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # run-once
-    run_once = subparsers.add_parser(
-        "run-once", help="Run a single main loop cycle"
-    )
+    run_once = subparsers.add_parser("run-once", help="Run a single main loop cycle")
     run_once.add_argument(
         "--with-exit",
         action="store_true",
@@ -108,9 +106,7 @@ def _parse_args() -> argparse.Namespace:
     )
 
     # run-continuous
-    continuous = subparsers.add_parser(
-        "run-continuous", help="Run continuously with scheduling"
-    )
+    continuous = subparsers.add_parser("run-continuous", help="Run continuously with scheduling")
     continuous.add_argument(
         "--interval",
         type=int,
@@ -119,20 +115,16 @@ def _parse_args() -> argparse.Namespace:
     )
 
     # run-learning
-    subparsers.add_parser(
-        "run-learning", help="Run an offline learning batch"
-    )
+    subparsers.add_parser("run-learning", help="Run an offline learning batch")
 
     # perceive
-    perceive = subparsers.add_parser(
-        "perceive", help="Run perception agents to ingest market data"
-    )
+    perceive = subparsers.add_parser("perceive", help="Run perception agents to ingest market data")
     perceive.add_argument(
         "--ticker",
         type=str,
         default=None,
         help="Run perception for a single ticker (e.g. AAPL). "
-             "If omitted, runs full watchlist sweep.",
+        "If omitted, runs full watchlist sweep.",
     )
     perceive.add_argument(
         "--priority",
@@ -203,9 +195,7 @@ def _build_system(
     # Shadow signal store (always created for SHADOW and PAPER modes)
     shadow_signal_store = None
     if system_mode in (SystemMode.SHADOW, SystemMode.PAPER):
-        shadow_signal_store = ShadowSignalStore(
-            persist_path=data_dir / "shadow_signals.jsonl"
-        )
+        shadow_signal_store = ShadowSignalStore(persist_path=data_dir / "shadow_signals.jsonl")
 
     # Paper trading service (only for PAPER mode)
     paper_trading_service = None
@@ -231,12 +221,8 @@ def _build_system(
         )
 
         # Create order manager and portfolio tracker
-        order_manager = OrderManager(
-            persist_path=data_dir / "orders.jsonl"
-        )
-        portfolio_tracker = PortfolioTracker(
-            persist_path=data_dir / "portfolio.jsonl"
-        )
+        order_manager = OrderManager(persist_path=data_dir / "orders.jsonl")
+        portfolio_tracker = PortfolioTracker(persist_path=data_dir / "portfolio.jsonl")
 
         # Create paper trading service
         paper_trading_service = PaperTradingService(
@@ -286,8 +272,7 @@ async def _cmd_perceive(args: argparse.Namespace) -> int:
 
     # Extract perception agents only
     perception_agents = {
-        aid: agent for aid, agent in registry.items()
-        if aid.startswith("PERCEPT-")
+        aid: agent for aid, agent in registry.items() if aid.startswith("PERCEPT-")
     }
 
     if not perception_agents:
@@ -433,10 +418,7 @@ def _cmd_health(args: argparse.Namespace) -> int:
         agent = registry[agent_id]
         health = report.agent_health.get(agent_id)
         status_str = health.status if health else "UNKNOWN"
-        print(
-            f"{agent_id:<25} {agent.agent_type:<12} "
-            f"{status_str:<12} {agent.version}"
-        )
+        print(f"{agent_id:<25} {agent.agent_type:<12} {status_str:<12} {agent.version}")
 
     # Print system summary
     summary = report.summary()
@@ -450,10 +432,7 @@ def _cmd_health(args: argparse.Namespace) -> int:
         f"{agents['offline']} offline "
         f"(total: {agents['total']})"
     )
-    print(
-        f"Pipeline: {pipeline['run_count']} runs, "
-        f"{pipeline['success_rate']:.1%} success rate"
-    )
+    print(f"Pipeline: {pipeline['run_count']} runs, {pipeline['success_rate']:.1%} success rate")
 
     missing = set(ALL_AGENT_IDS) - set(registry)
     if missing:
@@ -472,9 +451,7 @@ def _cmd_list_agents(_args: argparse.Namespace) -> int:
         "Decision": [a for a in ALL_AGENT_IDS if a.startswith("DECIDE-")],
         "Execution": [a for a in ALL_AGENT_IDS if a.startswith("EXEC-")],
         "Exit": [
-            a
-            for a in ALL_AGENT_IDS
-            if a.startswith(("INVALID-", "THESIS-", "SHADOW-", "RENEW-"))
+            a for a in ALL_AGENT_IDS if a.startswith(("INVALID-", "THESIS-", "SHADOW-", "RENEW-"))
         ],
         "Learning": [a for a in ALL_AGENT_IDS if a.startswith("LEARN-")],
         "Governance": [a for a in ALL_AGENT_IDS if a.startswith("GOVERN-")],
@@ -514,6 +491,7 @@ async def _cmd_backfill(args: argparse.Namespace) -> int:
         return 1
 
     from providence.infra.polygon_client import PolygonClient
+
     price_client = PolygonClient(api_key=api_key)
 
     backfill = PriceBackfillService(

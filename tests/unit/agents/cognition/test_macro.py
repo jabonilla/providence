@@ -64,15 +64,23 @@ def _make_yield_curve_fragment(
         payload={
             "curve_date": "2026-02-12",
             "tenors": {
-                "1M": 5.42, "3M": 5.38, "6M": 5.25,
-                "1Y": 4.95, "2Y": 4.35, "5Y": 3.88,
-                "10Y": 3.65, "20Y": 3.80, "30Y": 3.92,
+                "1M": 5.42,
+                "3M": 5.38,
+                "6M": 5.25,
+                "1Y": 4.95,
+                "2Y": 4.35,
+                "5Y": 3.88,
+                "10Y": 3.65,
+                "20Y": 3.80,
+                "30Y": 3.92,
             },
             "spread_2s10s": -70.0,
             "spread_3m10y": -173.0,
             "curve_source": "FRED",
             "previous_tenors": {
-                "1M": 5.40, "3M": 5.36, "10Y": 3.60,
+                "1M": 5.40,
+                "3M": 5.36,
+                "10Y": 3.60,
             },
         },
     )
@@ -376,12 +384,8 @@ class TestMacroPromptBuilding:
     def test_multiple_economic_indicators_all_present(self):
         """Multiple economic indicators all appear in the prompt."""
         agent = CognitMacro(llm_client=_make_mock_llm(VALID_MACRO_RESPONSE))
-        cpi = _make_economic_fragment(
-            fragment_id=uuid4(), indicator="CPI", value=2.8
-        )
-        gdp = _make_economic_fragment(
-            fragment_id=uuid4(), indicator="GDP", value=2.1
-        )
+        cpi = _make_economic_fragment(fragment_id=uuid4(), indicator="CPI", value=2.8)
+        gdp = _make_economic_fragment(fragment_id=uuid4(), indicator="GDP", value=2.1)
         unemployment = _make_economic_fragment(
             fragment_id=uuid4(), indicator="UNEMPLOYMENT_RATE", value=3.9
         )

@@ -30,9 +30,9 @@ logger = structlog.get_logger()
 # Tier thresholds in USD
 TIER_THRESHOLDS: dict[CapitalTier, float] = {
     CapitalTier.SEED: 0.0,
-    CapitalTier.GROWTH: 10_000_000.0,       # $10M
-    CapitalTier.SCALE: 100_000_000.0,        # $100M
-    CapitalTier.INSTITUTIONAL: 500_000_000.0, # $500M
+    CapitalTier.GROWTH: 10_000_000.0,  # $10M
+    CapitalTier.SCALE: 100_000_000.0,  # $100M
+    CapitalTier.INSTITUTIONAL: 500_000_000.0,  # $500M
 }
 
 # Execution constraints per tier
@@ -112,7 +112,12 @@ def compute_headroom(aum: float, current_tier: CapitalTier) -> float:
     Returns:
         Percentage (0-100) of progress toward next tier.
     """
-    tier_order = [CapitalTier.SEED, CapitalTier.GROWTH, CapitalTier.SCALE, CapitalTier.INSTITUTIONAL]
+    tier_order = [
+        CapitalTier.SEED,
+        CapitalTier.GROWTH,
+        CapitalTier.SCALE,
+        CapitalTier.INSTITUTIONAL,
+    ]
     idx = tier_order.index(current_tier)
 
     if idx >= len(tier_order) - 1:

@@ -74,6 +74,7 @@ RISK_MODE_LIMITS: dict[str, dict[str, float]] = {
 # Black-Litterman core functions (pure, stateless)
 # ---------------------------------------------------------------------------
 
+
 def compute_equilibrium_weights(n_assets: int) -> list[float]:
     """Compute equal-weighted prior (market cap proxy for MVP).
 
@@ -350,6 +351,7 @@ def intent_to_action(direction: str, weight: float) -> Action:
 # DecideOptim agent class
 # ---------------------------------------------------------------------------
 
+
 class DecideOptim(BaseAgent[PositionProposal]):
     """Portfolio optimization agent.
 
@@ -435,8 +437,10 @@ class DecideOptim(BaseAgent[PositionProposal]):
             # Extract parallel arrays for optimization
             tickers = [i["ticker"] for i in intents]
             directions = [
-                1.0 if i["net_direction"] == "LONG"
-                else -1.0 if i["net_direction"] == "SHORT"
+                1.0
+                if i["net_direction"] == "LONG"
+                else -1.0
+                if i["net_direction"] == "SHORT"
                 else 0.0
                 for i in intents
             ]
@@ -446,23 +450,30 @@ class DecideOptim(BaseAgent[PositionProposal]):
             n = len(tickers)
             prior_weights = compute_equilibrium_weights(n)
             raw_weights = black_litterman_weights(
-                prior_weights, directions, confidences,
+                prior_weights,
+                directions,
+                confidences,
             )
 
             # Step 4: CONSTRAIN
             # 4a: Position limits
             weights = apply_position_limits(
-                raw_weights, limits["max_position_weight"],
+                raw_weights,
+                limits["max_position_weight"],
             )
 
             # 4b: Sector concentration limits
             weights = enforce_sector_limits(
-                tickers, weights, limits["max_sector_concentration"],
+                tickers,
+                weights,
+                limits["max_sector_concentration"],
             )
 
             # 4c: Gross and net exposure limits
             weights = apply_exposure_limits(
-                weights, limits["max_gross_exposure"], limits["max_net_exposure"],
+                weights,
+                limits["max_gross_exposure"],
+                limits["max_net_exposure"],
             )
 
             # Step 5: BUILD PROPOSALS
@@ -481,17 +492,19 @@ class DecideOptim(BaseAgent[PositionProposal]):
                 except (ValueError, TypeError):
                     source_uuid = uuid4()
 
-                proposals.append(ProposedPosition(
-                    ticker=ticker,
-                    action=action,
-                    target_weight=abs(weight),
-                    direction=direction,
-                    confidence=confidences[i],
-                    source_intent_id=source_uuid,
-                    time_horizon_days=intents[i].get("time_horizon_days", 60),
-                    regime_adjustment=intents[i].get("regime_adjustment", 0.0),
-                    sector=get_sector(ticker) or "Unknown",
-                ))
+                proposals.append(
+                    ProposedPosition(
+                        ticker=ticker,
+                        action=action,
+                        target_weight=abs(weight),
+                        direction=direction,
+                        confidence=confidences[i],
+                        source_intent_id=source_uuid,
+                        time_horizon_days=intents[i].get("time_horizon_days", 60),
+                        regime_adjustment=intents[i].get("regime_adjustment", 0.0),
+                        sector=get_sector(ticker) or "Unknown",
+                    )
+                )
 
             # Step 6: COMPUTE PORTFOLIO METADATA
             final_weights = [
@@ -585,14 +598,16 @@ class DecideOptim(BaseAgent[PositionProposal]):
             if confidence < confidence_floor:
                 continue
 
-            filtered.append({
-                "ticker": ticker,
-                "net_direction": direction,
-                "synthesized_confidence": confidence,
-                "intent_id": intent.get("intent_id", ""),
-                "time_horizon_days": int(intent.get("time_horizon_days", 60)),
-                "regime_adjustment": float(intent.get("regime_adjustment", 0.0)),
-            })
+            filtered.append(
+                {
+                    "ticker": ticker,
+                    "net_direction": direction,
+                    "synthesized_confidence": confidence,
+                    "intent_id": intent.get("intent_id", ""),
+                    "time_horizon_days": int(intent.get("time_horizon_days", 60)),
+                    "regime_adjustment": float(intent.get("regime_adjustment", 0.0)),
+                }
+            )
 
         return filtered
 

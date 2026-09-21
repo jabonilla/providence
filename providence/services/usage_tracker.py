@@ -126,9 +126,7 @@ class UsageTracker:
     ) -> UsageSummary:
         """Get aggregated usage summary for a user over N days."""
         now = datetime.now(timezone.utc)
-        cutoff = datetime(
-            now.year, now.month, now.day, tzinfo=timezone.utc
-        )
+        cutoff = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
         # Go back N days
         from datetime import timedelta
 
@@ -136,11 +134,7 @@ class UsageTracker:
         cutoff_iso = cutoff.isoformat()
 
         with self._lock:
-            events = [
-                e
-                for e in self._by_user.get(user_id, [])
-                if e.timestamp >= cutoff_iso
-            ]
+            events = [e for e in self._by_user.get(user_id, []) if e.timestamp >= cutoff_iso]
 
         summary = UsageSummary(
             user_id=user_id,
@@ -179,11 +173,7 @@ class UsageTracker:
         start_iso = start.isoformat()
 
         with self._lock:
-            events = [
-                e
-                for e in self._by_user.get(user_id, [])
-                if e.timestamp >= start_iso
-            ]
+            events = [e for e in self._by_user.get(user_id, []) if e.timestamp >= start_iso]
 
         # Group by date
         by_date: dict[str, DailyUsage] = {}
@@ -221,11 +211,7 @@ class UsageTracker:
         cutoff = (now - timedelta(days=days)).isoformat()
 
         with self._lock:
-            events = [
-                e
-                for e in self._by_user.get(user_id, [])
-                if e.timestamp >= cutoff
-            ]
+            events = [e for e in self._by_user.get(user_id, []) if e.timestamp >= cutoff]
 
         counts: dict[str, int] = defaultdict(int)
         for e in events:

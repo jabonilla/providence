@@ -167,7 +167,9 @@ def evaluate_renewal(
 
     # Compute asymmetry
     asymmetry = compute_asymmetry_score(
-        health_score, original_confidence, regime_adj,
+        health_score,
+        original_confidence,
+        regime_adj,
     )
 
     # Compute renewed confidence

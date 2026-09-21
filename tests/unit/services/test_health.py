@@ -26,7 +26,9 @@ class HealthyAgent(BaseAgent[dict]):
         return {}
 
     def get_health(self) -> HealthStatus:
-        return HealthStatus(agent_id=self.agent_id, status=AgentStatus.HEALTHY, last_run=NOW, error_count_24h=0)
+        return HealthStatus(
+            agent_id=self.agent_id, status=AgentStatus.HEALTHY, last_run=NOW, error_count_24h=0
+        )
 
 
 class UnhealthyAgent(BaseAgent[dict]):
@@ -37,7 +39,9 @@ class UnhealthyAgent(BaseAgent[dict]):
         return {}
 
     def get_health(self) -> HealthStatus:
-        return HealthStatus(agent_id=self.agent_id, status=AgentStatus.UNHEALTHY, error_count_24h=10)
+        return HealthStatus(
+            agent_id=self.agent_id, status=AgentStatus.UNHEALTHY, error_count_24h=10
+        )
 
 
 class OfflineAgent(BaseAgent[dict]):
@@ -48,7 +52,9 @@ class OfflineAgent(BaseAgent[dict]):
         return {}
 
     def get_health(self) -> HealthStatus:
-        return HealthStatus(agent_id=self.agent_id, status=AgentStatus.OFFLINE, message="No connection")
+        return HealthStatus(
+            agent_id=self.agent_id, status=AgentStatus.OFFLINE, message="No connection"
+        )
 
 
 class BrokenAgent(BaseAgent[dict]):

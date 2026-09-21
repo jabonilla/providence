@@ -229,18 +229,14 @@ class CognitNarrative(BaseAgent[BeliefObject]):
             if frag.entity:
                 entity_counts[frag.entity] = entity_counts.get(frag.entity, 0) + 1
 
-        primary_ticker = (
-            max(entity_counts, key=entity_counts.get)
-            if entity_counts
-            else "UNKNOWN"
-        )
+        primary_ticker = max(entity_counts, key=entity_counts.get) if entity_counts else "UNKNOWN"
 
         for frag in context.fragments:
             fragment_ids.append(
                 f"- {frag.fragment_id} ({frag.data_type.value}, {frag.entity or 'N/A'})"
             )
 
-            is_primary = (frag.entity == primary_ticker)
+            is_primary = frag.entity == primary_ticker
 
             if frag.data_type == DataType.EARNINGS_CALL:
                 if is_primary:
@@ -265,25 +261,15 @@ class CognitNarrative(BaseAgent[BeliefObject]):
             else "No earnings call data available."
         )
         news_data = (
-            "\n\n".join(news_fragments)
-            if news_fragments
-            else "No news sentiment data available."
+            "\n\n".join(news_fragments) if news_fragments else "No news sentiment data available."
         )
         filing_data = (
-            "\n\n".join(filing_fragments)
-            if filing_fragments
-            else "No 8K filing data available."
+            "\n\n".join(filing_fragments) if filing_fragments else "No 8K filing data available."
         )
         peer_data = (
-            "\n\n".join(peer_fragments)
-            if peer_fragments
-            else "No peer narrative data available."
+            "\n\n".join(peer_fragments) if peer_fragments else "No peer narrative data available."
         )
-        fragment_id_list = (
-            "\n".join(fragment_ids)
-            if fragment_ids
-            else "No fragments available."
-        )
+        fragment_id_list = "\n".join(fragment_ids) if fragment_ids else "No fragments available."
 
         return template.format(
             ticker=primary_ticker,

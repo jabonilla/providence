@@ -96,7 +96,7 @@ def parse_narrative_response(
             if start == -1 or end == -1:
                 return None
             try:
-                parsed = json.loads(text[start:end + 1])
+                parsed = json.loads(text[start : end + 1])
             except json.JSONDecodeError:
                 return None
 
@@ -386,9 +386,7 @@ class RegimeNarr(BaseAgent[RegimeStateObject]):
                 price_fragments.append(self._format_fragment(frag))
 
         news_data = (
-            "\n\n".join(news_fragments)
-            if news_fragments
-            else "No news sentiment data available."
+            "\n\n".join(news_fragments) if news_fragments else "No news sentiment data available."
         )
         earnings_data = (
             "\n\n".join(earnings_fragments)
@@ -396,20 +394,12 @@ class RegimeNarr(BaseAgent[RegimeStateObject]):
             else "No earnings call data available."
         )
         macro_data = (
-            "\n\n".join(macro_fragments)
-            if macro_fragments
-            else "No macro context data available."
+            "\n\n".join(macro_fragments) if macro_fragments else "No macro context data available."
         )
         price_data = (
-            "\n\n".join(price_fragments)
-            if price_fragments
-            else "No price action data available."
+            "\n\n".join(price_fragments) if price_fragments else "No price action data available."
         )
-        fragment_id_list = (
-            "\n".join(fragment_ids)
-            if fragment_ids
-            else "No fragments available."
-        )
+        fragment_id_list = "\n".join(fragment_ids) if fragment_ids else "No fragments available."
 
         return template.format(
             news_data=news_data,

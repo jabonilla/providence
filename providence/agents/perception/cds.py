@@ -231,9 +231,7 @@ class PerceptCds(BaseAgent[list[MarketStateFragment]]):
 
         return ValidationStatus.VALID
 
-    def _normalize_entity(
-        self, raw_data: dict[str, Any], name: str, tenor: str
-    ) -> dict[str, Any]:
+    def _normalize_entity(self, raw_data: dict[str, Any], name: str, tenor: str) -> dict[str, Any]:
         """Step 3: NORMALIZE — Convert to CdsPayload dict."""
         observations = raw_data.get("observations", [])
         date = raw_data.get("date", "")

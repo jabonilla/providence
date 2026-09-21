@@ -91,9 +91,7 @@ class PerceptMacro(BaseAgent[list[MarketStateFragment]]):
                     error=str(e),
                 )
                 safe_error = redact_error_message(str(e))
-                fragment = self._create_quarantined_fragment(
-                    "YIELD_CURVE", date, safe_error
-                )
+                fragment = self._create_quarantined_fragment("YIELD_CURVE", date, safe_error)
                 fragments.append(fragment)
 
         # Fetch economic indicators
@@ -172,9 +170,7 @@ class PerceptMacro(BaseAgent[list[MarketStateFragment]]):
 
         return fragment
 
-    async def _process_indicator(
-        self, series_id: str, name: str, date: str
-    ) -> MarketStateFragment:
+    async def _process_indicator(self, series_id: str, name: str, date: str) -> MarketStateFragment:
         """Run the full Perception loop for an economic indicator.
 
         Steps: FETCH → VALIDATE → NORMALIZE → VERSION → return fragment.

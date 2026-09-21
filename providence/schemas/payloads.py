@@ -35,6 +35,7 @@ class PricePayload(BaseModel):
 
 class FilingType(str, Enum):
     """SEC filing type classification."""
+
     FORM_10K = "10-K"
     FORM_10Q = "10-Q"
     FORM_8K = "8-K"
@@ -74,7 +75,9 @@ class FilingPayload(BaseModel):
     # Event fields (8-K only)
     event_type: Optional[str] = Field(default=None, description="Type of material event")
     event_description: Optional[str] = Field(default=None, description="Description of the event")
-    material_impact: Optional[bool] = Field(default=None, description="Whether the event is material")
+    material_impact: Optional[bool] = Field(
+        default=None, description="Whether the event is material"
+    )
 
     # Text excerpt for agent context
     raw_text_excerpt: str = Field(
@@ -123,7 +126,9 @@ class OptionsPayload(BaseModel):
     ask: Optional[float] = Field(default=None, description="Current ask price")
     volume: int = Field(..., ge=0, description="Trading volume for the option")
     open_interest: int = Field(..., ge=0, description="Open interest for the contract")
-    implied_volatility: Optional[float] = Field(default=None, description="Implied volatility as decimal")
+    implied_volatility: Optional[float] = Field(
+        default=None, description="Implied volatility as decimal"
+    )
     delta: Optional[float] = Field(default=None, description="Greek: delta")
     gamma: Optional[float] = Field(default=None, description="Greek: gamma")
     theta: Optional[float] = Field(default=None, description="Greek: theta")
@@ -143,8 +148,12 @@ class CdsPayload(BaseModel):
     reference_entity: str = Field(..., description="Company or sovereign name")
     tenor: str = Field(..., description="CDS tenor (e.g., '5Y', '1Y', '10Y')")
     spread_bps: float = Field(..., description="CDS spread in basis points")
-    previous_spread_bps: Optional[float] = Field(default=None, description="Prior day's CDS spread in bps")
-    spread_change_bps: Optional[float] = Field(default=None, description="Daily change in spread (bps)")
+    previous_spread_bps: Optional[float] = Field(
+        default=None, description="Prior day's CDS spread in bps"
+    )
+    spread_change_bps: Optional[float] = Field(
+        default=None, description="Daily change in spread (bps)"
+    )
     recovery_rate: float = Field(default=0.4, description="Assumed recovery rate for calculation")
     currency: str = Field(default="USD", description="Currency of the CDS")
     observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")
@@ -165,7 +174,9 @@ class MacroYieldPayload(BaseModel):
     )
     spread_2s10s: Optional[float] = Field(default=None, description="2Y-10Y spread in basis points")
     spread_3m10y: Optional[float] = Field(default=None, description="3M-10Y spread in basis points")
-    curve_source: str = Field(..., description="Source of yield curve data (e.g., 'FRED', 'Treasury.gov')")
+    curve_source: str = Field(
+        ..., description="Source of yield curve data (e.g., 'FRED', 'Treasury.gov')"
+    )
     previous_tenors: Optional[dict[str, float]] = Field(
         default=None, description="Prior day's yield curve for comparison"
     )
@@ -187,8 +198,12 @@ class MacroEconomicPayload(BaseModel):
     previous_value: Optional[float] = Field(default=None, description="Prior period's value")
     period: str = Field(..., description="Period of the indicator (e.g., '2026-Q1', '2026-01')")
     frequency: str = Field(..., description="Frequency (e.g., 'MONTHLY', 'QUARTERLY', 'ANNUAL')")
-    unit: str = Field(..., description="Unit of measurement (e.g., 'PERCENT', 'BILLIONS_USD', 'THOUSANDS')")
-    source_series_id: str = Field(..., description="Source series ID (e.g., FRED series like 'CPIAUCSL')")
+    unit: str = Field(
+        ..., description="Unit of measurement (e.g., 'PERCENT', 'BILLIONS_USD', 'THOUSANDS')"
+    )
+    source_series_id: str = Field(
+        ..., description="Source series ID (e.g., FRED series like 'CPIAUCSL')"
+    )
     observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")
     revision_number: int = Field(default=0, description="Revision number for data releases")
 
@@ -214,12 +229,18 @@ class YFinanceFundamentalsPayload(BaseModel):
     price_to_book: Optional[float] = Field(default=None, description="Price-to-book ratio")
     price_to_sales: Optional[float] = Field(default=None, description="Price-to-sales ratio")
     profit_margin: Optional[float] = Field(default=None, description="Profit margin as decimal")
-    operating_margin: Optional[float] = Field(default=None, description="Operating margin as decimal")
+    operating_margin: Optional[float] = Field(
+        default=None, description="Operating margin as decimal"
+    )
     roe: Optional[float] = Field(default=None, description="Return on equity as decimal")
     roa: Optional[float] = Field(default=None, description="Return on assets as decimal")
     revenue: Optional[float] = Field(default=None, description="Total revenue in USD")
-    revenue_growth: Optional[float] = Field(default=None, description="Revenue growth rate as decimal")
-    earnings_growth: Optional[float] = Field(default=None, description="Earnings growth rate as decimal")
+    revenue_growth: Optional[float] = Field(
+        default=None, description="Revenue growth rate as decimal"
+    )
+    earnings_growth: Optional[float] = Field(
+        default=None, description="Earnings growth rate as decimal"
+    )
     debt_to_equity: Optional[float] = Field(default=None, description="Debt-to-equity ratio")
     current_ratio: Optional[float] = Field(default=None, description="Current ratio")
     free_cash_flow: Optional[float] = Field(default=None, description="Free cash flow in USD")
@@ -229,7 +250,9 @@ class YFinanceFundamentalsPayload(BaseModel):
     fifty_two_week_low: Optional[float] = Field(default=None, description="52-week low price")
     avg_volume: Optional[int] = Field(default=None, description="Average trading volume")
     shares_outstanding: Optional[int] = Field(default=None, description="Total shares outstanding")
-    institutional_holders_pct: Optional[float] = Field(default=None, description="Institutional ownership pct")
+    institutional_holders_pct: Optional[float] = Field(
+        default=None, description="Institutional ownership pct"
+    )
     short_ratio: Optional[float] = Field(default=None, description="Short interest ratio")
     sector: Optional[str] = Field(default=None, description="GICS sector")
     industry: Optional[str] = Field(default=None, description="Industry classification")
@@ -248,10 +271,16 @@ class AlphaVantageEarningsPayload(BaseModel):
     ticker: str = Field(..., description="Stock ticker symbol")
     fiscal_date_ending: str = Field(..., description="Fiscal period end date YYYY-MM-DD")
     reported_eps: Optional[float] = Field(default=None, description="Reported EPS")
-    estimated_eps: Optional[float] = Field(default=None, description="Analyst consensus estimated EPS")
-    surprise: Optional[float] = Field(default=None, description="EPS surprise (reported - estimated)")
+    estimated_eps: Optional[float] = Field(
+        default=None, description="Analyst consensus estimated EPS"
+    )
+    surprise: Optional[float] = Field(
+        default=None, description="EPS surprise (reported - estimated)"
+    )
     surprise_pct: Optional[float] = Field(default=None, description="EPS surprise percentage")
-    reported_date: Optional[str] = Field(default=None, description="Earnings report date YYYY-MM-DD")
+    reported_date: Optional[str] = Field(
+        default=None, description="Earnings report date YYYY-MM-DD"
+    )
     revenue: Optional[float] = Field(default=None, description="Reported revenue in USD")
     estimated_revenue: Optional[float] = Field(default=None, description="Estimated revenue in USD")
     revenue_surprise: Optional[float] = Field(default=None, description="Revenue surprise in USD")
@@ -274,11 +303,17 @@ class FactorReturnsPayload(BaseModel):
     mkt_rf: float = Field(..., description="Market excess return (Mkt-RF)")
     smb: float = Field(..., description="Small Minus Big factor")
     hml: float = Field(..., description="High Minus Low (value) factor")
-    rmw: Optional[float] = Field(default=None, description="Robust Minus Weak (profitability) factor")
-    cma: Optional[float] = Field(default=None, description="Conservative Minus Aggressive (investment) factor")
+    rmw: Optional[float] = Field(
+        default=None, description="Robust Minus Weak (profitability) factor"
+    )
+    cma: Optional[float] = Field(
+        default=None, description="Conservative Minus Aggressive (investment) factor"
+    )
     rf: float = Field(..., description="Risk-free rate")
     mom: Optional[float] = Field(default=None, description="Momentum factor (UMD)")
-    dataset: str = Field(default="F-F_Research_Data_5_Factors_2x3_daily", description="Source dataset name")
+    dataset: str = Field(
+        default="F-F_Research_Data_5_Factors_2x3_daily", description="Source dataset name"
+    )
 
 
 class FundFlowPayload(BaseModel):
@@ -292,11 +327,15 @@ class FundFlowPayload(BaseModel):
 
     account_id: str = Field(..., description="Anonymized account identifier")
     flow_date: str = Field(..., description="Transaction date in YYYY-MM-DD format")
-    net_flow: float = Field(..., description="Net flow amount in USD (positive=inflow, negative=outflow)")
+    net_flow: float = Field(
+        ..., description="Net flow amount in USD (positive=inflow, negative=outflow)"
+    )
     inflows: float = Field(..., ge=0, description="Total inflows in USD")
     outflows: float = Field(..., ge=0, description="Total outflows in USD (stored as positive)")
     transaction_count: int = Field(..., ge=0, description="Number of transactions")
-    category: str = Field(default="INVESTMENT", description="Flow category (INVESTMENT, TRANSFER, DIVIDEND, etc.)")
+    category: str = Field(
+        default="INVESTMENT", description="Flow category (INVESTMENT, TRANSFER, DIVIDEND, etc.)"
+    )
     institution_name: Optional[str] = Field(default=None, description="Financial institution name")
     top_tickers: list[str] = Field(default_factory=list, description="Top tickers by flow volume")
     observation_date: str = Field(..., description="Observation date in YYYY-MM-DD format")

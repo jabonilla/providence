@@ -290,11 +290,7 @@ class PerceptNews(BaseAgent[list[MarketStateFragment]]):
                 continue
 
         # Compute average sentiment
-        avg_sentiment = (
-            sum(sentiment_scores) / len(sentiment_scores)
-            if sentiment_scores
-            else 0.0
-        )
+        avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0.0
 
         return {
             "articles": normalized_articles,
@@ -325,9 +321,7 @@ class PerceptNews(BaseAgent[list[MarketStateFragment]]):
 
         return datetime.now(timezone.utc)
 
-    def _create_quarantined_fragment(
-        self, ticker: str, error_msg: str
-    ) -> MarketStateFragment:
+    def _create_quarantined_fragment(self, ticker: str, error_msg: str) -> MarketStateFragment:
         """Step 6: ALERT — Create a quarantined fragment for failed ingestion."""
         return MarketStateFragment(
             fragment_id=uuid4(),

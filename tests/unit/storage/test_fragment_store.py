@@ -109,9 +109,7 @@ class TestQueryDataType:
         store.append(_make_fragment(data_type=DataType.FILING_10Q))
         store.append(_make_fragment(data_type=DataType.SENTIMENT_NEWS))
 
-        results = store.query(
-            data_types={DataType.PRICE_OHLCV, DataType.FILING_10Q}
-        )
+        results = store.query(data_types={DataType.PRICE_OHLCV, DataType.FILING_10Q})
         assert len(results) == 2
 
 
@@ -159,9 +157,7 @@ class TestQueryCombined:
         store.append(_make_fragment(entity="AAPL", data_type=DataType.FILING_10Q))
         store.append(_make_fragment(entity="NVDA", data_type=DataType.PRICE_OHLCV))
 
-        results = store.query(
-            data_types={DataType.PRICE_OHLCV}, entities={"AAPL"}
-        )
+        results = store.query(data_types={DataType.PRICE_OHLCV}, entities={"AAPL"})
         assert len(results) == 1
         assert results[0].entity == "AAPL"
         assert results[0].data_type == DataType.PRICE_OHLCV
@@ -169,18 +165,14 @@ class TestQueryCombined:
     def test_exclude_quarantined(self):
         store = FragmentStore()
         store.append(_make_fragment(validation_status=ValidationStatus.VALID))
-        store.append(
-            _make_fragment(validation_status=ValidationStatus.QUARANTINED)
-        )
+        store.append(_make_fragment(validation_status=ValidationStatus.QUARANTINED))
         results = store.query(exclude_quarantined=True)
         assert len(results) == 1
 
     def test_include_quarantined(self):
         store = FragmentStore()
         store.append(_make_fragment(validation_status=ValidationStatus.VALID))
-        store.append(
-            _make_fragment(validation_status=ValidationStatus.QUARANTINED)
-        )
+        store.append(_make_fragment(validation_status=ValidationStatus.QUARANTINED))
         results = store.query(exclude_quarantined=False)
         assert len(results) == 2
 
@@ -244,9 +236,7 @@ class TestConvenience:
 
     def test_get_latest_by_entity_with_data_type(self):
         store = FragmentStore()
-        store.append(
-            _make_fragment(entity="AAPL", data_type=DataType.PRICE_OHLCV, timestamp=NOW)
-        )
+        store.append(_make_fragment(entity="AAPL", data_type=DataType.PRICE_OHLCV, timestamp=NOW))
         filing = _make_fragment(
             entity="AAPL",
             data_type=DataType.FILING_10Q,
