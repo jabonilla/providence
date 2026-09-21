@@ -112,14 +112,14 @@ class TestMainLoop:
 
     @pytest.mark.asyncio
     async def test_cognition_runs_parallel(self):
-        """All 6 cognition agents should be called."""
+        """Every cognition agent should be called."""
         agents = _build_agent_registry(_all_main_agents())
         orch = Orchestrator(agents, _mock_context_service(), _mock_config_registry())
 
         run = await orch.run_main_loop(fragments=[])
 
         cog_results = [s for s in run.stage_results if s.agent_id in COGNITION_AGENTS]
-        assert len(cog_results) == 6
+        assert len(cog_results) == len(COGNITION_AGENTS)
         assert all(s.status == StageStatus.SUCCEEDED for s in cog_results)
 
     @pytest.mark.asyncio

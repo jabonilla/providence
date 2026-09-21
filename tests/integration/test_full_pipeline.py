@@ -5,7 +5,7 @@ Validates:
   2. Storage integration: FragmentStore → Runner → BeliefStore + RunStore
   3. Learning batch runs correctly
   4. Continuous mode starts/stops cleanly
-  5. All 35 agents execute without errors (using mock implementations)
+  5. Every orchestrated agent executes without errors (using mock implementations)
 
 Uses mock agents throughout (no real API calls or LLM inference).
 """
@@ -101,19 +101,25 @@ PERCEPTION_AGENTS = [
 ]
 
 
+# Agents driven by the orchestrator loops (perception runs outside them).
+ORCHESTRATED_AGENTS = (
+    ALL_MAIN_AGENTS + EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS
+)
+
+
 def _build_registry() -> dict[str, BaseAgent]:
-    """Build a full 35-agent registry with mocks."""
+    """Build a registry of mocks covering every orchestrated agent."""
     registry: dict[str, BaseAgent] = {}
-    # 6 Perception agents (not orchestrated, but part of the registry)
+    # Perception agents (not orchestrated, but part of the registry)
     for aid in PERCEPTION_AGENTS:
         registry[aid] = MockAgent(aid)
-    # 16 Main loop agents (6 cognition + 3 regime parallel + 1 mismatch + 2 decision + 4 execution)
+    # Main loop agents (cognition + regime + decision + execution)
     for aid in ALL_MAIN_AGENTS:
         if aid.startswith("COGNIT-"):
             registry[aid] = MockCognitionAgent(aid)
         else:
             registry[aid] = MockAgent(aid)
-    # 5 Exit + 4 Learning + 4 Governance
+    # Exit + Learning + Governance loop agents
     for aid in EXIT_AGENTS + LEARNING_AGENTS + GOVERNANCE_AGENTS:
         registry[aid] = MockAgent(aid)
     return registry
@@ -221,8 +227,8 @@ class TestFullPipelineCycle:
         runs = await runner.run_once(fragments=[], run_exit=False, run_governance=False)
 
         main_run = runs["MAIN"]
-        # 6 cognition + 3 regime parallel + 1 REGIME-MISMATCH + 2 decision + 4 execution = 16
-        assert len(main_run.stage_results) == 16
+        # cognition + regime parallel + REGIME-MISMATCH + decision + execution
+        assert len(main_run.stage_results) == len(ALL_MAIN_AGENTS)
         assert all(sr.status == StageStatus.SUCCEEDED for sr in main_run.stage_results)
 
     @pytest.mark.asyncio
@@ -234,7 +240,7 @@ class TestFullPipelineCycle:
         runs = await runner.run_once(fragments=[], run_exit=True, run_governance=False)
 
         exit_run = runs["EXIT"]
-        assert len(exit_run.stage_results) == 5
+        assert len(exit_run.stage_results) == len(EXIT_AGENTS)
         assert all(sr.status == StageStatus.SUCCEEDED for sr in exit_run.stage_results)
 
     @pytest.mark.asyncio
@@ -246,7 +252,7 @@ class TestFullPipelineCycle:
         runs = await runner.run_once(fragments=[], run_exit=False, run_governance=True)
 
         gov_run = runs["GOVERNANCE"]
-        assert len(gov_run.stage_results) == 4
+        assert len(gov_run.stage_results) == len(GOVERNANCE_AGENTS)
         assert all(sr.status == StageStatus.SUCCEEDED for sr in gov_run.stage_results)
 
     @pytest.mark.asyncio
@@ -258,7 +264,7 @@ class TestFullPipelineCycle:
         meta = runs["MAIN"].metadata
         # Cognition outputs should be in metadata
         assert "belief_objects" in meta
-        assert len(meta["belief_objects"]) == 6  # 6 cognition agents
+        assert len(meta["belief_objects"]) == len(COGNITION_AGENTS)
 
         # Regime outputs should be in metadata
         assert "regime_outputs" in meta
@@ -465,28 +471,26 @@ class TestMultiCycleAnalytics:
 
 
 class TestAgentCountVerification:
-    def test_all_35_agents_in_registry(self):
-        """Registry should contain exactly 35 agents."""
+    def test_registry_covers_perception_and_orchestrated_agents(self):
+        """Registry should hold every perception and orchestrated agent."""
         registry = _build_registry()
-        assert len(registry) == 35
+        assert len(registry) == len(PERCEPTION_AGENTS) + len(ORCHESTRATED_AGENTS)
+        assert set(registry) == set(PERCEPTION_AGENTS) | set(ORCHESTRATED_AGENTS)
 
     def test_all_agent_groups_present(self):
-        """All agent group lists should sum to 35."""
+        """The loop group lists account for every orchestrated agent."""
         total = (
-            len(COGNITION_AGENTS)  # 6
-            + len(REGIME_PARALLEL_AGENTS)  # 3
+            len(COGNITION_AGENTS)
+            + len(REGIME_PARALLEL_AGENTS)
             + 1  # REGIME-MISMATCH
             + 2  # DECIDE-SYNTH, DECIDE-OPTIM
-            + len(EXECUTION_AGENTS)  # 4
-            + len(EXIT_AGENTS)  # 5
-            + len(LEARNING_AGENTS)  # 4
-            + len(GOVERNANCE_AGENTS)  # 4
+            + len(EXECUTION_AGENTS)
+            + len(EXIT_AGENTS)
+            + len(LEARNING_AGENTS)
+            + len(GOVERNANCE_AGENTS)
         )
-        # 6 + 3 + 1 + 2 + 4 + 5 + 4 + 4 = 29... missing 6 perception agents
-        # Perception agents are not in orchestrator groups (they run externally)
-        # Main loop agents: 16. Plus Exit (5) + Learning (4) + Governance (4) = 29
-        # The remaining 6 are Perception agents (not orchestrated in loops)
-        assert total == 29  # Orchestrated agents
+        # Perception agents are not in orchestrator groups (they run externally).
+        assert total == len(ORCHESTRATED_AGENTS)
 
     def test_registry_agent_ids_match_groups(self):
         """Every agent in group constants should be in the registry."""
