@@ -229,8 +229,10 @@ def sanitize_error(exc: Exception) -> str:
     # Patterns for sensitive data
     patterns = [
         # API keys and tokens
-        (r"sk-ant-[a-zA-Z0-9/+=]{20,}", "<REDACTED_APIKEY>"),
-        (r"sk-proj-[a-zA-Z0-9/+=]{20,}", "<REDACTED_APIKEY>"),
+        # Real keys contain '-' and '_' (e.g. sk-ant-api03-...), so both must
+        # be in the class or the match falls short of the {20,} minimum.
+        (r"sk-ant-[a-zA-Z0-9_\-/+=]{20,}", "<REDACTED_APIKEY>"),
+        (r"sk-proj-[a-zA-Z0-9_\-/+=]{20,}", "<REDACTED_APIKEY>"),
         (r"Bearer\s+[a-zA-Z0-9/+=.]+", "<REDACTED_TOKEN>"),
         (r"api[_-]?key\s*=\s*[^\s&]+", "api_key=<REDACTED>"),
         (r"token\s*=\s*[^\s&]+", "token=<REDACTED>"),
