@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class TechnicalSignals:
     """Aggregated technical signals from all indicator computations."""
+
     # Moving averages
     sma_20: float | None
     sma_50: float | None
@@ -21,12 +22,12 @@ class TechnicalSignals:
     price_vs_sma50: float | None
     price_vs_sma200: float | None
     golden_cross: bool  # SMA50 > SMA200 (bullish)
-    death_cross: bool   # SMA50 < SMA200 (bearish)
+    death_cross: bool  # SMA50 < SMA200 (bearish)
 
     # RSI
     rsi_14: float | None  # 0-100
     rsi_overbought: bool  # RSI > 70
-    rsi_oversold: bool    # RSI < 30
+    rsi_oversold: bool  # RSI < 30
 
     # MACD
     macd_line: float | None
@@ -39,7 +40,7 @@ class TechnicalSignals:
     bb_upper: float | None
     bb_middle: float | None  # = SMA20
     bb_lower: float | None
-    bb_width: float | None   # (upper - lower) / middle
+    bb_width: float | None  # (upper - lower) / middle
     price_above_upper_bb: bool
     price_below_lower_bb: bool
 
@@ -48,13 +49,13 @@ class TechnicalSignals:
     volume_ratio: float | None  # current volume / SMA20 volume
 
     # Momentum
-    momentum_5d: float | None   # % change over 5 days
+    momentum_5d: float | None  # % change over 5 days
     momentum_20d: float | None  # % change over 20 days
 
     # Overall signal
-    bullish_signals: int   # count of bullish signals
-    bearish_signals: int   # count of bearish signals
-    net_signal: int        # bullish - bearish
+    bullish_signals: int  # count of bullish signals
+    bearish_signals: int  # count of bearish signals
+    net_signal: int  # bullish - bearish
 
 
 def compute_sma(prices: list[float], period: int) -> float | None:
@@ -105,7 +106,7 @@ def compute_rsi(prices: list[float], period: int = 14) -> float | None:
         return None
 
     # Compute price changes
-    changes = [prices[i] - prices[i-1] for i in range(1, len(prices))]
+    changes = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
 
     # Separate gains and losses
     gains = [max(c, 0.0) for c in changes]
@@ -187,7 +188,7 @@ def compute_bollinger_bands(
 
     # Standard deviation
     variance = sum((p - middle) ** 2 for p in window) / period
-    std_dev = variance ** 0.5
+    std_dev = variance**0.5
 
     upper = middle + num_std * std_dev
     lower = middle - num_std * std_dev
@@ -230,28 +231,40 @@ def compute_all_signals(
     price_vs_sma50 = ((current_price - sma_50) / sma_50 * 100) if sma_50 else None
     price_vs_sma200 = ((current_price - sma_200) / sma_200 * 100) if sma_200 else None
 
-    golden_cross = (sma_50 is not None and sma_200 is not None and sma_50 > sma_200)
-    death_cross = (sma_50 is not None and sma_200 is not None and sma_50 < sma_200)
+    golden_cross = sma_50 is not None and sma_200 is not None and sma_50 > sma_200
+    death_cross = sma_50 is not None and sma_200 is not None and sma_50 < sma_200
 
     # RSI
     rsi_14 = compute_rsi(close_prices, 14)
-    rsi_overbought = (rsi_14 is not None and rsi_14 > 70)
-    rsi_oversold = (rsi_14 is not None and rsi_14 < 30)
+    rsi_overbought = rsi_14 is not None and rsi_14 > 70
+    rsi_oversold = rsi_14 is not None and rsi_14 < 30
 
     # MACD
     macd_line, macd_signal, macd_histogram = compute_macd(close_prices)
-    macd_bullish = (macd_histogram is not None and macd_histogram > 0 and
-                    macd_line is not None and macd_signal is not None and
-                    macd_line > macd_signal)
-    macd_bearish = (macd_histogram is not None and macd_histogram < 0 and
-                    macd_line is not None and macd_signal is not None and
-                    macd_line < macd_signal)
+    macd_bullish = (
+        macd_histogram is not None
+        and macd_histogram > 0
+        and macd_line is not None
+        and macd_signal is not None
+        and macd_line > macd_signal
+    )
+    macd_bearish = (
+        macd_histogram is not None
+        and macd_histogram < 0
+        and macd_line is not None
+        and macd_signal is not None
+        and macd_line < macd_signal
+    )
 
     # Bollinger Bands
     bb_upper, bb_middle, bb_lower = compute_bollinger_bands(close_prices)
-    bb_width = ((bb_upper - bb_lower) / bb_middle) if (bb_upper is not None and bb_middle and bb_lower is not None) else None
-    price_above_upper = (bb_upper is not None and current_price > bb_upper)
-    price_below_lower = (bb_lower is not None and current_price < bb_lower)
+    bb_width = (
+        ((bb_upper - bb_lower) / bb_middle)
+        if (bb_upper is not None and bb_middle and bb_lower is not None)
+        else None
+    )
+    price_above_upper = bb_upper is not None and current_price > bb_upper
+    price_below_lower = bb_lower is not None and current_price < bb_lower
 
     # Volume
     vol_sma_20 = compute_sma(volumes, 20) if volumes else None
@@ -265,18 +278,30 @@ def compute_all_signals(
     bullish = 0
     bearish = 0
 
-    if golden_cross: bullish += 1
-    if death_cross: bearish += 1
-    if rsi_oversold: bullish += 1
-    if rsi_overbought: bearish += 1
-    if macd_bullish: bullish += 1
-    if macd_bearish: bearish += 1
-    if price_below_lower: bullish += 1  # mean reversion signal
-    if price_above_upper: bearish += 1  # mean reversion signal
-    if price_vs_sma200 is not None and price_vs_sma200 > 0: bullish += 1
-    if price_vs_sma200 is not None and price_vs_sma200 < 0: bearish += 1
-    if momentum_20d is not None and momentum_20d > 5: bullish += 1
-    if momentum_20d is not None and momentum_20d < -5: bearish += 1
+    if golden_cross:
+        bullish += 1
+    if death_cross:
+        bearish += 1
+    if rsi_oversold:
+        bullish += 1
+    if rsi_overbought:
+        bearish += 1
+    if macd_bullish:
+        bullish += 1
+    if macd_bearish:
+        bearish += 1
+    if price_below_lower:
+        bullish += 1  # mean reversion signal
+    if price_above_upper:
+        bearish += 1  # mean reversion signal
+    if price_vs_sma200 is not None and price_vs_sma200 > 0:
+        bullish += 1
+    if price_vs_sma200 is not None and price_vs_sma200 < 0:
+        bearish += 1
+    if momentum_20d is not None and momentum_20d > 5:
+        bullish += 1
+    if momentum_20d is not None and momentum_20d < -5:
+        bearish += 1
 
     return TechnicalSignals(
         sma_20=sma_20,

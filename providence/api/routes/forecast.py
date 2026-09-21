@@ -6,7 +6,7 @@ GET  /api/v1/forecast           — Get forecasts for all watchlist tickers
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
@@ -61,13 +61,15 @@ async def get_forecast(
     for frag in sorted_frags:
         payload = frag.payload
         if "close" in payload:
-            records.append({
-                "open": float(payload.get("open", payload["close"])),
-                "high": float(payload.get("high", payload["close"])),
-                "low": float(payload.get("low", payload["close"])),
-                "close": float(payload["close"]),
-                "volume": float(payload.get("volume", 0)),
-            })
+            records.append(
+                {
+                    "open": float(payload.get("open", payload["close"])),
+                    "high": float(payload.get("high", payload["close"])),
+                    "low": float(payload.get("low", payload["close"])),
+                    "close": float(payload["close"]),
+                    "volume": float(payload.get("volume", 0)),
+                }
+            )
 
     if len(records) < 20:
         raise HTTPException(status_code=404, detail="Insufficient valid price records")
@@ -152,13 +154,15 @@ async def get_forecast(
                 candidate = last_ts + timedelta(days=day_offset)
             last_ts = candidate
 
-            candles.append({
-                "timestamp": last_ts.isoformat(),
-                "open": pred_open,
-                "high": pred_high,
-                "low": pred_low,
-                "close": pred_close,
-            })
+            candles.append(
+                {
+                    "timestamp": last_ts.isoformat(),
+                    "open": pred_open,
+                    "high": pred_high,
+                    "low": pred_low,
+                    "close": pred_close,
+                }
+            )
             prev_close = pred_close
 
         # Compute direction and return
@@ -187,7 +191,7 @@ async def get_forecast(
             "candles": candles,
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Forecast generation failed")
 
 
@@ -207,6 +211,7 @@ async def get_watchlist_forecasts(
     elif state.fragment_store:
         # Fall back to tickers that have data
         from providence.schemas.enums import DataType
+
         all_frags = state.fragment_store.query(data_types=[DataType.PRICE_OHLCV])
         tickers = list(set(f.entity for f in all_frags if f.entity))
 
@@ -219,15 +224,19 @@ async def get_watchlist_forecasts(
             forecast = await get_forecast(ticker, horizon)
             results.append(forecast)
         except HTTPException:
-            results.append({
-                "ticker": ticker,
-                "status": "insufficient_data",
-            })
+            results.append(
+                {
+                    "ticker": ticker,
+                    "status": "insufficient_data",
+                }
+            )
         except Exception:
-            results.append({
-                "ticker": ticker,
-                "status": "error",
-            })
+            results.append(
+                {
+                    "ticker": ticker,
+                    "status": "error",
+                }
+            )
 
     return {
         "forecasts": results,

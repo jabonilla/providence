@@ -6,7 +6,6 @@ data_type=USER_DOCUMENT and agent_id=USER-UPLOAD.
 
 from __future__ import annotations
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
@@ -17,6 +16,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 # ── List Documents ────────────────────────────────────────────────
+
 
 @router.get("")
 async def list_documents(
@@ -37,18 +37,27 @@ async def list_documents(
     return [
         {
             "fragment_id": str(f.fragment_id),
-            "filename": f.payload.get("filename", f.entity) if isinstance(f.payload, dict) else f.entity,
-            "content_type": f.payload.get("content_type", "unknown") if isinstance(f.payload, dict) else "unknown",
+            "filename": f.payload.get("filename", f.entity)
+            if isinstance(f.payload, dict)
+            else f.entity,
+            "content_type": f.payload.get("content_type", "unknown")
+            if isinstance(f.payload, dict)
+            else "unknown",
             "size_bytes": f.payload.get("size_bytes", 0) if isinstance(f.payload, dict) else 0,
             "text_length": len(f.payload.get("text", "")) if isinstance(f.payload, dict) else 0,
-            "uploaded_at": f.timestamp.isoformat() if hasattr(f.timestamp, "isoformat") else str(f.timestamp),
-            "validation_status": f.validation_status.value if hasattr(f.validation_status, "value") else str(f.validation_status),
+            "uploaded_at": f.timestamp.isoformat()
+            if hasattr(f.timestamp, "isoformat")
+            else str(f.timestamp),
+            "validation_status": f.validation_status.value
+            if hasattr(f.validation_status, "value")
+            else str(f.validation_status),
         }
         for f in fragments
     ]
 
 
 # ── Document Detail ───────────────────────────────────────────────
+
 
 @router.get("/{fragment_id}")
 async def get_document(fragment_id: UUID) -> dict:
@@ -73,13 +82,18 @@ async def get_document(fragment_id: UUID) -> dict:
         "size_bytes": payload.get("size_bytes", 0),
         "text_length": len(payload.get("text", "")),
         "text_preview": payload.get("text", "")[:500],
-        "uploaded_at": fragment.timestamp.isoformat() if hasattr(fragment.timestamp, "isoformat") else str(fragment.timestamp),
-        "validation_status": fragment.validation_status.value if hasattr(fragment.validation_status, "value") else str(fragment.validation_status),
+        "uploaded_at": fragment.timestamp.isoformat()
+        if hasattr(fragment.timestamp, "isoformat")
+        else str(fragment.timestamp),
+        "validation_status": fragment.validation_status.value
+        if hasattr(fragment.validation_status, "value")
+        else str(fragment.validation_status),
         "source_hash": fragment.source_hash,
     }
 
 
 # ── Upload Document ───────────────────────────────────────────────
+
 
 @router.post("")
 async def upload_document(
@@ -127,9 +141,9 @@ async def upload_document(
     elif ext in _PDF_EXTENSIONS:
         try:
             text = raw_bytes.decode("utf-8", errors="ignore")
-            printable_ratio = sum(
-                1 for c in text[:1000] if c.isprintable() or c.isspace()
-            ) / max(len(text[:1000]), 1)
+            printable_ratio = sum(1 for c in text[:1000] if c.isprintable() or c.isspace()) / max(
+                len(text[:1000]), 1
+            )
             if printable_ratio < 0.5:
                 text = f"[Binary PDF: {filename}, {size_bytes} bytes]"
         except Exception:
@@ -177,6 +191,7 @@ async def upload_document(
 
 # ── Delete Document ───────────────────────────────────────────────
 
+
 @router.delete("/{fragment_id}")
 async def delete_document(fragment_id: UUID) -> dict:
     """Mark a document fragment as deleted (soft delete via quarantine).
@@ -196,7 +211,6 @@ async def delete_document(fragment_id: UUID) -> dict:
         raise HTTPException(status_code=404, detail="Document not found")
 
     # Soft delete: create a replacement fragment with QUARANTINED status
-    from datetime import datetime, timezone
     from providence.schemas.market_state import MarketStateFragment
 
     quarantined = MarketStateFragment(
@@ -209,7 +223,12 @@ async def delete_document(fragment_id: UUID) -> dict:
         schema_version=fragment.schema_version,
         source_hash=fragment.source_hash,
         validation_status=ValidationStatus.QUARANTINED,
-        payload={"deleted": True, "original_filename": fragment.payload.get("filename", "") if isinstance(fragment.payload, dict) else ""},
+        payload={
+            "deleted": True,
+            "original_filename": fragment.payload.get("filename", "")
+            if isinstance(fragment.payload, dict)
+            else "",
+        },
     )
 
     # Replace in store (overwrite the in-memory entry)

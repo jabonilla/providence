@@ -21,7 +21,6 @@ from tests.fixtures.edgar_responses import (
     filing_10q_aapl,
     filing_8k_aapl,
     filing_8k_no_event_type,
-    filing_empty,
     filing_missing_xbrl,
 )
 

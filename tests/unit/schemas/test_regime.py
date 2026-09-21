@@ -4,7 +4,6 @@ Validates creation, immutability, content hashing, and field constraints.
 """
 
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError

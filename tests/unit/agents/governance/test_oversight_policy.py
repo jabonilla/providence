@@ -11,12 +11,6 @@ import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.governance.oversight import (
-    DEGRADED_THRESHOLD,
-    ERROR_THRESHOLD_24H,
-    GROSS_EXPOSURE_WARNING,
-    RETRAIN_QUEUE_WARNING,
-    SHADOW_DIVERGENCE_WARNING,
-    UNHEALTHY_THRESHOLD,
     GovernOversight,
     aggregate_health,
     detect_incidents,
@@ -69,6 +63,7 @@ def _make_health_report(
 # aggregate_health Tests
 # ===========================================================================
 
+
 class TestAggregateHealth:
     def test_all_healthy(self):
         reports = [
@@ -104,11 +99,15 @@ class TestAggregateHealth:
 # detect_incidents Tests
 # ===========================================================================
 
+
 class TestDetectIncidents:
     def test_healthy_system_no_incidents(self):
         health = SystemHealthSummary(
-            total_agents=10, healthy_count=10,
-            degraded_count=0, unhealthy_count=0, offline_count=0,
+            total_agents=10,
+            healthy_count=10,
+            degraded_count=0,
+            unhealthy_count=0,
+            offline_count=0,
             total_errors_24h=5,
         )
         incidents = detect_incidents(health, "NORMAL", 0, 0, 0.50)
@@ -116,8 +115,10 @@ class TestDetectIncidents:
 
     def test_unhealthy_agent_critical(self):
         health = SystemHealthSummary(
-            total_agents=10, healthy_count=9,
-            unhealthy_count=1, total_errors_24h=0,
+            total_agents=10,
+            healthy_count=9,
+            unhealthy_count=1,
+            total_errors_24h=0,
         )
         incidents = detect_incidents(health, "NORMAL", 0, 0, 0.50)
         assert any(i.severity == IncidentSeverity.CRITICAL for i in incidents)
@@ -125,14 +126,18 @@ class TestDetectIncidents:
 
     def test_offline_agent_critical(self):
         health = SystemHealthSummary(
-            total_agents=10, healthy_count=9, offline_count=1,
+            total_agents=10,
+            healthy_count=9,
+            offline_count=1,
         )
         incidents = detect_incidents(health, "NORMAL", 0, 0, 0.50)
         assert any("offline" in i.title.lower() for i in incidents)
 
     def test_many_degraded_warning(self):
         health = SystemHealthSummary(
-            total_agents=10, healthy_count=7, degraded_count=3,
+            total_agents=10,
+            healthy_count=7,
+            degraded_count=3,
         )
         incidents = detect_incidents(health, "NORMAL", 0, 0, 0.50)
         assert any(i.severity == IncidentSeverity.WARNING for i in incidents)
@@ -159,7 +164,9 @@ class TestDetectIncidents:
 
     def test_high_error_count(self):
         health = SystemHealthSummary(
-            total_agents=10, healthy_count=10, total_errors_24h=60,
+            total_agents=10,
+            healthy_count=10,
+            total_errors_24h=60,
         )
         incidents = detect_incidents(health, "NORMAL", 0, 0, 0.50)
         assert any("error" in i.title.lower() for i in incidents)
@@ -168,6 +175,7 @@ class TestDetectIncidents:
 # ===========================================================================
 # GovernOversight Integration Tests
 # ===========================================================================
+
 
 class TestGovernOversight:
     @pytest.mark.asyncio
@@ -243,6 +251,7 @@ class TestGovernOversightHealth:
 # ===========================================================================
 # Policy Check Tests
 # ===========================================================================
+
 
 class TestCheckSeedExecution:
     def test_seed_with_orders(self):
@@ -334,13 +343,18 @@ class TestCheckHaltedOrders:
 # GovernPolicy Integration Tests
 # ===========================================================================
 
+
 class TestGovernPolicy:
     @pytest.mark.asyncio
     async def test_process_no_violations(self):
         agent = GovernPolicy()
         ctx = _make_context(
             current_tier="GROWTH",
-            tier_constraints={"max_gross_exposure": 1.20, "max_single_sector_pct": 0.30, "max_positions": 15},
+            tier_constraints={
+                "max_gross_exposure": 1.20,
+                "max_single_sector_pct": 0.30,
+                "max_positions": 15,
+            },
             active_positions=[{"ticker": "AAPL"}],
             agent_maturity_records=[{"agent_id": "A", "current_stage": "FULL"}],
             current_risk_mode="NORMAL",
@@ -369,7 +383,11 @@ class TestGovernPolicy:
         agent = GovernPolicy()
         ctx = _make_context(
             current_tier="GROWTH",
-            tier_constraints={"max_gross_exposure": 0.80, "max_single_sector_pct": 0.25, "max_positions": 5},
+            tier_constraints={
+                "max_gross_exposure": 0.80,
+                "max_single_sector_pct": 0.25,
+                "max_positions": 5,
+            },
             active_positions=[{"ticker": t} for t in ["A", "B", "C", "D", "E", "F"]],
             gross_exposure_pct=1.00,
             sector_exposures={"tech": 0.40},
@@ -423,6 +441,7 @@ class TestGovernPolicyHealth:
 # ===========================================================================
 # Schema Tests
 # ===========================================================================
+
 
 class TestGovernanceOversightSchemas:
     def test_incident_frozen(self):

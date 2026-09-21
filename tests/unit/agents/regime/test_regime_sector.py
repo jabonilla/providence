@@ -13,12 +13,10 @@ from uuid import uuid4
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
-from providence.agents.regime.hmm_model import features_to_composite_score
 from providence.agents.regime.regime_features import RegimeFeatures
 from providence.agents.regime.regime_sector import RegimeSector
 from providence.agents.regime.sector_features import (
     GICS_SECTORS,
-    TICKER_SECTOR_MAP,
     SectorFragmentGroup,
     compute_relative_stress,
     extract_sector_features,
@@ -26,7 +24,6 @@ from providence.agents.regime.sector_features import (
     group_fragments_by_sector,
     identify_key_signals,
 )
-from providence.exceptions import AgentProcessingError
 from providence.schemas.enums import (
     DataType,
     StatisticalRegime,

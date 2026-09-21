@@ -168,18 +168,15 @@ class TestExecutionReportStatus:
     def test_status_rejected(self):
         """REJECTED status is valid."""
         report = _make_execution_report(
-            status=ExecutionStatus.REJECTED, 
+            status=ExecutionStatus.REJECTED,
             achieved_weight=0.0,
-            constraint_violations=["Insufficient liquidity"]
+            constraint_violations=["Insufficient liquidity"],
         )
         assert report.status == ExecutionStatus.REJECTED
 
     def test_status_cancelled(self):
         """CANCELLED status is valid."""
-        report = _make_execution_report(
-            status=ExecutionStatus.CANCELLED,
-            achieved_weight=0.0
-        )
+        report = _make_execution_report(status=ExecutionStatus.CANCELLED, achieved_weight=0.0)
         assert report.status == ExecutionStatus.CANCELLED
 
     def test_all_execution_status_values(self):
@@ -223,7 +220,7 @@ class TestExecutionReportPartialFill:
             status=ExecutionStatus.PARTIAL,
             requested_weight=0.10,
             achieved_weight=0.06,
-            constraint_violations=["Partial fill due to liquidity"]
+            constraint_violations=["Partial fill due to liquidity"],
         )
         assert report.requested_weight == 0.10
         assert report.achieved_weight == 0.06
@@ -234,6 +231,6 @@ class TestExecutionReportPartialFill:
         report = _make_execution_report(
             status=ExecutionStatus.PARTIAL,
             achieved_weight=0.0,
-            constraint_violations=["No shares filled"]
+            constraint_violations=["No shares filled"],
         )
         assert report.achieved_weight == 0.0

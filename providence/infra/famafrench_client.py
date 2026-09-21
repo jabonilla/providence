@@ -13,7 +13,6 @@ Usage:
 
 import asyncio
 import time
-from datetime import datetime
 from typing import Any
 
 import structlog
@@ -47,9 +46,7 @@ class FamaFrenchClient:
             await asyncio.sleep(self.MIN_REQUEST_INTERVAL - elapsed)
         self._last_request_time = time.monotonic()
 
-    async def get_five_factors_daily(
-        self, start_date: str, end_date: str
-    ) -> list[dict[str, Any]]:
+    async def get_five_factors_daily(self, start_date: str, end_date: str) -> list[dict[str, Any]]:
         """Fetch daily 5-factor Fama-French data.
 
         Fetches the Fama-French Research Data 5 Factors (2x3) daily dataset.
@@ -118,15 +115,17 @@ class FamaFrenchClient:
                 else:
                     date_str = str(date_idx).split()[0]
 
-                result.append({
-                    "date": date_str,
-                    "mkt_rf": float(row.get("Mkt-RF", 0.0)),
-                    "smb": float(row.get("SMB", 0.0)),
-                    "hml": float(row.get("HML", 0.0)),
-                    "rmw": float(row.get("RMW", 0.0)),
-                    "cma": float(row.get("CMA", 0.0)),
-                    "rf": float(row.get("RF", 0.0)),
-                })
+                result.append(
+                    {
+                        "date": date_str,
+                        "mkt_rf": float(row.get("Mkt-RF", 0.0)),
+                        "smb": float(row.get("SMB", 0.0)),
+                        "hml": float(row.get("HML", 0.0)),
+                        "rmw": float(row.get("RMW", 0.0)),
+                        "cma": float(row.get("CMA", 0.0)),
+                        "rf": float(row.get("RF", 0.0)),
+                    }
+                )
 
             logger.info(
                 "5-factor data loaded",
@@ -205,10 +204,14 @@ class FamaFrenchClient:
                 else:
                     date_str = str(date_idx).split()[0]
 
-                result.append({
-                    "date": date_str,
-                    "mom": float(row.get("Mom   ", 0.0)),  # Note: FF dataset has trailing spaces
-                })
+                result.append(
+                    {
+                        "date": date_str,
+                        "mom": float(
+                            row.get("Mom   ", 0.0)
+                        ),  # Note: FF dataset has trailing spaces
+                    }
+                )
 
             logger.info(
                 "Momentum factor data loaded",

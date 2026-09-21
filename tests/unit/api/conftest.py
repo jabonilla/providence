@@ -6,10 +6,8 @@ then builds a FastAPI TestClient.
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timezone
-from typing import Any, Optional
-from unittest.mock import MagicMock
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -21,7 +19,7 @@ from fastapi.testclient import TestClient
 
 from providence.agents.base import AgentStatus, BaseAgent, HealthStatus
 from providence.api.app import create_app
-from providence.api.deps import AppState, set_state
+from providence.api.deps import AppState
 from providence.orchestration.models import PipelineRun, RunStatus, StageResult, StageStatus
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
@@ -81,14 +79,16 @@ def _make_run(
     now = datetime.now(timezone.utc)
     stages = []
     for i in range(num_stages):
-        stages.append(StageResult(
-            stage_name=f"stage-{i}",
-            agent_id=f"AGENT-{i}",
-            status=StageStatus.SUCCEEDED,
-            started_at=now,
-            finished_at=now,
-            duration_ms=100.0 * (i + 1),
-        ))
+        stages.append(
+            StageResult(
+                stage_name=f"stage-{i}",
+                agent_id=f"AGENT-{i}",
+                status=StageStatus.SUCCEEDED,
+                started_at=now,
+                finished_at=now,
+                duration_ms=100.0 * (i + 1),
+            )
+        )
     return PipelineRun(
         run_id=uuid4(),
         loop_type=loop_type,
@@ -124,9 +124,14 @@ def test_agents():
     agents = {}
     # A few representative agents from each subsystem
     for aid in [
-        "PERCEPT-PRICE", "COGNIT-TECHNICAL", "COGNIT-FUNDAMENTAL",
-        "REGIME-STAT", "DECIDE-OPTIM", "EXEC-VALIDATE",
-        "LEARN-ATTRIB", "GOVERN-CAPITAL",
+        "PERCEPT-PRICE",
+        "COGNIT-TECHNICAL",
+        "COGNIT-FUNDAMENTAL",
+        "REGIME-STAT",
+        "DECIDE-OPTIM",
+        "EXEC-VALIDATE",
+        "LEARN-ATTRIB",
+        "GOVERN-CAPITAL",
     ]:
         agents[aid] = MockAgent(agent_id=aid)
     return agents

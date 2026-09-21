@@ -9,7 +9,6 @@ from __future__ import annotations
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 import structlog

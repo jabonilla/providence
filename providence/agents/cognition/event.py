@@ -228,11 +228,7 @@ class CognitEvent(BaseAgent[BeliefObject]):
             if frag.entity:
                 entity_counts[frag.entity] = entity_counts.get(frag.entity, 0) + 1
 
-        primary_ticker = (
-            max(entity_counts, key=entity_counts.get)
-            if entity_counts
-            else "UNKNOWN"
-        )
+        primary_ticker = max(entity_counts, key=entity_counts.get) if entity_counts else "UNKNOWN"
 
         for frag in context.fragments:
             fragment_ids.append(
@@ -250,30 +246,20 @@ class CognitEvent(BaseAgent[BeliefObject]):
 
         # Build formatted sections — provide informative defaults for missing data
         filing_events = (
-            "\n\n".join(filing_fragments)
-            if filing_fragments
-            else "No 8K filing events available."
+            "\n\n".join(filing_fragments) if filing_fragments else "No 8K filing events available."
         )
         news_data = (
-            "\n\n".join(news_fragments)
-            if news_fragments
-            else "No news sentiment data available."
+            "\n\n".join(news_fragments) if news_fragments else "No news sentiment data available."
         )
         price_data = (
-            "\n\n".join(price_fragments)
-            if price_fragments
-            else "No price action data available."
+            "\n\n".join(price_fragments) if price_fragments else "No price action data available."
         )
         options_data = (
             "\n\n".join(options_fragments)
             if options_fragments
             else "No options activity data available."
         )
-        fragment_id_list = (
-            "\n".join(fragment_ids)
-            if fragment_ids
-            else "No fragments available."
-        )
+        fragment_id_list = "\n".join(fragment_ids) if fragment_ids else "No fragments available."
 
         return template.format(
             ticker=primary_ticker,

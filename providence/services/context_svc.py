@@ -85,9 +85,7 @@ class ContextService:
 
         # Step 4: PEER CONTEXT — add peer fragments if configured
         if peer_fragments and config.peer_count > 0:
-            peer_selected = self._select_peers(
-                peer_fragments, target_data_types, config
-            )
+            peer_selected = self._select_peers(peer_fragments, target_data_types, config)
             prioritized.extend(peer_selected)
 
         # Step 5: TOKEN BUDGET — fit within limit
@@ -206,10 +204,7 @@ class ContextService:
         selected_entities = set(ranked_entities[: config.peer_count])
 
         # Return all (entity, data_type) fragments for selected peers
-        result = [
-            frag for (entity, _), frag in pair_latest.items()
-            if entity in selected_entities
-        ]
+        result = [frag for (entity, _), frag in pair_latest.items() if entity in selected_entities]
         result.sort(key=lambda f: f.timestamp, reverse=True)
         return result
 
@@ -237,12 +232,8 @@ class ContextService:
             frag_tokens = estimate_fragment_tokens(frag.payload)
 
             # Priority fragments (recent + target entity) are never dropped
-            is_priority = (
-                frag.timestamp >= priority_cutoff
-                and (
-                    not config.entity_scope
-                    or frag.entity in config.entity_scope
-                )
+            is_priority = frag.timestamp >= priority_cutoff and (
+                not config.entity_scope or frag.entity in config.entity_scope
             )
 
             if is_priority:

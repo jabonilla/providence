@@ -39,6 +39,7 @@ class HMMParameters:
     emission_stds: Std dev of Gaussian emission for each state.
     initial_probs: Initial state distribution.
     """
+
     transition_matrix: tuple[tuple[float, ...], ...]
     emission_means: tuple[float, ...]
     emission_stds: tuple[float, ...]
@@ -231,9 +232,7 @@ def classify_regime(
     confidence = max_prob
 
     # Build probability dict
-    prob_dict = {
-        state.value: round(prob, 6) for state, prob in zip(REGIME_STATES, posteriors)
-    }
+    prob_dict = {state.value: round(prob, 6) for state, prob in zip(REGIME_STATES, posteriors)}
 
     return regime, confidence, prob_dict
 

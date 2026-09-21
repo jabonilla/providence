@@ -11,9 +11,7 @@ and starts the FastAPI server via uvicorn.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import os
-import sys
 from pathlib import Path
 
 import structlog
@@ -59,7 +57,7 @@ def _log_startup_status(state: AppState) -> None:
         "fragments": state.fragment_store.count() if state.fragment_store else 0,
         "beliefs": state.belief_store.count() if state.belief_store else 0,
         "runs": state.run_store.count() if state.run_store else 0,
-        "shadow_signals": state.shadow_signal_store.count() if state.shadow_signal_store else 0,
+        "shadow_signals": state.shadow_signal_store.count if state.shadow_signal_store else 0,
         "has_health_service": state.health_service is not None,
         "has_runner": state.runner is not None,
         "has_portfolio": state.portfolio_tracker is not None,
@@ -211,12 +209,16 @@ def main() -> None:
     """Parse args and launch the API server."""
     parser = argparse.ArgumentParser(description="Providence REST API Server")
     parser.add_argument("--host", default="0.0.0.0", help="Bind host")
-    parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8000")), help="Bind port")
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("PORT", "8000")), help="Bind port"
+    )
     parser.add_argument("--data-dir", type=Path, default=None, help="Persistent storage directory")
     parser.add_argument("--skip-perception", action="store_true", help="Skip perception agents")
     parser.add_argument("--skip-adaptive", action="store_true", help="Skip adaptive (LLM) agents")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload (dev only)")
-    parser.add_argument("--log-level", default="info", choices=["debug", "info", "warning", "error"])
+    parser.add_argument(
+        "--log-level", default="info", choices=["debug", "info", "warning", "error"]
+    )
     args = parser.parse_args()
 
     # Build state
@@ -240,27 +242,31 @@ def main() -> None:
 
     # Auto-seed demo data if stores are empty or have insufficient data
     # (e.g. old seed with only 12 fragments per ticker — forecast needs 20+)
-    needs_seed = (
-        state.fragment_store and (
-            state.fragment_store.count() == 0
-            or state.fragment_store.count() < 200  # 8 tickers × 60 days = 480 minimum
-        )
+    needs_seed = state.fragment_store and (
+        state.fragment_store.count() == 0
+        or state.fragment_store.count() < 200  # 8 tickers × 60 days = 480 minimum
     )
     if needs_seed:
         try:
             from providence.api.routes.seed import (
-                _seed_fragments, _seed_beliefs, _seed_runs,
-                _seed_shadow_signals, _seed_portfolio,
+                _seed_fragments,
+                _seed_beliefs,
+                _seed_runs,
+                _seed_shadow_signals,
+                _seed_portfolio,
             )
+
             logger.info("Auto-seeding demo data (first startup)")
             _seed_fragments(state)
             _seed_beliefs(state)
             _seed_runs(state)
             _seed_shadow_signals(state)
             _seed_portfolio(state)
-            logger.info("Auto-seed complete",
-                        fragments=state.fragment_store.count(),
-                        beliefs=state.belief_store.count())
+            logger.info(
+                "Auto-seed complete",
+                fragments=state.fragment_store.count(),
+                beliefs=state.belief_store.count(),
+            )
         except Exception as exc:
             logger.warning("Auto-seed failed (non-fatal)", error=str(exc))
 

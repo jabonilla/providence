@@ -165,19 +165,23 @@ class PerceptFundFlow(BaseAgent[list[MarketStateFragment]]):
                 start_date=start_date,
                 end_date=end_date,
             )
-            return [self._create_quarantined_fragment(
-                "NO_TRANSACTIONS", observation_date, "No transactions in range"
-            )]
+            return [
+                self._create_quarantined_fragment(
+                    "NO_TRANSACTIONS", observation_date, "No transactions in range"
+                )
+            ]
 
         # Step 2+3: VALIDATE + NORMALIZE — aggregate by (account_id, date)
         # Build daily flow aggregates
         DayKey = tuple[str, str]  # (account_id, date)
-        day_flows: dict[DayKey, dict[str, Any]] = defaultdict(lambda: {
-            "inflows": 0.0,
-            "outflows": 0.0,
-            "count": 0,
-            "tickers": defaultdict(float),
-        })
+        day_flows: dict[DayKey, dict[str, Any]] = defaultdict(
+            lambda: {
+                "inflows": 0.0,
+                "outflows": 0.0,
+                "count": 0,
+                "tickers": defaultdict(float),
+            }
+        )
 
         for txn in all_transactions:
             acct_id = txn.get("account_id", "UNKNOWN")
@@ -209,9 +213,7 @@ class PerceptFundFlow(BaseAgent[list[MarketStateFragment]]):
             net_flow = inflows - outflows
 
             # Top tickers by flow volume (up to 10)
-            sorted_tickers = sorted(
-                agg["tickers"].items(), key=lambda x: x[1], reverse=True
-            )
+            sorted_tickers = sorted(agg["tickers"].items(), key=lambda x: x[1], reverse=True)
             top_tickers = [t[0] for t in sorted_tickers[:10]]
 
             # Account metadata
@@ -234,16 +236,17 @@ class PerceptFundFlow(BaseAgent[list[MarketStateFragment]]):
                 observation_date=observation_date,
             )
 
-            source_hash = self._compute_source_hash({
-                "account_id": anon_acct_id,
-                "flow_date": flow_date,
-                "net_flow": net_flow,
-                "count": agg["count"],
-            })
+            source_hash = self._compute_source_hash(
+                {
+                    "account_id": anon_acct_id,
+                    "flow_date": flow_date,
+                    "net_flow": net_flow,
+                    "count": agg["count"],
+                }
+            )
 
             validation_status = (
-                ValidationStatus.VALID if agg["count"] > 0
-                else ValidationStatus.PARTIAL
+                ValidationStatus.VALID if agg["count"] > 0 else ValidationStatus.PARTIAL
             )
 
             fragment = MarketStateFragment(

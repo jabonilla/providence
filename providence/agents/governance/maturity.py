@@ -175,9 +175,19 @@ class GovernMaturity(BaseAgent[MaturityGateOutput]):
                 retrain_recs = []
 
             # Index by agent_id
-            attr_by_agent = {a["agent_id"]: a for a in attribution_results if isinstance(a, dict) and "agent_id" in a}
-            cal_by_agent = {c["agent_id"]: c for c in calibration_results if isinstance(c, dict) and "agent_id" in c}
-            retrain_by_agent = {r["agent_id"]: r for r in retrain_recs if isinstance(r, dict) and "agent_id" in r}
+            attr_by_agent = {
+                a["agent_id"]: a
+                for a in attribution_results
+                if isinstance(a, dict) and "agent_id" in a
+            }
+            cal_by_agent = {
+                c["agent_id"]: c
+                for c in calibration_results
+                if isinstance(c, dict) and "agent_id" in c
+            }
+            retrain_by_agent = {
+                r["agent_id"]: r for r in retrain_recs if isinstance(r, dict) and "agent_id" in r
+            }
 
             records: list[AgentMaturityRecord] = []
             promotions = 0

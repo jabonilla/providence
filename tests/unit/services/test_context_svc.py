@@ -109,12 +109,14 @@ class TestAgentConfig:
 
     def test_registry_from_dict_string_data_types(self):
         """from_dict converts string DataType names to enums."""
-        registry = AgentConfigRegistry.from_dict({
-            "MY-AGENT": {
-                "consumes": ["PRICE_OHLCV", "FILING_10K"],
-                "max_token_budget": 50_000,
+        registry = AgentConfigRegistry.from_dict(
+            {
+                "MY-AGENT": {
+                    "consumes": ["PRICE_OHLCV", "FILING_10K"],
+                    "max_token_budget": 50_000,
+                }
             }
-        })
+        )
         config = registry.get("MY-AGENT")
         assert config is not None
         assert DataType.PRICE_OHLCV in config.consumes
@@ -407,10 +409,12 @@ class TestContextServiceTokenBudget:
     def test_over_budget_drops_oldest(self):
         """When over budget, older fragments are dropped first."""
         # Create a very small budget
-        registry = _make_registry({
-            "max_token_budget": 50,  # Very small budget
-            "priority_window_hours": 1,
-        })
+        registry = _make_registry(
+            {
+                "max_token_budget": 50,  # Very small budget
+                "priority_window_hours": 1,
+            }
+        )
         svc = ContextService(registry)
 
         # Create fragments: one recent (priority), several old
@@ -431,10 +435,12 @@ class TestContextServiceTokenBudget:
 
     def test_priority_fragments_never_dropped(self):
         """Priority-window fragments are never dropped, even if over budget."""
-        registry = _make_registry({
-            "max_token_budget": 1,  # Impossibly small budget
-            "priority_window_hours": 24,
-        })
+        registry = _make_registry(
+            {
+                "max_token_budget": 1,  # Impossibly small budget
+                "priority_window_hours": 24,
+            }
+        )
         svc = ContextService(registry)
 
         # All fragments within priority window
@@ -525,21 +531,25 @@ class TestTokenEstimation:
 
     def test_estimate_tokens_empty(self):
         from providence.utils.tokens import estimate_tokens
+
         assert estimate_tokens("") == 0
 
     def test_estimate_tokens_short(self):
         from providence.utils.tokens import estimate_tokens
+
         # "hello" is 5 chars → 5 // 4 = 1
         assert estimate_tokens("hello") >= 1
 
     def test_estimate_fragment_tokens(self):
         from providence.utils.tokens import estimate_fragment_tokens
+
         payload = {"key": "value", "number": 42}
         tokens = estimate_fragment_tokens(payload)
         assert tokens > 0
 
     def test_estimate_fragment_tokens_empty(self):
         from providence.utils.tokens import estimate_fragment_tokens
+
         tokens = estimate_fragment_tokens({})
         # "{}" serializes to 2 chars → at least 1 token
         assert tokens >= 0
@@ -682,12 +692,16 @@ class TestContextServicePeerMultiDataType:
 
         aapl = _make_fragment(entity="AAPL", hours_ago=1)
         msft_price = _make_fragment(
-            entity="MSFT", data_type=DataType.PRICE_OHLCV,
-            hours_ago=2, payload={"type": "price"},
+            entity="MSFT",
+            data_type=DataType.PRICE_OHLCV,
+            hours_ago=2,
+            payload={"type": "price"},
         )
         msft_filing = _make_fragment(
-            entity="MSFT", data_type=DataType.FILING_10Q,
-            hours_ago=3, payload={"type": "filing"},
+            entity="MSFT",
+            data_type=DataType.FILING_10Q,
+            hours_ago=3,
+            payload={"type": "filing"},
         )
 
         ctx = svc.assemble_context(
@@ -712,6 +726,7 @@ class TestRedaction:
 
     def test_redact_url_strips_api_key(self):
         from providence.utils.redaction import redact_url
+
         url = "https://api.polygon.io/v2/aggs?apiKey=SECRET123&ticker=AAPL"
         result = redact_url(url)
         assert "SECRET123" not in result
@@ -720,6 +735,7 @@ class TestRedaction:
 
     def test_redact_error_message_strips_key(self):
         from providence.utils.redaction import redact_error_message
+
         msg = "Failed: https://api.polygon.io/v2?apiKey=my_secret_key&other=ok"
         result = redact_error_message(msg)
         assert "my_secret_key" not in result
@@ -727,6 +743,7 @@ class TestRedaction:
 
     def test_redact_preserves_safe_message(self):
         from providence.utils.redaction import redact_error_message
+
         msg = "Connection timeout after 30 seconds"
         result = redact_error_message(msg)
         assert result == msg

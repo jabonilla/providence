@@ -97,8 +97,8 @@ async def subsystem_status() -> dict:
         }
     if state.shadow_signal_store:
         stores["shadow_signals"] = {
-            "count": state.shadow_signal_store.count(),
-            "status": "ok" if state.shadow_signal_store.count() > 0 else "empty",
+            "count": state.shadow_signal_store.count,
+            "status": "ok" if state.shadow_signal_store.count > 0 else "empty",
         }
 
     # Agent registry

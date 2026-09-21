@@ -16,7 +16,6 @@ Shadow mode integration:
 """
 
 import asyncio
-from datetime import datetime, timezone
 from typing import Any, Optional
 
 import structlog

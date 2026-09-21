@@ -10,7 +10,7 @@ Usage:
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -85,6 +85,7 @@ def get_settings() -> ProvidenceSettings:
         PROVIDENCE_PERSIST_STORAGE: Enable JSONL persistence (default: true)
         PROVIDENCE_EXTRACT_BELIEFS: Extract beliefs from cognition (default: true)
     """
+
     def _bool(key: str, default: bool = False) -> bool:
         val = os.environ.get(key, "").lower()
         if val in ("1", "true", "yes"):

@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install ruff
-        run: pip install ruff
+        # Pinned: an unpinned ruff can turn this job red on a release with no
+        # code change. Bump deliberately, alongside any reformatting it wants.
+        run: pip install ruff==0.15.8
       - name: Check formatting
         run: ruff format --check providence/ tests/
       - name: Check linting

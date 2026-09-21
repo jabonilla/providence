@@ -66,11 +66,13 @@ async def send_message(req: ChatMessageRequest) -> ChatSendResponse:
     conversation_history: list[dict[str, Any]] = []
     recent_messages = conv.messages[-10:]  # Last 10 messages for context
     for m in recent_messages:
-        conversation_history.append({
-            "role": m.role,
-            "content": m.content,
-            "timestamp": m.timestamp.isoformat(),
-        })
+        conversation_history.append(
+            {
+                "role": m.role,
+                "content": m.content,
+                "timestamp": m.timestamp.isoformat(),
+            }
+        )
 
     # Process through chat engine with conversation context
     response_text, citations_raw = state.chat_engine.process(
@@ -160,10 +162,7 @@ async def get_conversation_messages(conversation_id: str) -> list[ConversationMe
         ConversationMessage(
             role=m.role,
             content=m.content,
-            citations=[
-                ChatCitation(**c) if isinstance(c, dict) else c
-                for c in m.citations
-            ],
+            citations=[ChatCitation(**c) if isinstance(c, dict) else c for c in m.citations],
             timestamp=m.timestamp,
         )
         for m in conv.messages
@@ -191,10 +190,7 @@ async def get_conversation(conversation_id: str) -> ConversationDetail:
         ConversationMessage(
             role=m.role,
             content=m.content,
-            citations=[
-                ChatCitation(**c) if isinstance(c, dict) else c
-                for c in m.citations
-            ],
+            citations=[ChatCitation(**c) if isinstance(c, dict) else c for c in m.citations],
             timestamp=m.timestamp,
         )
         for m in conv.messages
@@ -247,7 +243,9 @@ async def upload_document(
         try:
             text = raw_bytes.decode("utf-8", errors="ignore")
             # If mostly non-printable, treat as binary
-            printable_ratio = sum(1 for c in text[:1000] if c.isprintable() or c.isspace()) / max(len(text[:1000]), 1)
+            printable_ratio = sum(1 for c in text[:1000] if c.isprintable() or c.isspace()) / max(
+                len(text[:1000]), 1
+            )
             if printable_ratio < 0.5:
                 text = f"[Binary PDF uploaded: {filename}, {size_bytes} bytes]"
         except Exception:

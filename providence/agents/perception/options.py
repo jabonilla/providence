@@ -80,9 +80,7 @@ class PerceptOptions(BaseAgent[list[MarketStateFragment]]):
         fragments: list[MarketStateFragment] = []
         for ticker in tickers:
             try:
-                fragment = await self._process_ticker(
-                    ticker, expiration_date, contract_type, limit
-                )
+                fragment = await self._process_ticker(ticker, expiration_date, contract_type, limit)
                 fragments.append(fragment)
             except Exception as e:
                 self._error_count_24h += 1
@@ -199,9 +197,7 @@ class PerceptOptions(BaseAgent[list[MarketStateFragment]]):
 
         return ValidationStatus.VALID
 
-    def _normalize(
-        self, raw_data: list[dict[str, Any]], ticker: str
-    ) -> dict[str, Any]:
+    def _normalize(self, raw_data: list[dict[str, Any]], ticker: str) -> dict[str, Any]:
         """Step 3: NORMALIZE — Convert to options payload dict.
 
         Extracts and transforms options contracts into OptionsPayload format.
@@ -246,7 +242,9 @@ class PerceptOptions(BaseAgent[list[MarketStateFragment]]):
                 ask=float(ask) if ask is not None else None,
                 volume=int(volume),
                 open_interest=int(open_interest),
-                implied_volatility=float(implied_volatility) if implied_volatility is not None else None,
+                implied_volatility=float(implied_volatility)
+                if implied_volatility is not None
+                else None,
                 delta=float(delta) if delta is not None else None,
                 gamma=float(gamma) if gamma is not None else None,
                 theta=float(theta) if theta is not None else None,

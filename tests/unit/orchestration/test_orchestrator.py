@@ -8,9 +8,7 @@ Tests cover:
   - PipelineRun tracking and content hash
 """
 
-import asyncio
 from datetime import datetime, timezone
-from typing import Any, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,7 +16,7 @@ import pytest
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.config.agent_config import AgentConfigRegistry
 from providence.exceptions import AgentProcessingError
-from providence.orchestration.models import PipelineRun, RunStatus, StageStatus
+from providence.orchestration.models import RunStatus, StageStatus
 from providence.orchestration.orchestrator import (
     COGNITION_AGENTS,
     EXECUTION_AGENTS,
@@ -98,6 +96,7 @@ def _all_main_agents() -> list[str]:
 # Main Loop Tests
 # ===========================================================================
 
+
 class TestMainLoop:
     @pytest.mark.asyncio
     async def test_all_stages_succeed(self):
@@ -162,7 +161,8 @@ class TestMainLoop:
 
         run = await orch.run_main_loop(fragments=[])
         router_result = next(
-            (s for s in run.stage_results if s.agent_id == "EXEC-ROUTER"), None,
+            (s for s in run.stage_results if s.agent_id == "EXEC-ROUTER"),
+            None,
         )
         assert router_result is not None
         assert router_result.status == StageStatus.SKIPPED
@@ -202,6 +202,7 @@ class TestMainLoop:
 # Exit Loop Tests
 # ===========================================================================
 
+
 class TestExitLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -235,6 +236,7 @@ class TestExitLoop:
 # Learning Loop Tests
 # ===========================================================================
 
+
 class TestLearningLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -257,6 +259,7 @@ class TestLearningLoop:
 # Governance Loop Tests
 # ===========================================================================
 
+
 class TestGovernanceLoop:
     @pytest.mark.asyncio
     async def test_all_succeed(self):
@@ -271,6 +274,7 @@ class TestGovernanceLoop:
 # ===========================================================================
 # PipelineRun Model Tests
 # ===========================================================================
+
 
 class TestPipelineRunModel:
     @pytest.mark.asyncio
@@ -302,6 +306,7 @@ class TestPipelineRunModel:
 # ===========================================================================
 # ProvidenceRunner Tests
 # ===========================================================================
+
 
 class TestProvidenceRunner:
     @pytest.mark.asyncio

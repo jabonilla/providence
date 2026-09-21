@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Optional
 
 import structlog
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from providence.api.deps import get_state
@@ -26,12 +26,14 @@ _sweep_state: dict = {"running": False, "started_at": None, "last_result": None,
 
 class SweepRequest(BaseModel):
     """Request to trigger a perception sweep."""
+
     tickers: Optional[list[str]] = None  # None = full watchlist
     priority: Optional[int] = None  # 1=high priority only, None=all
 
 
 class SweepResponse(BaseModel):
     """Result of a perception sweep."""
+
     status: str
     sweep_start: Optional[str] = None
     sweep_end: Optional[str] = None
@@ -111,8 +113,10 @@ async def _run_sweep_background(req: SweepRequest) -> None:
             result = await scheduler.run_full_sweep()
             _sweep_state["last_result"] = result
 
-        logger.info("Background perception sweep complete",
-                     fragments=_sweep_state["last_result"].get("fragments_created", 0))
+        logger.info(
+            "Background perception sweep complete",
+            fragments=_sweep_state["last_result"].get("fragments_created", 0),
+        )
 
     except Exception as exc:
         logger.error("Background perception sweep failed", error=str(exc))
@@ -137,9 +141,11 @@ async def trigger_sweep(request: SweepRequest | None = None) -> dict:
     req = request or SweepRequest()
 
     from datetime import datetime, timezone
+
     _sweep_state["started_at"] = datetime.now(timezone.utc).isoformat()
 
     import asyncio
+
     asyncio.create_task(_run_sweep_background(req))
 
     return {

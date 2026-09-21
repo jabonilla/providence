@@ -7,9 +7,8 @@ metadata computation, error handling, and health reporting.
 DECIDE-OPTIM is FROZEN: zero LLM calls, pure computation.
 """
 
-import math
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -27,7 +26,6 @@ from providence.agents.decision.optim import (
     estimate_sharpe,
     intent_to_action,
 )
-from providence.exceptions import AgentProcessingError
 from providence.schemas.decision import (
     PortfolioMetadata,
     PositionProposal,
@@ -451,7 +449,9 @@ class TestDecideOptim:
         agent = DecideOptim()
         intents = [_make_intent(f"T{i}", "LONG", 0.70) for i in range(10)]
         # Use known tickers for sector mapping
-        for i, t in enumerate(["AAPL", "MSFT", "GOOG", "AMZN", "JPM", "GS", "JNJ", "PFE", "XOM", "CVX"]):
+        for i, t in enumerate(
+            ["AAPL", "MSFT", "GOOG", "AMZN", "JPM", "GS", "JNJ", "PFE", "XOM", "CVX"]
+        ):
             intents[i]["ticker"] = t
         ctx = _make_context(intents=intents, regime=_make_regime("NORMAL"))
         result = await agent.process(ctx)

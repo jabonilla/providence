@@ -31,6 +31,7 @@ from providence.schemas.enums import (
 # GOVERN-CAPITAL output
 # ---------------------------------------------------------------------------
 
+
 class TierConstraints(BaseModel):
     """Execution constraints derived from the current capital tier."""
 
@@ -63,7 +64,8 @@ class CapitalTierOutput(BaseModel):
     tier_changed: bool = Field(default=False)
     constraints: TierConstraints = Field(...)
     headroom_to_next_tier_pct: float = Field(
-        default=0.0, ge=0.0,
+        default=0.0,
+        ge=0.0,
         description="How close to next tier threshold (0-100%)",
     )
     content_hash: str = Field(default="")
@@ -93,6 +95,7 @@ class CapitalTierOutput(BaseModel):
 # GOVERN-MATURITY output
 # ---------------------------------------------------------------------------
 
+
 class AgentMaturityRecord(BaseModel):
     """Maturity classification for a single agent."""
 
@@ -112,7 +115,9 @@ class AgentMaturityRecord(BaseModel):
         description="Reasons preventing promotion to next stage",
     )
     confidence_weight: float = Field(
-        default=1.0, ge=0.0, le=1.0,
+        default=1.0,
+        ge=0.0,
+        le=1.0,
         description="Confidence weighting: SHADOW=0.0, LIMITED=0.5, FULL=1.0",
     )
 
@@ -163,6 +168,7 @@ class MaturityGateOutput(BaseModel):
 # ---------------------------------------------------------------------------
 # GOVERN-OVERSIGHT output
 # ---------------------------------------------------------------------------
+
 
 class GovernanceIncident(BaseModel):
     """A governance incident flagged for human review."""
@@ -242,6 +248,7 @@ class OversightOutput(BaseModel):
 # ---------------------------------------------------------------------------
 # GOVERN-POLICY output
 # ---------------------------------------------------------------------------
+
 
 class PolicyViolation(BaseModel):
     """A detected policy violation."""

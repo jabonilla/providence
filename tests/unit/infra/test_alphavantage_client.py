@@ -2,10 +2,9 @@
 
 All tests mock httpx — NO real HTTP calls.
 """
-import asyncio
+
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
 import httpx
 import pytest
@@ -44,10 +43,7 @@ class TestAlphaVantageClientInit:
 
     def test_init_custom_base_url(self):
         """Can override base_url."""
-        client = AlphaVantageClient(
-            api_key="test_key",
-            base_url="https://custom.example.com"
-        )
+        client = AlphaVantageClient(api_key="test_key", base_url="https://custom.example.com")
         assert client._base_url == "https://custom.example.com"
 
     def test_init_custom_timeout(self):
@@ -75,7 +71,7 @@ class TestAlphaVantageClientGetEarnings:
                     "estimatedEPS": "1.45",
                     "surprise": "0.05",
                     "surprisePercentage": "3.45",
-                    "reportedDate": "2025-04-15"
+                    "reportedDate": "2025-04-15",
                 },
                 {
                     "fiscalDateEnding": "2024-12-31",
@@ -83,7 +79,7 @@ class TestAlphaVantageClientGetEarnings:
                     "estimatedEPS": "1.28",
                     "surprise": "0.02",
                     "surprisePercentage": "1.56",
-                    "reportedDate": "2025-01-15"
+                    "reportedDate": "2025-01-15",
                 },
             ]
         }
@@ -134,7 +130,7 @@ class TestAlphaVantageClientGetIncomeStatement:
                     "grossProfit": "30000000000",
                     "netIncome": "22000000000",
                 }
-            ]
+            ],
         }
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = income_response
@@ -351,9 +347,7 @@ class TestAlphaVantageClientErrorHandling:
 
             response = MagicMock()
             response.status_code = 200
-            response.json.return_value = {
-                "Error Message": "Invalid symbol or API key"
-            }
+            response.json.return_value = {"Error Message": "Invalid symbol or API key"}
 
             mock_http_client.get.return_value = response
 

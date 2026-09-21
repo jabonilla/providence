@@ -24,7 +24,6 @@ Input: AgentContext with metadata:
 Output: CalibrationOutput with per-agent calibration profiles.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -89,16 +88,16 @@ def calibrate_bucket(
         Dict with bucket calibration fields.
     """
     bucket_beliefs = [
-        b for b in beliefs
-        if isinstance(b, dict)
-        and lower <= float(b.get("raw_confidence", 0.0)) < upper
+        b
+        for b in beliefs
+        if isinstance(b, dict) and lower <= float(b.get("raw_confidence", 0.0)) < upper
     ]
     # Include upper bound for the last bucket
     if upper >= 1.0:
         bucket_beliefs = [
-            b for b in beliefs
-            if isinstance(b, dict)
-            and lower <= float(b.get("raw_confidence", 0.0)) <= upper
+            b
+            for b in beliefs
+            if isinstance(b, dict) and lower <= float(b.get("raw_confidence", 0.0)) <= upper
         ]
 
     count = len(bucket_beliefs)
@@ -249,11 +248,17 @@ class LearnCalib(BaseAgent[CalibrationOutput]):
                 belief_outcomes = []
 
             try:
-                eval_start = datetime.fromisoformat(eval_start_str) if eval_start_str else context.timestamp
+                eval_start = (
+                    datetime.fromisoformat(eval_start_str) if eval_start_str else context.timestamp
+                )
             except (ValueError, TypeError):
                 eval_start = context.timestamp
             try:
-                eval_end = datetime.fromisoformat(eval_end_str) if eval_end_str else datetime.now(timezone.utc)
+                eval_end = (
+                    datetime.fromisoformat(eval_end_str)
+                    if eval_end_str
+                    else datetime.now(timezone.utc)
+                )
             except (ValueError, TypeError):
                 eval_end = datetime.now(timezone.utc)
 

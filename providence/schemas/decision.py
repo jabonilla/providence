@@ -10,7 +10,6 @@ Spec Reference: Technical Spec v2.3, Section 2.4
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -34,7 +33,9 @@ class ContributingThesis(BaseModel):
     raw_confidence: float = Field(..., ge=0.0, le=1.0, description="Agent's confidence")
     magnitude: Magnitude = Field(..., description="SMALL, MODERATE, or LARGE")
     synthesis_weight: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Weight assigned to this thesis during synthesis",
     )
 
@@ -100,7 +101,9 @@ class SynthesizedPositionIntent(BaseModel):
         ..., description="Synthesized net direction: LONG, SHORT, or NEUTRAL"
     )
     synthesized_confidence: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Synthesized confidence after conflict resolution and regime adjustment",
     )
     contributing_theses: list[ContributingThesis] = Field(
@@ -116,7 +119,8 @@ class SynthesizedPositionIntent(BaseModel):
         description="How conflicts between agents were resolved",
     )
     time_horizon_days: int = Field(
-        ..., gt=0,
+        ...,
+        gt=0,
         description="Synthesized time horizon (weighted average of contributing theses)",
     )
     regime_adjustment: float = Field(
@@ -145,9 +149,7 @@ class SynthesisOutput(BaseModel):
     synthesis_id: UUID = Field(default_factory=uuid4, description="Unique synthesis ID")
     agent_id: str = Field(..., description="ID of the agent that produced this")
     timestamp: datetime = Field(..., description="When this synthesis was produced")
-    context_window_hash: str = Field(
-        ..., description="Hash of input context for reproducibility"
-    )
+    context_window_hash: str = Field(..., description="Hash of input context for reproducibility")
     position_intents: list[SynthesizedPositionIntent] = Field(
         default_factory=list,
         description="Synthesized position intents",
@@ -157,7 +159,8 @@ class SynthesisOutput(BaseModel):
         description="Current regime label used for adjustments",
     )
     total_beliefs_consumed: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Total number of individual beliefs consumed from all agents",
     )
     content_hash: str = Field(
@@ -213,11 +216,15 @@ class PortfolioMetadata(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     gross_exposure: float = Field(
-        ..., ge=0.0, le=2.0,
+        ...,
+        ge=0.0,
+        le=2.0,
         description="Sum of absolute position weights (0.0 to 2.0)",
     )
     net_exposure: float = Field(
-        ..., ge=-1.0, le=1.0,
+        ...,
+        ge=-1.0,
+        le=1.0,
         description="Net long minus short exposure (-1.0 to 1.0)",
     )
     sector_concentrations: dict[str, float] = Field(
@@ -229,7 +236,8 @@ class PortfolioMetadata(BaseModel):
         description="Estimated ex-ante Sharpe ratio from optimization",
     )
     position_count: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Number of positions in the proposed portfolio",
     )
     risk_mode_applied: str = Field(
@@ -250,19 +258,25 @@ class ProposedPosition(BaseModel):
     ticker: str = Field(..., description="Target ticker symbol")
     action: Action = Field(..., description="OPEN_LONG, OPEN_SHORT, CLOSE, or ADJUST")
     target_weight: float = Field(
-        ..., ge=0.0, le=0.20,
+        ...,
+        ge=0.0,
+        le=0.20,
         description="Target portfolio weight (0.0 to 0.20, max 20% per position)",
     )
     direction: Direction = Field(..., description="LONG, SHORT, or NEUTRAL")
     confidence: float = Field(
-        ..., ge=0.0, le=1.0,
+        ...,
+        ge=0.0,
+        le=1.0,
         description="Confidence carried from synthesized intent",
     )
     source_intent_id: UUID = Field(
-        ..., description="Reference to the SynthesizedPositionIntent that produced this",
+        ...,
+        description="Reference to the SynthesizedPositionIntent that produced this",
     )
     time_horizon_days: int = Field(
-        ..., gt=0,
+        ...,
+        gt=0,
         description="Time horizon from the source intent",
     )
     regime_adjustment: float = Field(
@@ -288,17 +302,20 @@ class PositionProposal(BaseModel):
     agent_id: str = Field(..., description="ID of the agent that produced this")
     timestamp: datetime = Field(..., description="When this proposal was produced")
     context_window_hash: str = Field(
-        ..., description="Hash of input context for reproducibility",
+        ...,
+        description="Hash of input context for reproducibility",
     )
     proposals: list[ProposedPosition] = Field(
         default_factory=list,
         description="Proposed positions after optimization",
     )
     portfolio_metadata: PortfolioMetadata = Field(
-        ..., description="Portfolio-level risk and exposure metrics",
+        ...,
+        description="Portfolio-level risk and exposure metrics",
     )
     total_intents_consumed: int = Field(
-        default=0, ge=0,
+        default=0,
+        ge=0,
         description="Number of position intents consumed from DECIDE-SYNTH",
     )
     content_hash: str = Field(

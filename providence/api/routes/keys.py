@@ -68,11 +68,13 @@ SUPPORTED_KEYS = {
 
 class KeyUpdate(BaseModel):
     """Request to set one or more API keys."""
+
     keys: dict[str, str]
 
 
 class KeyStatus(BaseModel):
     """Status of a single API key."""
+
     key_name: str
     label: str
     description: str
@@ -83,6 +85,7 @@ class KeyStatus(BaseModel):
 
 class KeysStatusResponse(BaseModel):
     """Status of all API keys."""
+
     keys: list[KeyStatus]
     all_required_set: bool
     paper_trading_ready: bool
@@ -151,14 +154,16 @@ async def get_keys_status() -> KeysStatusResponse:
         if meta["required"] and not is_set:
             all_required_set = False
 
-        statuses.append(KeyStatus(
-            key_name=key_name,
-            label=meta["label"],
-            description=meta["description"],
-            required=meta["required"],
-            is_set=is_set,
-            masked_value=_mask_key(value) if is_set else None,
-        ))
+        statuses.append(
+            KeyStatus(
+                key_name=key_name,
+                label=meta["label"],
+                description=meta["description"],
+                required=meta["required"],
+                is_set=is_set,
+                masked_value=_mask_key(value) if is_set else None,
+            )
+        )
 
     # Paper trading needs both Alpaca keys
     alpaca_key = _get_effective_value("ALPACA_API_KEY")
@@ -189,9 +194,7 @@ async def update_keys(request: KeyUpdate) -> dict:
         # Basic validation
         meta = SUPPORTED_KEYS[key_name]
         if meta["prefix"] and value and not value.startswith(meta["prefix"]):
-            errors.append(
-                f"{meta['label']} key should start with '{meta['prefix']}'"
-            )
+            errors.append(f"{meta['label']} key should start with '{meta['prefix']}'")
             continue
 
     if errors:
@@ -241,10 +244,6 @@ async def validate_keys() -> dict:
         else:
             results[key_name] = {"valid": True, "reason": "Format OK"}
 
-    all_valid = all(
-        results[k]["valid"]
-        for k in SUPPORTED_KEYS
-        if SUPPORTED_KEYS[k]["required"]
-    )
+    all_valid = all(results[k]["valid"] for k in SUPPORTED_KEYS if SUPPORTED_KEYS[k]["required"])
 
     return {"results": results, "all_required_valid": all_valid}

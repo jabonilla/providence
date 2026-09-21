@@ -40,6 +40,7 @@ def _get_shadow_store():
 
 # ── Stats ──────────────────────────────────────────────────────────
 
+
 @router.get("/stats", response_model=ShadowStoreStatsResponse)
 async def get_shadow_stats() -> ShadowStoreStatsResponse:
     """Get shadow signal store statistics."""
@@ -49,6 +50,7 @@ async def get_shadow_stats() -> ShadowStoreStatsResponse:
 
 
 # ── Signals ────────────────────────────────────────────────────────
+
 
 @router.get("/signals", response_model=list[ShadowSignalResponse])
 async def list_signals(
@@ -139,6 +141,7 @@ async def get_signal(signal_id: UUID) -> ShadowSignalResponse:
 
 # ── Run Summaries ──────────────────────────────────────────────────
 
+
 @router.get("/summaries", response_model=list[ShadowRunSummaryResponse])
 async def list_summaries(
     limit: int = Query(50, ge=1, le=200, description="Max results"),
@@ -166,6 +169,7 @@ async def list_summaries(
 
 # ── Performance Report ─────────────────────────────────────────────
 
+
 @router.get("/report", response_model=ShadowReportResponse)
 async def get_shadow_report() -> ShadowReportResponse:
     """Generate and return the shadow mode performance report.
@@ -178,10 +182,10 @@ async def get_shadow_report() -> ShadowReportResponse:
     stats = store.stats()
 
     if not signals:
-        return ShadowReportResponse(status="NO_DATA", **{
-            k: v for k, v in stats.items()
-            if k in ("total_runs", "total_signals")
-        })
+        return ShadowReportResponse(
+            status="NO_DATA",
+            **{k: v for k, v in stats.items() if k in ("total_runs", "total_signals")},
+        )
 
     from datetime import datetime, timezone
 
@@ -198,7 +202,8 @@ async def get_shadow_report() -> ShadowReportResponse:
         if not measured:
             return None
         correct = sum(
-            1 for s, r in measured
+            1
+            for s, r in measured
             if (r > 0 and s.direction.value == "LONG")
             or (r > 0 and s.direction.value == "SHORT")  # short return already signed
             or (r == 0)
@@ -232,10 +237,12 @@ async def get_shadow_report() -> ShadowReportResponse:
         ticker_breakdown[ticker] = {
             "total": len(t_sigs),
             "approved": len(t_approved),
-            "avg_confidence": round(sum(s.confidence for s in t_sigs) / len(t_sigs), 3) if t_sigs else 0,
-            "accuracy_5d": round(
-                sum(1 for r in t_ret_5d if r > 0) / len(t_ret_5d), 3
-            ) if t_ret_5d else None,
+            "avg_confidence": round(sum(s.confidence for s in t_sigs) / len(t_sigs), 3)
+            if t_sigs
+            else 0,
+            "accuracy_5d": round(sum(1 for r in t_ret_5d if r > 0) / len(t_ret_5d), 3)
+            if t_ret_5d
+            else None,
             "avg_return_5d": round(sum(t_ret_5d) / len(t_ret_5d), 5) if t_ret_5d else None,
         }
 
@@ -266,6 +273,7 @@ async def get_shadow_report() -> ShadowReportResponse:
 
 
 # ── Backfill Trigger ───────────────────────────────────────────────
+
 
 @router.post("/backfill", response_model=BackfillTriggerResponse)
 async def trigger_backfill(

@@ -7,14 +7,11 @@ Tests cover:
 """
 
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.exit.thesis_renew import (
-    RENEWAL_WINDOW_DAYS,
-    MIN_HEALTH_FOR_RENEWAL,
     ThesisRenew,
     compute_asymmetry_score,
     compute_confidence_decay,
@@ -27,11 +24,8 @@ from providence.agents.exit.shadow_exit import (
     compute_exit_probability,
 )
 from providence.agents.exit.renew_mon import (
-    DEGRADED_THRESHOLD,
-    HEALTHY_THRESHOLD,
     RenewMon,
     compute_belief_health,
-    compute_confidence_decay as renew_compute_decay,
     determine_renewal_urgency,
 )
 from providence.schemas.exit import (
@@ -79,6 +73,7 @@ def _make_belief(
 # compute_confidence_decay Tests
 # ===========================================================================
 
+
 class TestConfidenceDecay:
     def test_zero_elapsed(self):
         decay = compute_confidence_decay(0, 60)
@@ -109,6 +104,7 @@ class TestConfidenceDecay:
 # compute_asymmetry_score Tests
 # ===========================================================================
 
+
 class TestAsymmetryScore:
     def test_perfect_health_high_confidence(self):
         score = compute_asymmetry_score(1.0, 1.0, 0.0)
@@ -133,6 +129,7 @@ class TestAsymmetryScore:
 # ===========================================================================
 # evaluate_renewal Tests
 # ===========================================================================
+
 
 class TestEvaluateRenewal:
     def test_within_window_healthy_renewed(self):
@@ -199,6 +196,7 @@ class TestEvaluateRenewal:
 # ThesisRenew Integration Tests
 # ===========================================================================
 
+
 class TestThesisRenew:
     @pytest.mark.asyncio
     async def test_process_with_renewal(self):
@@ -264,6 +262,7 @@ class TestThesisRenewHealth:
 # compute_agreement Tests
 # ===========================================================================
 
+
 class TestComputeAgreement:
     def test_both_hold(self):
         agree, reason = compute_agreement("HOLD", "HOLD")
@@ -293,6 +292,7 @@ class TestComputeAgreement:
 # compute_exit_probability Tests
 # ===========================================================================
 
+
 class TestExitProbability:
     def test_both_hold(self):
         prob = compute_exit_probability("HOLD", 0.0, "HOLD", 0.0)
@@ -316,6 +316,7 @@ class TestExitProbability:
 # ===========================================================================
 # build_shadow_signal Tests
 # ===========================================================================
+
 
 class TestBuildShadowSignal:
     def test_both_hold_resets_shadow(self):
@@ -355,6 +356,7 @@ class TestBuildShadowSignal:
 # ===========================================================================
 # ShadowExit Integration Tests
 # ===========================================================================
+
 
 class TestShadowExit:
     @pytest.mark.asyncio
@@ -436,31 +438,68 @@ class TestShadowExitHealth:
 # compute_belief_health (RENEW-MON) Tests
 # ===========================================================================
 
+
 class TestComputeBeliefHealth:
     def test_all_healthy(self):
-        conditions = {"T1": [
-            {"is_breached": False, "breach_magnitude": 0.0, "threshold": 100, "current_value": 120},
-            {"is_breached": False, "breach_magnitude": 0.0, "threshold": 50, "current_value": 60},
-        ]}
+        conditions = {
+            "T1": [
+                {
+                    "is_breached": False,
+                    "breach_magnitude": 0.0,
+                    "threshold": 100,
+                    "current_value": 120,
+                },
+                {
+                    "is_breached": False,
+                    "breach_magnitude": 0.0,
+                    "threshold": 50,
+                    "current_value": 60,
+                },
+            ]
+        }
         health, h, b, a = compute_belief_health("T1", "AAPL", conditions)
         assert health == 1.0
         assert h == 2
         assert b == 0
 
     def test_one_breached(self):
-        conditions = {"T1": [
-            {"is_breached": True, "breach_magnitude": 0.1, "threshold": 100, "current_value": 110},
-            {"is_breached": False, "breach_magnitude": 0.0, "threshold": 50, "current_value": 60},
-        ]}
+        conditions = {
+            "T1": [
+                {
+                    "is_breached": True,
+                    "breach_magnitude": 0.1,
+                    "threshold": 100,
+                    "current_value": 110,
+                },
+                {
+                    "is_breached": False,
+                    "breach_magnitude": 0.0,
+                    "threshold": 50,
+                    "current_value": 60,
+                },
+            ]
+        }
         health, h, b, a = compute_belief_health("T1", "AAPL", conditions)
         assert b == 1
         assert health < 1.0
 
     def test_all_breached(self):
-        conditions = {"T1": [
-            {"is_breached": True, "breach_magnitude": 0.2, "threshold": 100, "current_value": 80},
-            {"is_breached": True, "breach_magnitude": 0.3, "threshold": 50, "current_value": 35},
-        ]}
+        conditions = {
+            "T1": [
+                {
+                    "is_breached": True,
+                    "breach_magnitude": 0.2,
+                    "threshold": 100,
+                    "current_value": 80,
+                },
+                {
+                    "is_breached": True,
+                    "breach_magnitude": 0.3,
+                    "threshold": 50,
+                    "current_value": 35,
+                },
+            ]
+        }
         health, h, b, a = compute_belief_health("T1", "AAPL", conditions)
         assert health == 0.0
         assert b == 2
@@ -471,9 +510,16 @@ class TestComputeBeliefHealth:
 
     def test_approaching_penalized(self):
         # Condition not breached but within 10% of threshold
-        conditions = {"T1": [
-            {"is_breached": False, "breach_magnitude": 0.05, "threshold": 100, "current_value": 95},
-        ]}
+        conditions = {
+            "T1": [
+                {
+                    "is_breached": False,
+                    "breach_magnitude": 0.05,
+                    "threshold": 100,
+                    "current_value": 95,
+                },
+            ]
+        }
         health, h, b, a = compute_belief_health("T1", "AAPL", conditions)
         assert a == 1
         assert health < 1.0
@@ -482,6 +528,7 @@ class TestComputeBeliefHealth:
 # ===========================================================================
 # determine_renewal_urgency Tests
 # ===========================================================================
+
 
 class TestDetermineRenewalUrgency:
     def test_not_candidate(self):
@@ -506,6 +553,7 @@ class TestDetermineRenewalUrgency:
 # ===========================================================================
 # RenewMon Integration Tests
 # ===========================================================================
+
 
 class TestRenewMon:
     @pytest.mark.asyncio
@@ -625,6 +673,7 @@ class TestRenewMonHealth:
 # ===========================================================================
 # Schema Tests
 # ===========================================================================
+
 
 class TestExitSystemSchemas:
     def test_renewal_candidate_frozen(self):

@@ -6,7 +6,6 @@ FragmentStore when none are provided.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
 from uuid import uuid4
 
 import pytest

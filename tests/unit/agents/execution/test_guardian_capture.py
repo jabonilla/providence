@@ -20,18 +20,13 @@ from providence.agents.execution.guardian import (
 )
 from providence.agents.execution.capture import (
     ExecCapture,
-    MAX_TRIM_STAGES,
     TRAIL_PARAMS,
     compute_trailing_stop,
     evaluate_position,
 )
-from providence.exceptions import AgentProcessingError
 from providence.schemas.execution import (
-    CaptureDecision,
     CaptureOutput,
-    GuardianCheck,
     GuardianVerdict,
-    TrailingStopState,
 )
 
 NOW = datetime.now(timezone.utc)
@@ -139,13 +134,19 @@ class TestCheckOrder:
 
     def test_within_turnover(self):
         approved, _ = check_order(
-            _make_order(weight=0.05), {}, CIRCUIT_BREAKERS["NORMAL"], 0.0,
+            _make_order(weight=0.05),
+            {},
+            CIRCUIT_BREAKERS["NORMAL"],
+            0.0,
         )
         assert approved is True
 
     def test_turnover_exceeded(self):
         approved, reason = check_order(
-            _make_order(weight=0.10), {}, CIRCUIT_BREAKERS["NORMAL"], 39.0,
+            _make_order(weight=0.10),
+            {},
+            CIRCUIT_BREAKERS["NORMAL"],
+            39.0,
         )
         assert approved is False
         assert "turnover" in reason.lower()
@@ -155,7 +156,6 @@ class TestCheckOrder:
 # Tests: ExecGuardian agent
 # ===========================================================================
 class TestExecGuardian:
-
     @pytest.mark.asyncio
     async def test_process_approved(self):
         agent = ExecGuardian()
@@ -282,8 +282,11 @@ class TestEvaluatePosition:
     def test_trailing_stop_breached_trim(self):
         # Peak 0.10, current 0.06, trail 30% → trigger at 0.07
         pos = _make_position(
-            unrealized_pnl=0.06, peak_pnl=0.10,
-            expected_return=0.04, days_held=10, trim_stage=0,
+            unrealized_pnl=0.06,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
+            trim_stage=0,
         )
         state = compute_trailing_stop(pos, TRAIL_PARAMS["NORMAL"])
         action, trim_pct, _, reason = evaluate_position(pos, state, TRAIL_PARAMS["NORMAL"])
@@ -293,8 +296,10 @@ class TestEvaluatePosition:
     def test_trailing_stop_not_breached_hold(self):
         # Peak 0.10, current 0.09, trail 30% → trigger at 0.07
         pos = _make_position(
-            unrealized_pnl=0.09, peak_pnl=0.10,
-            expected_return=0.04, days_held=10,
+            unrealized_pnl=0.09,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
         )
         state = compute_trailing_stop(pos, TRAIL_PARAMS["NORMAL"])
         action, _, _, _ = evaluate_position(pos, state, TRAIL_PARAMS["NORMAL"])
@@ -303,8 +308,11 @@ class TestEvaluatePosition:
     def test_stage_2_full_close(self):
         # Stage 2 trim_pct = 1.0 → CLOSE
         pos = _make_position(
-            unrealized_pnl=0.06, peak_pnl=0.10,
-            expected_return=0.04, days_held=10, trim_stage=2,
+            unrealized_pnl=0.06,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
+            trim_stage=2,
         )
         state = compute_trailing_stop(pos, TRAIL_PARAMS["NORMAL"])
         action, _, _, _ = evaluate_position(pos, state, TRAIL_PARAMS["NORMAL"])
@@ -313,8 +321,10 @@ class TestEvaluatePosition:
     def test_default_hold(self):
         # Not activated, within min hold, no giveback
         pos = _make_position(
-            unrealized_pnl=0.03, peak_pnl=0.03,
-            expected_return=0.04, days_held=10,
+            unrealized_pnl=0.03,
+            peak_pnl=0.03,
+            expected_return=0.04,
+            days_held=10,
         )
         state = compute_trailing_stop(pos, TRAIL_PARAMS["NORMAL"])
         action, _, _, _ = evaluate_position(pos, state, TRAIL_PARAMS["NORMAL"])
@@ -325,13 +335,14 @@ class TestEvaluatePosition:
 # Tests: ExecCapture agent
 # ===========================================================================
 class TestExecCapture:
-
     @pytest.mark.asyncio
     async def test_process_hold(self):
         agent = ExecCapture()
         pos = _make_position(
-            unrealized_pnl=0.03, peak_pnl=0.03,
-            expected_return=0.04, days_held=10,
+            unrealized_pnl=0.03,
+            peak_pnl=0.03,
+            expected_return=0.04,
+            days_held=10,
         )
         ctx = _make_context(
             active_positions=[pos],
@@ -346,8 +357,11 @@ class TestExecCapture:
     async def test_process_trim(self):
         agent = ExecCapture()
         pos = _make_position(
-            unrealized_pnl=0.06, peak_pnl=0.10,
-            expected_return=0.04, days_held=10, trim_stage=0,
+            unrealized_pnl=0.06,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
+            trim_stage=0,
         )
         ctx = _make_context(
             active_positions=[pos],
@@ -360,8 +374,10 @@ class TestExecCapture:
     async def test_process_close_hard_giveback(self):
         agent = ExecCapture()
         pos = _make_position(
-            unrealized_pnl=0.04, peak_pnl=0.10,
-            expected_return=0.04, days_held=10,
+            unrealized_pnl=0.04,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
         )
         ctx = _make_context(
             active_positions=[pos],
@@ -424,8 +440,11 @@ class TestExecCapture:
         agent = ExecCapture()
         # Stage 0 breached → trim 30% of REMAINING
         pos = _make_position(
-            unrealized_pnl=0.06, peak_pnl=0.10,
-            expected_return=0.04, days_held=10, trim_stage=0,
+            unrealized_pnl=0.06,
+            peak_pnl=0.10,
+            expected_return=0.04,
+            days_held=10,
+            trim_stage=0,
         )
         ctx = _make_context(
             active_positions=[pos],

@@ -25,7 +25,6 @@ from providence.agents.regime.hmm_model import (
     features_to_composite_score,
 )
 from providence.agents.regime.regime_features import (
-    RegimeFeatures,
     extract_regime_features,
 )
 from providence.agents.regime.sector_features import (
@@ -116,6 +115,7 @@ class RegimeSector(BaseAgent[RegimeStateObject]):
             )
 
             from providence.agents.regime.hmm_model import derive_risk_mode
+
             global_risk_mode = derive_risk_mode(global_regime, global_confidence)
 
             log.info(
@@ -149,6 +149,7 @@ class RegimeSector(BaseAgent[RegimeStateObject]):
 
                 # Update running prior for this sector
                 from providence.agents.regime.hmm_model import REGIME_STATES
+
                 self._sector_priors[sector_name] = tuple(
                     sector_probs[s.value] for s in REGIME_STATES
                 )

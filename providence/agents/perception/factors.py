@@ -25,7 +25,6 @@ from uuid import uuid4
 import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
-from providence.exceptions import AgentProcessingError
 from providence.infra.famafrench_client import FamaFrenchClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
@@ -189,9 +188,7 @@ class PerceptFactors(BaseAgent[list[MarketStateFragment]]):
         except (ValueError, TypeError):
             return datetime.now(timezone.utc)
 
-    def _create_quarantined_fragment(
-        self, date_str: str, error_msg: str
-    ) -> MarketStateFragment:
+    def _create_quarantined_fragment(self, date_str: str, error_msg: str) -> MarketStateFragment:
         """Step 6: ALERT — Create a quarantined fragment for failed ingestion."""
         return MarketStateFragment(
             fragment_id=uuid4(),

@@ -37,11 +37,11 @@ logger = structlog.get_logger()
 # COGNIT-EXIT actions: HOLD, REDUCE, EXIT
 # EXEC-CAPTURE actions: HOLD, TRIM, CLOSE
 EXIT_DIRECTION_MAP = {
-    "HOLD": 0,    # No exit signal
+    "HOLD": 0,  # No exit signal
     "REDUCE": 1,  # Partial exit
-    "TRIM": 1,    # Partial exit (CAPTURE equivalent)
-    "EXIT": 2,    # Full exit
-    "CLOSE": 2,   # Full exit (CAPTURE equivalent)
+    "TRIM": 1,  # Partial exit (CAPTURE equivalent)
+    "EXIT": 2,  # Full exit
+    "CLOSE": 2,  # Full exit (CAPTURE equivalent)
 }
 
 # Exit probability weights
@@ -80,8 +80,7 @@ def compute_agreement(
         )
     else:
         return False, (
-            f"EXEC-CAPTURE says {capture_action} but "
-            f"COGNIT-EXIT only recommends {cognit_action}"
+            f"EXEC-CAPTURE says {capture_action} but COGNIT-EXIT only recommends {cognit_action}"
         )
 
 
@@ -111,10 +110,7 @@ def compute_exit_probability(
     cognit_signal = cognit_level * max(cognit_confidence, 0.1)
     capture_signal = capture_level * max(capture_confidence, 0.1)
 
-    combined = (
-        COGNIT_EXIT_WEIGHT * cognit_signal
-        + CAPTURE_WEIGHT * capture_signal
-    )
+    combined = COGNIT_EXIT_WEIGHT * cognit_signal + CAPTURE_WEIGHT * capture_signal
 
     return round(max(0.0, min(1.0, combined)), 4)
 
@@ -150,16 +146,19 @@ def build_shadow_signal(
         capture_confidence = float(capture_decision.get("exit_confidence", 0.0))
 
     signals_agree, divergence_reason = compute_agreement(
-        cognit_action, capture_action,
+        cognit_action,
+        capture_action,
     )
     exit_prob = compute_exit_probability(
-        cognit_action, cognit_confidence,
-        capture_action, capture_confidence,
+        cognit_action,
+        cognit_confidence,
+        capture_action,
+        capture_confidence,
     )
 
     # Track shadow days: increment if any exit signal, reset if both HOLD
     prior_days = shadow_history.get(ticker, 0)
-    any_signal = (cognit_action != "HOLD" or capture_action != "HOLD")
+    any_signal = cognit_action != "HOLD" or capture_action != "HOLD"
     if any_signal:
         days_in_shadow = min(prior_days + 1, MAX_SHADOW_DAYS)
     else:

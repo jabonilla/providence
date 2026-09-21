@@ -16,7 +16,7 @@ Output: GuardianVerdict with per-order approval/halt decisions.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID, uuid4
 
 import structlog
@@ -82,8 +82,7 @@ def check_system_halt(
     daily_trades = int(portfolio_state.get("daily_trade_count", 0))
     if daily_trades >= breakers["max_daily_trades"]:
         return True, (
-            f"Daily trade count {daily_trades} exceeds "
-            f"limit {int(breakers['max_daily_trades'])}"
+            f"Daily trade count {daily_trades} exceeds limit {int(breakers['max_daily_trades'])}"
         )
 
     return False, ""
@@ -175,7 +174,9 @@ class ExecGuardian(BaseAgent[GuardianVerdict]):
 
             # Step 2: System-wide halt check
             system_halt, halt_reason = check_system_halt(
-                risk_mode, portfolio_state, breakers,
+                risk_mode,
+                portfolio_state,
+                breakers,
             )
 
             orders = []
@@ -202,23 +203,30 @@ class ExecGuardian(BaseAgent[GuardianVerdict]):
                     order_uuid = uuid4()
 
                 if system_halt:
-                    checks.append(GuardianCheck(
-                        order_id=order_uuid,
-                        ticker=ticker,
-                        approved=False,
-                        halt_reason=halt_reason,
-                    ))
+                    checks.append(
+                        GuardianCheck(
+                            order_id=order_uuid,
+                            ticker=ticker,
+                            approved=False,
+                            halt_reason=halt_reason,
+                        )
+                    )
                     halted_count += 1
                 else:
                     approved, reason = check_order(
-                        order, portfolio_state, breakers, daily_turnover,
+                        order,
+                        portfolio_state,
+                        breakers,
+                        daily_turnover,
                     )
-                    checks.append(GuardianCheck(
-                        order_id=order_uuid,
-                        ticker=ticker,
-                        approved=approved,
-                        halt_reason=reason,
-                    ))
+                    checks.append(
+                        GuardianCheck(
+                            order_id=order_uuid,
+                            ticker=ticker,
+                            approved=approved,
+                            halt_reason=reason,
+                        )
+                    )
                     if approved:
                         approved_count += 1
                         daily_turnover += float(order.get("target_weight", 0.0)) * 100.0

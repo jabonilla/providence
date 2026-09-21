@@ -15,16 +15,24 @@ def __getattr__(name: str):
     """Lazy-load orchestration submodules on first attribute access."""
     if name in ("PipelineRun", "RunStatus", "StageResult", "StageStatus"):
         from providence.orchestration.models import PipelineRun, RunStatus, StageResult, StageStatus
-        return {"PipelineRun": PipelineRun, "RunStatus": RunStatus,
-                "StageResult": StageResult, "StageStatus": StageStatus}[name]
+
+        return {
+            "PipelineRun": PipelineRun,
+            "RunStatus": RunStatus,
+            "StageResult": StageResult,
+            "StageStatus": StageStatus,
+        }[name]
     if name == "Orchestrator":
         from providence.orchestration.orchestrator import Orchestrator
+
         return Orchestrator
     if name == "ProvidenceRunner":
         from providence.orchestration.runner import ProvidenceRunner
+
         return ProvidenceRunner
     if name == "PipelineStage":
         from providence.orchestration.stage import PipelineStage
+
         return PipelineStage
     raise AttributeError(f"module 'providence.orchestration' has no attribute {name!r}")
 

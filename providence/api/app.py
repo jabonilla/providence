@@ -17,17 +17,33 @@ import asyncio
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from providence.api.deps import AppState, get_state, set_state
-from providence.api.routes import agents, chat, config, documents, forecast, health, keys, perception, pipeline, portfolio, regime, seed, shadow, stores, usage
+from providence.api.routes import (
+    agents,
+    chat,
+    config,
+    documents,
+    forecast,
+    health,
+    keys,
+    perception,
+    pipeline,
+    portfolio,
+    regime,
+    seed,
+    shadow,
+    stores,
+    usage,
+)
 from providence.api.security import (
     RateLimitMiddleware,
     RequestSizeLimitMiddleware,
@@ -63,7 +79,9 @@ async def _pipeline_scheduler() -> None:
     run_hours = {int(h.strip()) for h in hours_str.split(",") if h.strip()}
 
     days_str = os.getenv("SCHEDULER_DAYS", "mon,tue,wed,thu,fri")
-    run_days = {_DAY_MAP[d.strip().lower()] for d in days_str.split(",") if d.strip().lower() in _DAY_MAP}
+    run_days = {
+        _DAY_MAP[d.strip().lower()] for d in days_str.split(",") if d.strip().lower() in _DAY_MAP
+    }
 
     logger.info(
         "Pipeline scheduler started",
@@ -242,9 +260,7 @@ def create_app(
                 "/dashboard",
             }
             # Dashboard-served pages can access shadow/health data
-            exempt_prefixes = (
-                "/api/v1/shadow/",
-            )
+            exempt_prefixes = ("/api/v1/shadow/",)
             # Skip auth for CORS preflight and exempt paths
             if request.method == "OPTIONS" or path in exempt or path.startswith(exempt_prefixes):
                 return await call_next(request)

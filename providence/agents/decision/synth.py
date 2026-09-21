@@ -20,7 +20,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
-from uuid import uuid4
 
 import structlog
 import yaml
@@ -86,7 +85,7 @@ def parse_synthesis_response(raw: str | dict[str, Any]) -> dict[str, Any] | None
             if start == -1 or end == -1:
                 return None
             try:
-                parsed = json.loads(text[start:end + 1])
+                parsed = json.loads(text[start : end + 1])
             except json.JSONDecodeError:
                 return None
 
@@ -131,29 +130,37 @@ def _build_intent(raw_intent: dict) -> SynthesizedPositionIntent:
     contributing = []
     for ct in raw_intent.get("contributing_theses", []):
         if isinstance(ct, dict) and ct.get("thesis_id"):
-            contributing.append(ContributingThesis(
-                thesis_id=ct["thesis_id"],
-                agent_id=ct.get("agent_id", "UNKNOWN"),
-                ticker=ct.get("ticker", raw_intent["ticker"]),
-                direction=DIRECTION_MAP.get(ct.get("direction", "NEUTRAL"), Direction.NEUTRAL),
-                raw_confidence=max(0.0, min(1.0, float(ct.get("raw_confidence", 0.5)))),
-                magnitude=MAGNITUDE_MAP.get(ct.get("magnitude", "MODERATE"), Magnitude.MODERATE),
-                synthesis_weight=max(0.0, min(1.0, float(ct.get("synthesis_weight", 0.2)))),
-            ))
+            contributing.append(
+                ContributingThesis(
+                    thesis_id=ct["thesis_id"],
+                    agent_id=ct.get("agent_id", "UNKNOWN"),
+                    ticker=ct.get("ticker", raw_intent["ticker"]),
+                    direction=DIRECTION_MAP.get(ct.get("direction", "NEUTRAL"), Direction.NEUTRAL),
+                    raw_confidence=max(0.0, min(1.0, float(ct.get("raw_confidence", 0.5)))),
+                    magnitude=MAGNITUDE_MAP.get(
+                        ct.get("magnitude", "MODERATE"), Magnitude.MODERATE
+                    ),
+                    synthesis_weight=max(0.0, min(1.0, float(ct.get("synthesis_weight", 0.2)))),
+                )
+            )
 
     # Conflicting theses
     conflicting = []
     for ct in raw_intent.get("conflicting_theses", []):
         if isinstance(ct, dict) and ct.get("thesis_id"):
-            conflicting.append(ContributingThesis(
-                thesis_id=ct["thesis_id"],
-                agent_id=ct.get("agent_id", "UNKNOWN"),
-                ticker=ct.get("ticker", raw_intent["ticker"]),
-                direction=DIRECTION_MAP.get(ct.get("direction", "NEUTRAL"), Direction.NEUTRAL),
-                raw_confidence=max(0.0, min(1.0, float(ct.get("raw_confidence", 0.5)))),
-                magnitude=MAGNITUDE_MAP.get(ct.get("magnitude", "MODERATE"), Magnitude.MODERATE),
-                synthesis_weight=max(0.0, min(1.0, float(ct.get("synthesis_weight", 0.1)))),
-            ))
+            conflicting.append(
+                ContributingThesis(
+                    thesis_id=ct["thesis_id"],
+                    agent_id=ct.get("agent_id", "UNKNOWN"),
+                    ticker=ct.get("ticker", raw_intent["ticker"]),
+                    direction=DIRECTION_MAP.get(ct.get("direction", "NEUTRAL"), Direction.NEUTRAL),
+                    raw_confidence=max(0.0, min(1.0, float(ct.get("raw_confidence", 0.5)))),
+                    magnitude=MAGNITUDE_MAP.get(
+                        ct.get("magnitude", "MODERATE"), Magnitude.MODERATE
+                    ),
+                    synthesis_weight=max(0.0, min(1.0, float(ct.get("synthesis_weight", 0.1)))),
+                )
+            )
 
     # Conflict resolution
     cr_data = raw_intent.get("conflict_resolution", {})
@@ -163,7 +170,9 @@ def _build_intent(raw_intent: dict) -> SynthesizedPositionIntent:
             conflict_type=str(cr_data.get("conflict_type", "NONE")),
             resolution_method=str(cr_data.get("resolution_method", "")),
             resolution_rationale=str(cr_data.get("resolution_rationale", "")),
-            net_conviction_delta=max(-1.0, min(0.0, float(cr_data.get("net_conviction_delta", 0.0)))),
+            net_conviction_delta=max(
+                -1.0, min(0.0, float(cr_data.get("net_conviction_delta", 0.0)))
+            ),
         )
     else:
         conflict_resolution = ConflictResolution()
@@ -172,14 +181,16 @@ def _build_intent(raw_intent: dict) -> SynthesizedPositionIntent:
     invalidations = []
     for inv in raw_intent.get("active_invalidations", [])[:5]:
         if isinstance(inv, dict) and inv.get("metric"):
-            invalidations.append(ActiveInvalidation(
-                source_thesis_id=str(inv.get("source_thesis_id", "")),
-                source_agent_id=str(inv.get("source_agent_id", "")),
-                metric=str(inv["metric"]),
-                operator=str(inv.get("operator", "GT")),
-                threshold=float(inv.get("threshold", 0.0)),
-                description=str(inv.get("description", "")),
-            ))
+            invalidations.append(
+                ActiveInvalidation(
+                    source_thesis_id=str(inv.get("source_thesis_id", "")),
+                    source_agent_id=str(inv.get("source_agent_id", "")),
+                    metric=str(inv["metric"]),
+                    operator=str(inv.get("operator", "GT")),
+                    threshold=float(inv.get("threshold", 0.0)),
+                    description=str(inv.get("description", "")),
+                )
+            )
 
     # Time horizon
     time_horizon = int(raw_intent.get("time_horizon_days", 60))
@@ -300,7 +311,11 @@ class DecideSynth(BaseAgent[SynthesisOutput]):
             # Step 2: FORMAT BELIEFS
             beliefs_data = self._format_beliefs(belief_objects)
             regime_context = self._format_regime(regime_state)
-            risk_mode = regime_state.get("system_risk_mode", "NORMAL") if isinstance(regime_state, dict) else "NORMAL"
+            risk_mode = (
+                regime_state.get("system_risk_mode", "NORMAL")
+                if isinstance(regime_state, dict)
+                else "NORMAL"
+            )
 
             # Step 3: CALL LLM
             system_prompt = self._prompt_config.get(
@@ -444,7 +459,9 @@ class DecideSynth(BaseAgent[SynthesisOutput]):
 
         narr = regime_state.get("narrative_overlay", {})
         if isinstance(narr, dict) and narr.get("label"):
-            lines.append(f"Narrative: {narr['label']} (alignment: {narr.get('regime_alignment', 'N/A')})")
+            lines.append(
+                f"Narrative: {narr['label']} (alignment: {narr.get('regime_alignment', 'N/A')})"
+            )
 
         return "\n".join(lines)
 

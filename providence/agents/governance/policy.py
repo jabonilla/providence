@@ -56,12 +56,14 @@ def check_seed_execution(
     """
     violations: list[PolicyViolation] = []
     if tier == "SEED" and len(pending_orders) > 0:
-        violations.append(PolicyViolation(
-            policy_name="SEED_NO_EXECUTION",
-            severity=IncidentSeverity.CRITICAL,
-            description=f"SEED tier has {len(pending_orders)} pending orders — live execution prohibited",
-            auto_enforced=True,
-        ))
+        violations.append(
+            PolicyViolation(
+                policy_name="SEED_NO_EXECUTION",
+                severity=IncidentSeverity.CRITICAL,
+                description=f"SEED tier has {len(pending_orders)} pending orders — live execution prohibited",
+                auto_enforced=True,
+            )
+        )
     return violations
 
 
@@ -80,12 +82,14 @@ def check_exposure_limits(
     """
     violations: list[PolicyViolation] = []
     if max_gross > 0 and gross_exposure > max_gross:
-        violations.append(PolicyViolation(
-            policy_name="GROSS_EXPOSURE_LIMIT",
-            severity=IncidentSeverity.CRITICAL,
-            description=f"Gross exposure {gross_exposure:.2%} exceeds tier limit {max_gross:.2%}",
-            auto_enforced=False,
-        ))
+        violations.append(
+            PolicyViolation(
+                policy_name="GROSS_EXPOSURE_LIMIT",
+                severity=IncidentSeverity.CRITICAL,
+                description=f"Gross exposure {gross_exposure:.2%} exceeds tier limit {max_gross:.2%}",
+                auto_enforced=False,
+            )
+        )
     return violations
 
 
@@ -108,12 +112,14 @@ def check_sector_concentration(
 
     for sector, exposure in sector_exposures.items():
         if exposure > max_sector:
-            violations.append(PolicyViolation(
-                policy_name="SECTOR_CONCENTRATION_LIMIT",
-                severity=IncidentSeverity.WARNING,
-                description=f"Sector {sector} exposure {exposure:.2%} exceeds limit {max_sector:.2%}",
-                auto_enforced=False,
-            ))
+            violations.append(
+                PolicyViolation(
+                    policy_name="SECTOR_CONCENTRATION_LIMIT",
+                    severity=IncidentSeverity.WARNING,
+                    description=f"Sector {sector} exposure {exposure:.2%} exceeds limit {max_sector:.2%}",
+                    auto_enforced=False,
+                )
+            )
     return violations
 
 
@@ -132,12 +138,14 @@ def check_position_count(
     """
     violations: list[PolicyViolation] = []
     if max_positions > 0 and active_count > max_positions:
-        violations.append(PolicyViolation(
-            policy_name="POSITION_COUNT_LIMIT",
-            severity=IncidentSeverity.WARNING,
-            description=f"{active_count} positions exceed tier limit of {max_positions}",
-            auto_enforced=False,
-        ))
+        violations.append(
+            PolicyViolation(
+                policy_name="POSITION_COUNT_LIMIT",
+                severity=IncidentSeverity.WARNING,
+                description=f"{active_count} positions exceed tier limit of {max_positions}",
+                auto_enforced=False,
+            )
+        )
     return violations
 
 
@@ -173,13 +181,15 @@ def check_shadow_agent_leakage(
         for agent_id in contributing:
             if agent_id in shadow_agents:
                 ticker = pos.get("ticker", "UNKNOWN")
-                violations.append(PolicyViolation(
-                    policy_name="SHADOW_AGENT_LEAKAGE",
-                    severity=IncidentSeverity.CRITICAL,
-                    description=f"SHADOW agent {agent_id} contributed to live position {ticker}",
-                    violating_agent_id=agent_id,
-                    auto_enforced=True,
-                ))
+                violations.append(
+                    PolicyViolation(
+                        policy_name="SHADOW_AGENT_LEAKAGE",
+                        severity=IncidentSeverity.CRITICAL,
+                        description=f"SHADOW agent {agent_id} contributed to live position {ticker}",
+                        violating_agent_id=agent_id,
+                        auto_enforced=True,
+                    )
+                )
     return violations
 
 
@@ -198,12 +208,14 @@ def check_halted_orders(
     """
     violations: list[PolicyViolation] = []
     if risk_mode == "HALTED" and len(pending_orders) > 0:
-        violations.append(PolicyViolation(
-            policy_name="HALTED_NO_ORDERS",
-            severity=IncidentSeverity.CRITICAL,
-            description=f"HALTED mode has {len(pending_orders)} pending orders — must be zero",
-            auto_enforced=True,
-        ))
+        violations.append(
+            PolicyViolation(
+                policy_name="HALTED_NO_ORDERS",
+                severity=IncidentSeverity.CRITICAL,
+                description=f"HALTED mode has {len(pending_orders)} pending orders — must be zero",
+                auto_enforced=True,
+            )
+        )
     return violations
 
 

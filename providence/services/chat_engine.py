@@ -7,7 +7,6 @@ No LLM calls. Fast and free.
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -117,12 +116,56 @@ _TICKER_RE = re.compile(r"\b([A-Z]{1,5})\b")
 
 # Known tickers to avoid matching generic words
 _COMMON_TICKERS = {
-    "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "NVDA", "TSLA", "META",
-    "JPM", "BAC", "WFC", "GS", "BRK", "V", "MA", "UNH", "JNJ", "PG",
-    "XOM", "CVX", "HD", "DIS", "NFLX", "PYPL", "INTC", "AMD", "CRM",
-    "COST", "WMT", "TGT", "LOW", "SBUX", "NKE", "MCD", "PEP", "KO",
-    "ABBV", "MRK", "PFE", "LLY", "TMO", "ABT", "DHR", "BMY", "GILD",
-    "SPY", "QQQ", "IWM", "VTI", "VOO",
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "GOOG",
+    "AMZN",
+    "NVDA",
+    "TSLA",
+    "META",
+    "JPM",
+    "BAC",
+    "WFC",
+    "GS",
+    "BRK",
+    "V",
+    "MA",
+    "UNH",
+    "JNJ",
+    "PG",
+    "XOM",
+    "CVX",
+    "HD",
+    "DIS",
+    "NFLX",
+    "PYPL",
+    "INTC",
+    "AMD",
+    "CRM",
+    "COST",
+    "WMT",
+    "TGT",
+    "LOW",
+    "SBUX",
+    "NKE",
+    "MCD",
+    "PEP",
+    "KO",
+    "ABBV",
+    "MRK",
+    "PFE",
+    "LLY",
+    "TMO",
+    "ABT",
+    "DHR",
+    "BMY",
+    "GILD",
+    "SPY",
+    "QQQ",
+    "IWM",
+    "VTI",
+    "VOO",
 }
 
 
@@ -229,13 +272,11 @@ class ChatEngine:
         short_count = sum(1 for p in positions.values() if p.quantity < 0)
 
         # Top positions by absolute weight
-        sorted_positions = sorted(
-            positions.values(), key=lambda p: abs(p.weight), reverse=True
-        )
+        sorted_positions = sorted(positions.values(), key=lambda p: abs(p.weight), reverse=True)
         top_5 = sorted_positions[:5]
 
         lines = [
-            f"**Portfolio Overview**",
+            "**Portfolio Overview**",
             f"- Total equity: ${equity:,.2f}",
             f"- Positions: {len(positions)} ({long_count} long, {short_count} short)",
             f"- Unrealized P&L: ${total_unrealized:,.2f}",
@@ -251,12 +292,14 @@ class ChatEngine:
                 f"- {pos.ticker}: {pos.weight:.1%} weight, "
                 f"${pos.current_price:,.2f} ({pnl_sign}${pos.unrealized_pnl:,.2f})"
             )
-            citations.append({
-                "type": "position",
-                "id": pos.ticker,
-                "label": f"{pos.ticker} position",
-                "url": f"/api/v1/portfolio/positions/{pos.ticker}",
-            })
+            citations.append(
+                {
+                    "type": "position",
+                    "id": pos.ticker,
+                    "label": f"{pos.ticker} position",
+                    "url": f"/api/v1/portfolio/positions/{pos.ticker}",
+                }
+            )
 
         return ("\n".join(lines), citations)
 
@@ -276,21 +319,25 @@ class ChatEngine:
                 pos = tracker.get_position(ticker)
                 if pos:
                     pnl_sign = "+" if pos.unrealized_pnl >= 0 else ""
-                    lines.extend([
-                        f"**{ticker}** ({pos.side.value})",
-                        f"- Quantity: {pos.quantity}",
-                        f"- Entry: ${pos.avg_entry_price:,.2f} | Current: ${pos.current_price:,.2f}",
-                        f"- Unrealized P&L: {pnl_sign}${pos.unrealized_pnl:,.2f} ({pos.unrealized_pnl_pct:+.1%})",
-                        f"- Weight: {pos.weight:.1%} | Sector: {pos.sector}",
-                        f"- Days held: {pos.days_held}",
-                        "",
-                    ])
-                    citations.append({
-                        "type": "position",
-                        "id": ticker,
-                        "label": f"{ticker} position",
-                        "url": f"/api/v1/portfolio/positions/{ticker}",
-                    })
+                    lines.extend(
+                        [
+                            f"**{ticker}** ({pos.side.value})",
+                            f"- Quantity: {pos.quantity}",
+                            f"- Entry: ${pos.avg_entry_price:,.2f} | Current: ${pos.current_price:,.2f}",
+                            f"- Unrealized P&L: {pnl_sign}${pos.unrealized_pnl:,.2f} ({pos.unrealized_pnl_pct:+.1%})",
+                            f"- Weight: {pos.weight:.1%} | Sector: {pos.sector}",
+                            f"- Days held: {pos.days_held}",
+                            "",
+                        ]
+                    )
+                    citations.append(
+                        {
+                            "type": "position",
+                            "id": ticker,
+                            "label": f"{ticker} position",
+                            "url": f"/api/v1/portfolio/positions/{ticker}",
+                        }
+                    )
                 else:
                     lines.append(f"No open position in {ticker}.")
                     lines.append("")
@@ -308,12 +355,14 @@ class ChatEngine:
                 f"- **{ticker}** ({pos.side.value}): {pos.weight:.1%} weight, "
                 f"{pnl_sign}${pos.unrealized_pnl:,.2f} P&L"
             )
-            citations.append({
-                "type": "position",
-                "id": ticker,
-                "label": f"{ticker} position",
-                "url": f"/api/v1/portfolio/positions/{ticker}",
-            })
+            citations.append(
+                {
+                    "type": "position",
+                    "id": ticker,
+                    "label": f"{ticker} position",
+                    "url": f"/api/v1/portfolio/positions/{ticker}",
+                }
+            )
 
         return ("\n".join(lines), citations)
 
@@ -340,12 +389,14 @@ class ChatEngine:
                                 )
                                 if b.thesis_summary:
                                     lines.append(f"  {b.thesis_summary[:120]}")
-                        citations.append({
-                            "type": "belief",
-                            "id": str(bo.belief_id),
-                            "label": f"{bo.agent_id} belief on {ticker}",
-                            "url": f"/api/v1/stores/beliefs/{bo.belief_id}",
-                        })
+                        citations.append(
+                            {
+                                "type": "belief",
+                                "id": str(bo.belief_id),
+                                "label": f"{bo.agent_id} belief on {ticker}",
+                                "url": f"/api/v1/stores/beliefs/{bo.belief_id}",
+                            }
+                        )
                     lines.append("")
                 else:
                     lines.append(f"No beliefs found for {ticker}.")
@@ -358,7 +409,7 @@ class ChatEngine:
         all_tickers = sorted(belief_store.all_tickers())
 
         lines = [
-            f"**Belief Store Summary**",
+            "**Belief Store Summary**",
             f"- Total belief objects: {total}",
             f"- Active agents: {len(agents)} ({', '.join(agents[:6])}{'...' if len(agents) > 6 else ''})",
             f"- Tickers covered: {len(all_tickers)} ({', '.join(all_tickers[:8])}{'...' if len(all_tickers) > 8 else ''})",
@@ -375,12 +426,14 @@ class ChatEngine:
                 for b in bo.beliefs:
                     tks.add(b.ticker)
                 lines.append(f"- {bo.agent_id} ({ts}): {', '.join(sorted(tks))}")
-                citations.append({
-                    "type": "belief",
-                    "id": str(bo.belief_id),
-                    "label": f"{bo.agent_id} belief",
-                    "url": f"/api/v1/stores/beliefs/{bo.belief_id}",
-                })
+                citations.append(
+                    {
+                        "type": "belief",
+                        "id": str(bo.belief_id),
+                        "label": f"{bo.agent_id} belief",
+                        "url": f"/api/v1/stores/beliefs/{bo.belief_id}",
+                    }
+                )
 
         return ("\n".join(lines), citations)
 
@@ -412,17 +465,21 @@ class ChatEngine:
         lines = [
             f"**Current Market Regime** (as of {ts})",
             f"- Statistical regime: {stat_regime}",
-            f"- Confidence: {confidence:.0%}" if isinstance(confidence, float) else f"- Confidence: {confidence}",
+            f"- Confidence: {confidence:.0%}"
+            if isinstance(confidence, float)
+            else f"- Confidence: {confidence}",
             f"- System risk mode: {risk_mode}",
             f"- Narrative: {narrative}",
         ]
 
-        citations.append({
-            "type": "pipeline",
-            "id": str(latest_run.run_id),
-            "label": f"Pipeline run {ts}",
-            "url": f"/api/v1/pipeline/runs/{latest_run.run_id}",
-        })
+        citations.append(
+            {
+                "type": "pipeline",
+                "id": str(latest_run.run_id),
+                "label": f"Pipeline run {ts}",
+                "url": f"/api/v1/pipeline/runs/{latest_run.run_id}",
+            }
+        )
 
         return ("\n".join(lines), citations)
 
@@ -470,12 +527,14 @@ class ChatEngine:
             except Exception:
                 pass
 
-        citations.append({
-            "type": "agent",
-            "id": "all",
-            "label": "All agents",
-            "url": "/api/v1/agents",
-        })
+        citations.append(
+            {
+                "type": "agent",
+                "id": "all",
+                "label": "All agents",
+                "url": "/api/v1/agents",
+            }
+        )
 
         return ("\n".join(lines), citations)
 
@@ -492,7 +551,7 @@ class ChatEngine:
         latest = run_store.get_latest()
 
         lines = [
-            f"**Pipeline Summary**",
+            "**Pipeline Summary**",
             f"- Total runs: {total}",
             f"- Overall success rate: {rate:.0%}",
         ]
@@ -507,28 +566,38 @@ class ChatEngine:
         if latest:
             ts = latest.started_at.strftime("%Y-%m-%d %H:%M")
             status = latest.status.value if hasattr(latest.status, "value") else str(latest.status)
-            lines.extend([
-                "",
-                f"**Latest Run:**",
-                f"- ID: {latest.run_id}",
-                f"- Loop: {latest.loop_type}",
-                f"- Status: {status}",
-                f"- Started: {ts}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "**Latest Run:**",
+                    f"- ID: {latest.run_id}",
+                    f"- Loop: {latest.loop_type}",
+                    f"- Status: {status}",
+                    f"- Started: {ts}",
+                ]
+            )
             # Stage summary
             stage_results = getattr(latest, "stage_results", []) or []
             if stage_results:
-                succeeded = sum(1 for s in stage_results if s.status.value == "SUCCEEDED" or s.status == "SUCCEEDED")
-                failed = sum(1 for s in stage_results if s.status.value == "FAILED" or s.status == "FAILED")
+                succeeded = sum(
+                    1
+                    for s in stage_results
+                    if s.status.value == "SUCCEEDED" or s.status == "SUCCEEDED"
+                )
+                failed = sum(
+                    1 for s in stage_results if s.status.value == "FAILED" or s.status == "FAILED"
+                )
                 skipped = len(stage_results) - succeeded - failed
                 lines.append(f"- Stages: {succeeded} succeeded, {failed} failed, {skipped} skipped")
 
-            citations.append({
-                "type": "pipeline",
-                "id": str(latest.run_id),
-                "label": f"Latest {latest.loop_type} run",
-                "url": f"/api/v1/pipeline/runs/{latest.run_id}",
-            })
+            citations.append(
+                {
+                    "type": "pipeline",
+                    "id": str(latest.run_id),
+                    "label": f"Latest {latest.loop_type} run",
+                    "url": f"/api/v1/pipeline/runs/{latest.run_id}",
+                }
+            )
 
         return ("\n".join(lines), citations)
 
@@ -554,7 +623,7 @@ class ChatEngine:
         has_5d = [s for s in signals if s.realized_return_5d is not None]
 
         lines = [
-            f"**Shadow Mode Summary**",
+            "**Shadow Mode Summary**",
             f"- Total signals: {total}",
             f"- Approved: {approved} | Rejected: {rejected}",
             f"- Pipeline runs: {len(summaries)}",
@@ -562,7 +631,8 @@ class ChatEngine:
 
         if has_1d:
             correct_1d = sum(
-                1 for s in has_1d
+                1
+                for s in has_1d
                 if (s.realized_return_1d > 0 and s.direction == "LONG")
                 or (s.realized_return_1d < 0 and s.direction == "SHORT")
             )
@@ -571,7 +641,8 @@ class ChatEngine:
 
         if has_5d:
             correct_5d = sum(
-                1 for s in has_5d
+                1
+                for s in has_5d
                 if (s.realized_return_5d > 0 and s.direction == "LONG")
                 or (s.realized_return_5d < 0 and s.direction == "SHORT")
             )
@@ -587,12 +658,14 @@ class ChatEngine:
                 status = "approved" if sig.approved else "rejected"
                 lines.append(f"- {sig.ticker} {sig.direction} ({status}) @ {ts}")
 
-        citations.append({
-            "type": "pipeline",
-            "id": "shadow",
-            "label": "Shadow mode stats",
-            "url": "/api/v1/shadow/stats",
-        })
+        citations.append(
+            {
+                "type": "pipeline",
+                "id": "shadow",
+                "label": "Shadow mode stats",
+                "url": "/api/v1/shadow/stats",
+            }
+        )
 
         return ("\n".join(lines), citations)
 

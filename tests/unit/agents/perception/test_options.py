@@ -155,6 +155,7 @@ class TestPerceptOptionsContentHash:
     async def test_same_data_same_hash(self) -> None:
         """Same Polygon data should produce the same content hash when snapshot_time is fixed."""
         from unittest.mock import patch
+
         fixed_time = datetime(2026, 2, 9, 12, 0, 0, tzinfo=timezone.utc)
 
         mock_client = AsyncMock(spec=PolygonClient)

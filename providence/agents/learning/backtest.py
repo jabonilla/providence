@@ -218,11 +218,15 @@ class LearnBacktest(BaseAgent[BacktestOutput]):
 
             # Parse backtest window
             try:
-                bt_start = datetime.fromisoformat(bt_start_str) if bt_start_str else context.timestamp
+                bt_start = (
+                    datetime.fromisoformat(bt_start_str) if bt_start_str else context.timestamp
+                )
             except (ValueError, TypeError):
                 bt_start = context.timestamp
             try:
-                bt_end = datetime.fromisoformat(bt_end_str) if bt_end_str else datetime.now(timezone.utc)
+                bt_end = (
+                    datetime.fromisoformat(bt_end_str) if bt_end_str else datetime.now(timezone.utc)
+                )
             except (ValueError, TypeError):
                 bt_end = datetime.now(timezone.utc)
 
@@ -255,21 +259,23 @@ class LearnBacktest(BaseAgent[BacktestOutput]):
                 current_end = min(current_start + delta, bt_end)
 
                 # Filter trades for this period
-                period_trades = [
-                    t for ts, t in trades_with_ts
-                    if current_start <= ts < current_end
-                ]
+                period_trades = [t for ts, t in trades_with_ts if current_start <= ts < current_end]
 
                 if period_trades:
                     metrics = compute_period_metrics(
-                        period_trades, current_start, current_end, regime_history,
+                        period_trades,
+                        current_start,
+                        current_end,
+                        regime_history,
                     )
                     periods.append(BacktestPeriod(**metrics))
 
                 current_start = current_end
 
             # Aggregate metrics
-            all_returns = [float(t.get("realized_pnl_bps", 0.0)) for t in trade_history if isinstance(t, dict)]
+            all_returns = [
+                float(t.get("realized_pnl_bps", 0.0)) for t in trade_history if isinstance(t, dict)
+            ]
             total_return = sum(all_returns)
             total_trades = len(all_returns)
 

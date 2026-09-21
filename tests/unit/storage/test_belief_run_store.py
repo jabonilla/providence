@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-import pytest
 
 from providence.orchestration.models import (
     PipelineRun,
@@ -11,7 +10,13 @@ from providence.orchestration.models import (
     StageResult,
     StageStatus,
 )
-from providence.schemas.belief import Belief, BeliefMetadata, BeliefObject, EvidenceRef, InvalidationCondition
+from providence.schemas.belief import (
+    Belief,
+    BeliefMetadata,
+    BeliefObject,
+    EvidenceRef,
+    InvalidationCondition,
+)
 from providence.schemas.enums import (
     ComparisonOperator,
     ConditionStatus,
@@ -175,9 +180,7 @@ class TestBeliefQuery:
         store.append(_make_belief(agent_id="COGNIT-FUNDAMENTAL", ticker="NVDA"))
         store.append(_make_belief(agent_id="COGNIT-TECHNICAL", ticker="AAPL"))
 
-        results = store.query(
-            agent_ids={"COGNIT-FUNDAMENTAL"}, tickers={"AAPL"}
-        )
+        results = store.query(agent_ids={"COGNIT-FUNDAMENTAL"}, tickers={"AAPL"})
         assert len(results) == 1
 
     def test_since_filter(self):
@@ -225,7 +228,11 @@ class TestBeliefConvenience:
     def test_get_latest_by_ticker(self):
         store = BeliefStore()
         store.append(_make_belief(agent_id="COGNIT-FUNDAMENTAL", ticker="AAPL", timestamp=NOW))
-        store.append(_make_belief(agent_id="COGNIT-TECHNICAL", ticker="AAPL", timestamp=NOW - timedelta(hours=1)))
+        store.append(
+            _make_belief(
+                agent_id="COGNIT-TECHNICAL", ticker="AAPL", timestamp=NOW - timedelta(hours=1)
+            )
+        )
 
         results = store.get_latest_by_ticker("AAPL")
         assert len(results) == 2  # One from each agent

@@ -226,25 +226,32 @@ class ExecRouter(BaseAgent[RoutingPlan]):
                     source_uuid = uuid4()
 
                 strategy = determine_strategy(
-                    action_str, confidence, time_horizon, rules,
+                    action_str,
+                    confidence,
+                    time_horizon,
+                    rules,
                 )
                 urgency = determine_urgency(action_str, confidence, time_horizon)
                 slippage = compute_max_slippage(
-                    action_str, confidence, rules["max_slippage_bps"],
+                    action_str,
+                    confidence,
+                    rules["max_slippage_bps"],
                 )
 
-                orders.append(RoutedOrder(
-                    ticker=ticker,
-                    action=action,
-                    direction=direction,
-                    target_weight=weight,
-                    confidence=confidence,
-                    source_intent_id=source_uuid,
-                    execution_strategy=strategy,
-                    urgency=urgency,
-                    time_horizon_days=time_horizon,
-                    max_slippage_bps=slippage,
-                ))
+                orders.append(
+                    RoutedOrder(
+                        ticker=ticker,
+                        action=action,
+                        direction=direction,
+                        target_weight=weight,
+                        confidence=confidence,
+                        source_intent_id=source_uuid,
+                        execution_strategy=strategy,
+                        urgency=urgency,
+                        time_horizon_days=time_horizon,
+                        max_slippage_bps=slippage,
+                    )
+                )
 
             output = RoutingPlan(
                 agent_id=self.agent_id,

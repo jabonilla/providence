@@ -7,11 +7,9 @@ validation_status, and timestamp range.
 
 from __future__ import annotations
 
-import json
 import threading
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
 from uuid import UUID
 
 import structlog

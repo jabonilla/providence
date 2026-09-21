@@ -129,7 +129,7 @@ def _income_statement_response_aapl() -> dict:
                 "ebitda": "32000000000",
                 "netIncome": "21500000000",
             },
-        ]
+        ],
     }
 
 
@@ -433,7 +433,7 @@ class TestPerceptAlphaVantageErrorHandling:
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL", "MSFT"])
-        fragments = await agent.process(context)
+        await agent.process(context)
 
         assert agent._error_count_24h == 2
 

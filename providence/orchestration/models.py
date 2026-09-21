@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class StageStatus(str, Enum):
     """Execution status for a single pipeline stage."""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
@@ -25,6 +26,7 @@ class StageStatus(str, Enum):
 
 class RunStatus(str, Enum):
     """Aggregate status for a pipeline run."""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
@@ -91,7 +93,9 @@ class PipelineRun(BaseModel):
             }
             serialized = json.dumps(data, sort_keys=True, default=str).encode("utf-8")
             object.__setattr__(
-                self, "content_hash", hashlib.sha256(serialized).hexdigest(),
+                self,
+                "content_hash",
+                hashlib.sha256(serialized).hexdigest(),
             )
         return self
 

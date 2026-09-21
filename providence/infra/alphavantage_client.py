@@ -11,7 +11,6 @@ Usage:
 """
 
 import asyncio
-import json
 import os
 import time
 from typing import Any
@@ -82,7 +81,9 @@ class AlphaVantageClient:
             await asyncio.sleep(self.MIN_REQUEST_INTERVAL - elapsed)
         self._last_request_time = time.monotonic()
 
-    async def _request(self, function: str, symbol: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def _request(
+        self, function: str, symbol: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Make a GET request with rate limiting and retry logic.
 
         Args:
@@ -116,7 +117,7 @@ class AlphaVantageClient:
 
                 if response.status_code == 429:
                     # Rate limited — back off and retry
-                    wait = self.RETRY_BACKOFF_BASE * (2 ** attempt)
+                    wait = self.RETRY_BACKOFF_BASE * (2**attempt)
                     logger.warning(
                         "Alpha Vantage rate limited — backing off",
                         wait_seconds=wait,
@@ -159,7 +160,7 @@ class AlphaVantageClient:
                     service="alphavantage",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except httpx.HTTPError as e:
@@ -168,7 +169,7 @@ class AlphaVantageClient:
                     service="alphavantage",
                 )
                 if attempt < self.MAX_RETRIES - 1:
-                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2 ** attempt))
+                    await asyncio.sleep(self.RETRY_BACKOFF_BASE * (2**attempt))
                     continue
 
             except (ExternalAPIError, DataIngestionError):

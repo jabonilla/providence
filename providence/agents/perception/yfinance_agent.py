@@ -168,9 +168,7 @@ class PerceptYFinance(BaseAgent[list[MarketStateFragment]]):
 
         return ValidationStatus.VALID
 
-    def _normalize(
-        self, raw_data: dict[str, Any], ticker: str, date_str: str
-    ) -> dict[str, Any]:
+    def _normalize(self, raw_data: dict[str, Any], ticker: str, date_str: str) -> dict[str, Any]:
         """Step 3: NORMALIZE — Convert to YFinanceFundamentalsPayload dict."""
         payload = YFinanceFundamentalsPayload(
             ticker=ticker,

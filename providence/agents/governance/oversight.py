@@ -39,7 +39,7 @@ logger = structlog.get_logger()
 
 # Thresholds for incident generation
 UNHEALTHY_THRESHOLD = 1  # ≥ 1 unhealthy agent → CRITICAL incident
-DEGRADED_THRESHOLD = 3   # ≥ 3 degraded agents → WARNING incident
+DEGRADED_THRESHOLD = 3  # ≥ 3 degraded agents → WARNING incident
 ERROR_THRESHOLD_24H = 50  # Total errors > 50 → WARNING
 RETRAIN_QUEUE_WARNING = 3  # ≥ 3 agents needing retrain → WARNING
 SHADOW_DIVERGENCE_WARNING = 5  # ≥ 5 divergences → WARNING
@@ -110,83 +110,99 @@ def detect_incidents(
 
     # Unhealthy agents
     if health.unhealthy_count >= UNHEALTHY_THRESHOLD:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.CRITICAL,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Unhealthy agents detected",
-            description=f"{health.unhealthy_count} agent(s) are UNHEALTHY",
-            requires_human_action=True,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.CRITICAL,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Unhealthy agents detected",
+                description=f"{health.unhealthy_count} agent(s) are UNHEALTHY",
+                requires_human_action=True,
+            )
+        )
 
     # Offline agents
     if health.offline_count > 0:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.CRITICAL,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Offline agents detected",
-            description=f"{health.offline_count} agent(s) are OFFLINE",
-            requires_human_action=True,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.CRITICAL,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Offline agents detected",
+                description=f"{health.offline_count} agent(s) are OFFLINE",
+                requires_human_action=True,
+            )
+        )
 
     # Many degraded agents
     if health.degraded_count >= DEGRADED_THRESHOLD:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.WARNING,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Multiple degraded agents",
-            description=f"{health.degraded_count} agents are DEGRADED",
-            requires_human_action=False,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.WARNING,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Multiple degraded agents",
+                description=f"{health.degraded_count} agents are DEGRADED",
+                requires_human_action=False,
+            )
+        )
 
     # High error count
     if health.total_errors_24h > ERROR_THRESHOLD_24H:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.WARNING,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="High error count",
-            description=f"{health.total_errors_24h} total errors in last 24h",
-            requires_human_action=False,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.WARNING,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="High error count",
+                description=f"{health.total_errors_24h} total errors in last 24h",
+                requires_human_action=False,
+            )
+        )
 
     # HALTED risk mode
     if risk_mode == "HALTED":
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.CRITICAL,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="System HALTED",
-            description="Risk mode is HALTED — all execution suspended",
-            requires_human_action=True,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.CRITICAL,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="System HALTED",
+                description="Risk mode is HALTED — all execution suspended",
+                requires_human_action=True,
+            )
+        )
 
     # Retrain backlog
     if retraining_queue >= RETRAIN_QUEUE_WARNING:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.WARNING,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Retraining backlog",
-            description=f"{retraining_queue} agents need retraining",
-            requires_human_action=False,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.WARNING,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Retraining backlog",
+                description=f"{retraining_queue} agents need retraining",
+                requires_human_action=False,
+            )
+        )
 
     # Shadow exit divergences
     if shadow_divergences >= SHADOW_DIVERGENCE_WARNING:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.WARNING,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Shadow exit divergences",
-            description=f"{shadow_divergences} COGNIT-EXIT vs EXEC-CAPTURE divergences",
-            requires_human_action=False,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.WARNING,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Shadow exit divergences",
+                description=f"{shadow_divergences} COGNIT-EXIT vs EXEC-CAPTURE divergences",
+                requires_human_action=False,
+            )
+        )
 
     # Gross exposure breach
     if gross_exposure > GROSS_EXPOSURE_WARNING:
-        incidents.append(GovernanceIncident(
-            severity=IncidentSeverity.CRITICAL,
-            source_agent_id="GOVERN-OVERSIGHT",
-            title="Gross exposure breach",
-            description=f"Gross exposure {gross_exposure:.1%} exceeds {GROSS_EXPOSURE_WARNING:.0%} threshold",
-            requires_human_action=True,
-        ))
+        incidents.append(
+            GovernanceIncident(
+                severity=IncidentSeverity.CRITICAL,
+                source_agent_id="GOVERN-OVERSIGHT",
+                title="Gross exposure breach",
+                description=f"Gross exposure {gross_exposure:.1%} exceeds {GROSS_EXPOSURE_WARNING:.0%} threshold",
+                requires_human_action=True,
+            )
+        )
 
     return incidents
 
@@ -259,7 +275,11 @@ class GovernOversight(BaseAgent[OversightOutput]):
             # Aggregate and detect
             health = aggregate_health(health_reports)
             incidents = detect_incidents(
-                health, risk_mode_str, retrain_queue, shadow_div, gross_exp,
+                health,
+                risk_mode_str,
+                retrain_queue,
+                shadow_div,
+                gross_exp,
             )
 
             output = OversightOutput(

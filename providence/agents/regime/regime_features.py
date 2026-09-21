@@ -21,12 +21,13 @@ class RegimeFeatures:
     All fields are optional — the HMM uses whatever features
     are available and falls back to priors for missing data.
     """
+
     # Volatility features (from PRICE_OHLCV)
-    realized_vol_20d: float | None = None   # Annualized 20-day realized vol
-    realized_vol_60d: float | None = None   # Annualized 60-day realized vol
-    vol_of_vol: float | None = None         # Volatility of volatility (instability)
-    price_drawdown_pct: float | None = None # Max drawdown from recent peak
-    price_momentum_20d: float | None = None # 20-day price momentum (% change)
+    realized_vol_20d: float | None = None  # Annualized 20-day realized vol
+    realized_vol_60d: float | None = None  # Annualized 60-day realized vol
+    vol_of_vol: float | None = None  # Volatility of volatility (instability)
+    price_drawdown_pct: float | None = None  # Max drawdown from recent peak
+    price_momentum_20d: float | None = None  # 20-day price momentum (% change)
 
     # Yield curve features (from MACRO_YIELD_CURVE)
     yield_spread_2s10s: float | None = None  # 2-10Y spread in bps
@@ -57,7 +58,7 @@ def compute_realized_vol(prices: list[float], window: int = 20) -> float | None:
         return None
 
     # Compute log returns for the window
-    recent = prices[-(window + 1):]
+    recent = prices[-(window + 1) :]
     log_returns = []
     for i in range(1, len(recent)):
         if recent[i - 1] > 0 and recent[i] > 0:
@@ -75,9 +76,7 @@ def compute_realized_vol(prices: list[float], window: int = 20) -> float | None:
     return daily_vol * math.sqrt(252)
 
 
-def compute_vol_of_vol(
-    prices: list[float], window: int = 60, sub_window: int = 5
-) -> float | None:
+def compute_vol_of_vol(prices: list[float], window: int = 60, sub_window: int = 5) -> float | None:
     """Compute volatility of volatility (vol-of-vol).
 
     Measures instability: rolling sub_window vol computed over window,
@@ -94,12 +93,12 @@ def compute_vol_of_vol(
     if len(prices) < window + 1:
         return None
 
-    recent = prices[-(window + 1):]
+    recent = prices[-(window + 1) :]
 
     # Compute rolling realized vols
     rolling_vols = []
     for i in range(sub_window + 1, len(recent) + 1):
-        sub_prices = recent[i - sub_window - 1: i]
+        sub_prices = recent[i - sub_window - 1 : i]
         vol = compute_realized_vol(sub_prices, window=sub_window)
         if vol is not None:
             rolling_vols.append(vol)

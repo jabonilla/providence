@@ -24,13 +24,9 @@ from providence.agents.execution.router import (
     determine_strategy,
     determine_urgency,
 )
-from providence.exceptions import AgentProcessingError
-from providence.schemas.enums import Action, Direction
 from providence.schemas.execution import (
-    RoutedOrder,
     RoutingPlan,
     ValidatedProposal,
-    ValidationResult,
 )
 
 NOW = datetime.now(timezone.utc)
@@ -171,10 +167,12 @@ class TestExecValidate:
     async def test_process_multiple(self):
         agent = ExecValidate()
         ctx = _make_context(
-            proposal=_make_proposal([
-                _make_position("AAPL"),
-                _make_position("JPM", sector="Financials"),
-            ]),
+            proposal=_make_proposal(
+                [
+                    _make_position("AAPL"),
+                    _make_position("JPM", sector="Financials"),
+                ]
+            ),
             regime=_make_regime("NORMAL"),
         )
         result = await agent.process(ctx)

@@ -7,7 +7,7 @@ All tests run without real API calls.
 """
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import pytest
@@ -187,8 +187,8 @@ class TestPerceptNewsErrorHandling:
         """One ticker failing shouldn't prevent others from succeeding."""
         mock_client = AsyncMock(spec=PolygonClient)
         mock_client.get_ticker_news.side_effect = [
-            _articles(news_aapl()),                      # AAPL succeeds
-            Exception("Timeout"),             # MSFT fails
+            _articles(news_aapl()),  # AAPL succeeds
+            Exception("Timeout"),  # MSFT fails
         ]
         agent = _make_agent(mock_client)
 

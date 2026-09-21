@@ -242,11 +242,7 @@ class CognitMacro(BaseAgent[BeliefObject]):
             if yield_curve_fragments
             else "No yield curve data available."
         )
-        cds_data = (
-            "\n\n".join(cds_fragments)
-            if cds_fragments
-            else "No CDS data available."
-        )
+        cds_data = "\n\n".join(cds_fragments) if cds_fragments else "No CDS data available."
         economic_data = (
             "\n\n".join(economic_fragments)
             if economic_fragments
@@ -257,11 +253,7 @@ class CognitMacro(BaseAgent[BeliefObject]):
             if price_fragments
             else "No broad market price data available."
         )
-        fragment_id_list = (
-            "\n".join(fragment_ids)
-            if fragment_ids
-            else "No fragments available."
-        )
+        fragment_id_list = "\n".join(fragment_ids) if fragment_ids else "No fragments available."
 
         return template.format(
             yield_curve_data=yield_curve_data,

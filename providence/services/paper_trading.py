@@ -23,8 +23,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from typing import Any, Optional
-from uuid import UUID
+from typing import Any
 
 import structlog
 
@@ -33,7 +32,6 @@ from providence.infra.alpaca_client import AlpacaClient
 from providence.orchestration.models import PipelineRun, StageStatus
 from providence.portfolio.order_manager import OrderManager, OrderStatus, ManagedOrder
 from providence.portfolio.tracker import PortfolioTracker
-from providence.schemas.enums import Action, Direction, SystemMode
 from providence.services.shadow_execution import ShadowExecutionService, ShadowSignalStore
 
 logger = structlog.get_logger()
@@ -358,9 +356,7 @@ class PaperTradingService:
                 try:
                     # Fetch broker status
                     if managed_order.broker_order_id:
-                        broker_order = await self._broker.get_order(
-                            managed_order.broker_order_id
-                        )
+                        broker_order = await self._broker.get_order(managed_order.broker_order_id)
                     else:
                         broker_order = await self._broker.get_order_by_client_id(
                             managed_order.client_order_id
@@ -499,11 +495,13 @@ class PaperTradingService:
                     orphaned=list(orphaned),
                 )
                 for ticker in orphaned:
-                    discrepancies.append({
-                        "type": "orphaned_position",
-                        "ticker": ticker,
-                        "description": f"Position {ticker} on broker but not in portfolio tracker",
-                    })
+                    discrepancies.append(
+                        {
+                            "type": "orphaned_position",
+                            "ticker": ticker,
+                            "description": f"Position {ticker} on broker but not in portfolio tracker",
+                        }
+                    )
 
             positions_synced = list(broker_tickers)
 
@@ -578,9 +576,7 @@ class PaperTradingService:
         if flatten_positions:
             try:
                 close_orders = await self._broker.close_all_positions()
-                closed_positions = [
-                    order.get("symbol", "UNKNOWN") for order in close_orders
-                ]
+                closed_positions = [order.get("symbol", "UNKNOWN") for order in close_orders]
                 logger.info(
                     "All paper positions closed",
                     count=len(closed_positions),

@@ -1,4 +1,5 @@
 """Tests for PortfolioTracker at providence/portfolio/tracker.py."""
+
 import json
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -192,7 +193,7 @@ class TestPortfolioTrackerInit:
         """Tracker creates persist path parent directories."""
         with TemporaryDirectory() as tmpdir:
             persist_path = Path(tmpdir) / "subdir" / "tracker.jsonl"
-            tracker = PortfolioTracker(persist_path=persist_path)
+            PortfolioTracker(persist_path=persist_path)
             assert persist_path.parent.exists()
 
 
@@ -209,7 +210,7 @@ class TestSyncFromBroker:
         }
         positions = []
 
-        snap = tracker.sync_from_broker(account, positions)
+        tracker.sync_from_broker(account, positions)
 
         assert tracker.equity == Decimal("105000.00")
         assert tracker._cash == Decimal("50000.00")
@@ -232,7 +233,7 @@ class TestSyncFromBroker:
             }
         ]
 
-        snap = tracker.sync_from_broker(account, positions)
+        tracker.sync_from_broker(account, positions)
 
         assert "AAPL" in tracker.positions
         assert tracker.positions["AAPL"].quantity == Decimal("100")

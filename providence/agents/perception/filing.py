@@ -18,7 +18,7 @@ import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.agents.perception.filing_parser import parse_event_filing, parse_financial_filing
-from providence.exceptions import AgentProcessingError, DataIngestionError
+from providence.exceptions import AgentProcessingError
 from providence.infra.edgar_client import EdgarClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
@@ -133,9 +133,9 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
                 ticker=ticker,
                 filing_type=filing_type.value,
             )
-            return [self._create_quarantined_fragment(
-                ticker, filing_type.value, "No filings found"
-            )]
+            return [
+                self._create_quarantined_fragment(ticker, filing_type.value, "No filings found")
+            ]
 
         # Step 1b: FETCH XBRL — get company financial facts for 10-K/10-Q
         xbrl_company_facts: dict[str, Any] | None = None
@@ -164,9 +164,7 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
                         agent_id=self.agent_id,
                         ticker=ticker,
                         cik=resolved_cik,
-                        has_us_gaap=bool(
-                            xbrl_company_facts.get("facts", {}).get("us-gaap")
-                        ),
+                        has_us_gaap=bool(xbrl_company_facts.get("facts", {}).get("us-gaap")),
                     )
                 except Exception as e:
                     logger.warning(
@@ -229,7 +227,9 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
                 fragment_id=uuid4(),
                 agent_id=self.agent_id,
                 timestamp=datetime.now(timezone.utc),
-                source_timestamp=datetime.combine(filed_date, datetime.min.time(), tzinfo=timezone.utc),
+                source_timestamp=datetime.combine(
+                    filed_date, datetime.min.time(), tzinfo=timezone.utc
+                ),
                 entity=ticker,
                 data_type=data_type,
                 schema_version="1.0.0",
@@ -249,9 +249,7 @@ class PerceptFiling(BaseAgent[list[MarketStateFragment]]):
 
         return fragments
 
-    def _validate(
-        self, filing_data: dict[str, Any], filing_type: FilingType
-    ) -> ValidationStatus:
+    def _validate(self, filing_data: dict[str, Any], filing_type: FilingType) -> ValidationStatus:
         """Step 2: VALIDATE — check data completeness."""
         if filing_type in (FilingType.FORM_10K, FilingType.FORM_10Q):
             # Check for XBRL data presence

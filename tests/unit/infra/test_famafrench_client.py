@@ -6,7 +6,7 @@ All tests mock pandas_datareader — NO real API calls.
 import asyncio
 import sys
 from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -61,6 +61,7 @@ class TestFamaFrenchClientRateLimit:
 
         # Second call without delay should sleep
         import time
+
         before = time.time()
         await client._rate_limit()
         elapsed = time.time() - before
@@ -121,14 +122,16 @@ class TestGetFiveFactorsDaily:
 
         pd = pytest.importorskip("pandas")
 
-        df = pd.DataFrame({
-            "Mkt-RF": [1.0],
-            "SMB": [0.1],
-            "HML": [0.2],
-            "RMW": [0.05],
-            "CMA": [0.03],
-            "RF": [0.01],
-        })
+        df = pd.DataFrame(
+            {
+                "Mkt-RF": [1.0],
+                "SMB": [0.1],
+                "HML": [0.2],
+                "RMW": [0.05],
+                "CMA": [0.03],
+                "RF": [0.01],
+            }
+        )
         df.index = pd.date_range("2026-02-01", periods=1)
 
         # DataReader returns tuple (df, description)
@@ -283,15 +286,17 @@ class TestRateLimitingBehavior:
         pd = pytest.importorskip("pandas")
         import time
 
-        df = pd.DataFrame({
-            "Mkt-RF": [1.0],
-            "SMB": [0.1],
-            "HML": [0.2],
-            "RMW": [0.05],
-            "CMA": [0.03],
-            "RF": [0.01],
-            "Mom   ": [1.5],
-        })
+        df = pd.DataFrame(
+            {
+                "Mkt-RF": [1.0],
+                "SMB": [0.1],
+                "HML": [0.2],
+                "RMW": [0.05],
+                "CMA": [0.03],
+                "RF": [0.01],
+                "Mom   ": [1.5],
+            }
+        )
         df.index = pd.date_range("2026-02-01", periods=1)
 
         with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:

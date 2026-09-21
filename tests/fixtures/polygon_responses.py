@@ -14,14 +14,14 @@ def daily_bars_aapl() -> dict:
         "adjusted": True,
         "results": [
             {
-                "v": 52_345_678,       # volume
-                "vw": 186.15,          # vwap
-                "o": 185.50,           # open
-                "c": 186.90,           # close
-                "h": 187.20,           # high
-                "l": 184.80,           # low
-                "t": 1739059200000,    # timestamp (2025-02-09 00:00 UTC ms)
-                "n": 623_456,          # number of trades
+                "v": 52_345_678,  # volume
+                "vw": 186.15,  # vwap
+                "o": 185.50,  # open
+                "c": 186.90,  # close
+                "h": 187.20,  # high
+                "l": 184.80,  # low
+                "t": 1739059200000,  # timestamp (2025-02-09 00:00 UTC ms)
+                "n": 623_456,  # number of trades
             }
         ],
         "status": "OK",

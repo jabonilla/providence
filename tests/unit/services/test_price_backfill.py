@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta, timezone, date
 from uuid import uuid4
 
-import pytest
 
 from providence.schemas.enums import Action, Direction
 from providence.schemas.shadow import ShadowSignal
@@ -18,6 +17,7 @@ from providence.services.shadow_execution import ShadowSignalStore
 # ---------------------------------------------------------------------------
 # Trading day utilities
 # ---------------------------------------------------------------------------
+
 
 class TestTradingDayUtils:
     """Tests for trading day calculation functions."""
@@ -63,6 +63,7 @@ class TestTradingDayUtils:
 # Mock price client
 # ---------------------------------------------------------------------------
 
+
 class MockPriceClient:
     """Minimal mock for PolygonClient.get_daily_bars()."""
 
@@ -83,6 +84,7 @@ class MockPriceClient:
 # ShadowSignalStore.update_signal tests
 # ---------------------------------------------------------------------------
 
+
 class TestSignalStoreUpdate:
     """Tests for ShadowSignalStore.update_signal()."""
 
@@ -90,18 +92,28 @@ class TestSignalStoreUpdate:
         store = ShadowSignalStore()
         run_id = uuid4()
         signal = ShadowSignal(
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True, price_at_signal=180.0,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+            price_at_signal=180.0,
         )
         store.append(signal)
 
         # Create updated version with realized return
         updated = ShadowSignal(
             signal_id=signal.signal_id,
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True, price_at_signal=180.0,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+            price_at_signal=180.0,
             price_1d_later=182.0,
             realized_return_1d=(182.0 - 180.0) / 180.0,
         )
@@ -118,9 +130,13 @@ class TestSignalStoreUpdate:
         fake_id = uuid4()
         signal = ShadowSignal(
             signal_id=fake_id,
-            run_id=uuid4(), ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True,
+            run_id=uuid4(),
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
         )
         assert store.update_signal(fake_id, signal) is False
 
@@ -128,18 +144,26 @@ class TestSignalStoreUpdate:
         store = ShadowSignalStore()
         run_id = uuid4()
         signal = ShadowSignal(
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
         )
         store.append(signal)
 
         # Try to update with wrong signal_id
         wrong_signal = ShadowSignal(
             signal_id=uuid4(),  # Different ID
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
         )
         assert store.update_signal(signal.signal_id, wrong_signal) is False
 
@@ -149,17 +173,27 @@ class TestSignalStoreUpdate:
         store = ShadowSignalStore(persist_path=path)
         run_id = uuid4()
         signal = ShadowSignal(
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True, price_at_signal=180.0,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+            price_at_signal=180.0,
         )
         store.append(signal)
 
         updated = ShadowSignal(
             signal_id=signal.signal_id,
-            run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-            direction=Direction.LONG, target_weight=0.05,
-            confidence=0.7, approved=True, price_at_signal=180.0,
+            run_id=run_id,
+            ticker="AAPL",
+            action=Action.OPEN_LONG,
+            direction=Direction.LONG,
+            target_weight=0.05,
+            confidence=0.7,
+            approved=True,
+            price_at_signal=180.0,
             realized_return_1d=0.011,
         )
         store.update_signal(signal.signal_id, updated)
@@ -174,6 +208,7 @@ class TestSignalStoreUpdate:
 # ---------------------------------------------------------------------------
 # PriceBackfillService tests
 # ---------------------------------------------------------------------------
+
 
 class TestPriceBackfillService:
     """Tests for PriceBackfillService.run()."""

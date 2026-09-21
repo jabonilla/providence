@@ -1,6 +1,6 @@
 """Tests for PerceptionScheduler at providence/services/perception_scheduler.py."""
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

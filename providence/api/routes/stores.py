@@ -22,13 +22,14 @@ router = APIRouter(prefix="/stores", tags=["stores"])
 
 # ── Fragment Store ──────────────────────────────────────────────────
 
+
 @router.get("/fragments/stats", response_model=FragmentStoreStatsResponse)
 async def get_fragment_stats() -> FragmentStoreStatsResponse:
     """Get fragment store statistics."""
     state = get_state()
     store = state.fragment_store
 
-    from providence.schemas.enums import DataType, ValidationStatus
+    from providence.schemas.enums import DataType
 
     # Count by data type using the index
     by_type = {}
@@ -40,7 +41,11 @@ async def get_fragment_stats() -> FragmentStoreStatsResponse:
     # Count by validation status by scanning all fragments
     status_summary: dict[str, int] = {}
     for frag in store._fragments.values():
-        vs = frag.validation_status.value if hasattr(frag.validation_status, 'value') else str(frag.validation_status)
+        vs = (
+            frag.validation_status.value
+            if hasattr(frag.validation_status, "value")
+            else str(frag.validation_status)
+        )
         status_summary[vs] = status_summary.get(vs, 0) + 1
 
     return FragmentStoreStatsResponse(
@@ -64,6 +69,7 @@ async def list_fragments(
         kwargs["entities"] = {entity}
     if data_type:
         from providence.schemas.enums import DataType
+
         try:
             kwargs["data_types"] = {DataType(data_type)}
         except ValueError:
@@ -79,8 +85,10 @@ async def list_fragments(
             agent_id=f.agent_id,
             timestamp=f.timestamp,
             entity=f.entity,
-            data_type=f.data_type.value if hasattr(f.data_type, 'value') else str(f.data_type),
-            validation_status=f.validation_status.value if hasattr(f.validation_status, 'value') else str(f.validation_status),
+            data_type=f.data_type.value if hasattr(f.data_type, "value") else str(f.data_type),
+            validation_status=f.validation_status.value
+            if hasattr(f.validation_status, "value")
+            else str(f.validation_status),
             schema_version=f.schema_version,
         )
         for f in fragments
@@ -100,14 +108,19 @@ async def get_fragment(fragment_id: UUID) -> FragmentDetailResponse:
         agent_id=fragment.agent_id,
         timestamp=fragment.timestamp,
         entity=fragment.entity,
-        data_type=fragment.data_type.value if hasattr(fragment.data_type, 'value') else str(fragment.data_type),
-        validation_status=fragment.validation_status.value if hasattr(fragment.validation_status, 'value') else str(fragment.validation_status),
+        data_type=fragment.data_type.value
+        if hasattr(fragment.data_type, "value")
+        else str(fragment.data_type),
+        validation_status=fragment.validation_status.value
+        if hasattr(fragment.validation_status, "value")
+        else str(fragment.validation_status),
         schema_version=fragment.schema_version,
         payload=fragment.payload,
     )
 
 
 # ── Belief Store ────────────────────────────────────────────────────
+
 
 @router.get("/beliefs/stats", response_model=BeliefStoreStatsResponse)
 async def get_belief_stats() -> BeliefStoreStatsResponse:

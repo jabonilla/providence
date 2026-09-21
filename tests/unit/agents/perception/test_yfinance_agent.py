@@ -7,7 +7,7 @@ All tests run without real API calls.
 """
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import pytest
@@ -444,9 +444,7 @@ class TestPerceptYFinanceHealth:
     async def test_health_degraded_after_repeated_errors(self) -> None:
         """Health status should be DEGRADED once errors exceed the threshold."""
         mock_client = AsyncMock(spec=YFinanceClient)
-        mock_client.get_fundamentals.side_effect = DataIngestionError(
-            message="API error"
-        )
+        mock_client.get_fundamentals.side_effect = DataIngestionError(message="API error")
         agent = _make_agent(mock_client)
 
         # DEGRADED kicks in above 3 errors in 24h
@@ -462,9 +460,7 @@ class TestPerceptYFinanceHealth:
     async def test_health_unhealthy_after_10_errors(self) -> None:
         """Health status should be UNHEALTHY after 10+ errors."""
         mock_client = AsyncMock(spec=YFinanceClient)
-        mock_client.get_fundamentals.side_effect = DataIngestionError(
-            message="API error"
-        )
+        mock_client.get_fundamentals.side_effect = DataIngestionError(message="API error")
         agent = _make_agent(mock_client)
 
         # Trigger 11 errors (each ticker is one error)
@@ -536,7 +532,11 @@ class TestPerceptYFinanceFragmentMetadata:
         assert frag.schema_version == "1.0.0"
         assert isinstance(frag.source_hash, str)
         assert len(frag.source_hash) == 64  # SHA-256 hex = 64 chars
-        assert frag.validation_status in [ValidationStatus.VALID, ValidationStatus.PARTIAL, ValidationStatus.QUARANTINED]
+        assert frag.validation_status in [
+            ValidationStatus.VALID,
+            ValidationStatus.PARTIAL,
+            ValidationStatus.QUARANTINED,
+        ]
         assert isinstance(frag.payload, dict)
 
     @pytest.mark.asyncio

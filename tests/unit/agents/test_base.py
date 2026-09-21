@@ -4,7 +4,6 @@ BaseAgent is tested via a MockAgent implementation since it's abstract.
 """
 
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 
@@ -14,7 +13,6 @@ from providence.agents.base import (
     BaseAgent,
     HealthStatus,
 )
-from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 
 

@@ -26,8 +26,8 @@ Research Agent Common Loop (FROZEN variant):
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import structlog
@@ -50,6 +50,9 @@ from providence.schemas.enums import (
     MarketCapBucket,
 )
 from providence.schemas.market_state import MarketStateFragment
+
+if TYPE_CHECKING:
+    from providence.services.kronos_service import ForecastResult, KronosService
 
 logger = structlog.get_logger()
 
@@ -93,6 +96,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
         """Get or lazily create the KronosService."""
         if self._kronos_service is None:
             from providence.services.kronos_service import KronosService
+
             self._kronos_service = KronosService()
         return self._kronos_service
 
@@ -334,7 +338,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
                 EvidenceRef(
                     source_fragment_id=frag_id,
                     field_path="payload",
-                    observation=f"OHLCV data used in Kronos model inference",
+                    observation="OHLCV data used in Kronos model inference",
                     weight=weight,
                 )
             )
@@ -351,10 +355,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             catalyst_type=None,
         )
 
-        thesis_id = (
-            f"KRONOS-{ticker}-{direction.value}-"
-            f"{forecast.predicted_return:+.3f}"
-        )
+        thesis_id = f"KRONOS-{ticker}-{direction.value}-{forecast.predicted_return:+.3f}"
 
         return Belief(
             thesis_id=thesis_id,
@@ -385,8 +386,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             conditions.append(
                 InvalidationCondition(
                     description=(
-                        f"Price drops below {stop_level:.2f} "
-                        f"(2x forecast magnitude below entry)"
+                        f"Price drops below {stop_level:.2f} (2x forecast magnitude below entry)"
                     ),
                     data_source_agent="PERCEPT-PRICE",
                     metric="close",
@@ -413,8 +413,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
             conditions.append(
                 InvalidationCondition(
                     description=(
-                        f"Price rises above {stop_level:.2f} "
-                        f"(2x forecast magnitude above entry)"
+                        f"Price rises above {stop_level:.2f} (2x forecast magnitude above entry)"
                     ),
                     data_source_agent="PERCEPT-PRICE",
                     metric="close",
@@ -466,8 +465,6 @@ class CognitKronos(BaseAgent[BeliefObject]):
         ohlcv_records: list[dict],
     ) -> Belief:
         """Generate a neutral low-confidence belief when Kronos is unavailable."""
-        current_close = ohlcv_records[-1]["close"] if ohlcv_records else 0.0
-
         evidence_refs = []
         for frag_id in fragment_ids[:3]:
             evidence_refs.append(

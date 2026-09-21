@@ -50,9 +50,7 @@ class AgentWeightConfig(BaseModel):
     def _validate_weights(cls, v: dict[str, float]) -> dict[str, float]:
         for agent_id, w in v.items():
             if not 0.0 <= w <= 1.0:
-                raise ValueError(
-                    f"Weight for {agent_id} must be in [0.0, 1.0], got {w}"
-                )
+                raise ValueError(f"Weight for {agent_id} must be in [0.0, 1.0], got {w}")
         return v
 
     def normalized(self) -> dict[str, float]:

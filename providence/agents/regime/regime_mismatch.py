@@ -317,9 +317,9 @@ class RegimeMismatch(BaseAgent[RegimeStateObject]):
             stat_confidence = float(stat_data.get("regime_confidence", 0.5))
             stat_risk_mode_str = stat_data.get("system_risk_mode", "NORMAL")
             stat_risk_mode = SystemRiskMode(stat_risk_mode_str)
-            stat_probs = stat_data.get("regime_probabilities", {
-                r.value: 0.25 for r in StatisticalRegime
-            })
+            stat_probs = stat_data.get(
+                "regime_probabilities", {r.value: 0.25 for r in StatisticalRegime}
+            )
             stat_features = stat_data.get("features_used", {})
 
             # Parse narrative overlay (optional)
@@ -356,16 +356,12 @@ class RegimeMismatch(BaseAgent[RegimeStateObject]):
                                 regime=StatisticalRegime(
                                     overlay_dict.get("regime", "LOW_VOL_TRENDING")
                                 ),
-                                regime_confidence=float(
-                                    overlay_dict.get("regime_confidence", 0.5)
-                                ),
+                                regime_confidence=float(overlay_dict.get("regime_confidence", 0.5)),
                                 regime_probabilities=overlay_dict.get(
                                     "regime_probabilities",
                                     {r.value: 0.25 for r in StatisticalRegime},
                                 ),
-                                relative_stress=float(
-                                    overlay_dict.get("relative_stress", 0.0)
-                                ),
+                                relative_stress=float(overlay_dict.get("relative_stress", 0.0)),
                                 key_signals=overlay_dict.get("key_signals", []),
                                 ticker_count=int(overlay_dict.get("ticker_count", 0)),
                             )

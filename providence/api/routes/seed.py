@@ -3,6 +3,7 @@
 POST /api/v1/seed — populates all stores with realistic demo data
 so the portal dashboard has something to display.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -21,19 +22,40 @@ router = APIRouter(tags=["seed"])
 
 TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "JPM"]
 SECTORS = {
-    "AAPL": "Technology", "MSFT": "Technology", "GOOGL": "Communication Services",
-    "AMZN": "Consumer Discretionary", "NVDA": "Technology", "TSLA": "Consumer Discretionary",
-    "META": "Communication Services", "JPM": "Financials",
+    "AAPL": "Technology",
+    "MSFT": "Technology",
+    "GOOGL": "Communication Services",
+    "AMZN": "Consumer Discretionary",
+    "NVDA": "Technology",
+    "TSLA": "Consumer Discretionary",
+    "META": "Communication Services",
+    "JPM": "Financials",
 }
 PRICES = {
-    "AAPL": 185.0, "MSFT": 420.0, "GOOGL": 175.0, "AMZN": 195.0,
-    "NVDA": 890.0, "TSLA": 175.0, "META": 525.0, "JPM": 210.0,
+    "AAPL": 185.0,
+    "MSFT": 420.0,
+    "GOOGL": 175.0,
+    "AMZN": 195.0,
+    "NVDA": 890.0,
+    "TSLA": 175.0,
+    "META": 525.0,
+    "JPM": 210.0,
 }
-REGIMES = ["LOW_VOL_TRENDING", "HIGH_VOL_MEAN_REVERTING", "TRANSITION_UNCERTAIN", "LOW_VOL_TRENDING"]
+REGIMES = [
+    "LOW_VOL_TRENDING",
+    "HIGH_VOL_MEAN_REVERTING",
+    "TRANSITION_UNCERTAIN",
+    "LOW_VOL_TRENDING",
+]
 RISK_MODES = ["NORMAL", "NORMAL", "CAUTIOUS", "NORMAL"]
 AGENTS = [
-    "COGNIT-FUNDAMENTAL", "COGNIT-TECHNICAL", "COGNIT-KRONOS",
-    "COGNIT-MACRO", "COGNIT-EVENT", "COGNIT-NARRATIVE", "COGNIT-CROSSSEC",
+    "COGNIT-FUNDAMENTAL",
+    "COGNIT-TECHNICAL",
+    "COGNIT-KRONOS",
+    "COGNIT-MACRO",
+    "COGNIT-EVENT",
+    "COGNIT-NARRATIVE",
+    "COGNIT-CROSSSEC",
 ]
 NUM_RUNS = 12
 
@@ -73,12 +95,17 @@ def _seed_fragments(state) -> int:
                 "vwap": round(price * (1 + random.gauss(0, 0.001)), 2),
             }
             frag = MarketStateFragment(
-                fragment_id=str(uuid4()), agent_id="PERCEPT-PRICE",
-                timestamp=ts, source_timestamp=ts,
-                version=_hash(payload), entity=ticker,
-                data_type=DataType.PRICE_OHLCV, schema_version="1.0.0",
+                fragment_id=str(uuid4()),
+                agent_id="PERCEPT-PRICE",
+                timestamp=ts,
+                source_timestamp=ts,
+                version=_hash(payload),
+                entity=ticker,
+                data_type=DataType.PRICE_OHLCV,
+                schema_version="1.0.0",
                 source_hash=_hash({"source": "polygon", "ticker": ticker}),
-                validation_status=ValidationStatus.VALID, payload=payload,
+                validation_status=ValidationStatus.VALID,
+                payload=payload,
             )
             store.append(frag)
             count += 1
@@ -91,18 +118,26 @@ def _seed_fragments(state) -> int:
             price = price_tracker[ticker] * (1 + random.uniform(-0.03, 0.03))
             # PRICE fragment
             payload = {
-                "ticker": ticker, "open": round(price * 0.998, 2),
-                "high": round(price * 1.01, 2), "low": round(price * 0.99, 2),
-                "close": round(price, 2), "volume": random.randint(10_000_000, 80_000_000),
+                "ticker": ticker,
+                "open": round(price * 0.998, 2),
+                "high": round(price * 1.01, 2),
+                "low": round(price * 0.99, 2),
+                "close": round(price, 2),
+                "volume": random.randint(10_000_000, 80_000_000),
                 "vwap": round(price * 0.999, 2),
             }
             frag = MarketStateFragment(
-                fragment_id=str(uuid4()), agent_id="PERCEPT-PRICE",
-                timestamp=ts, source_timestamp=ts,
-                version=_hash(payload), entity=ticker,
-                data_type=DataType.PRICE_OHLCV, schema_version="1.0.0",
+                fragment_id=str(uuid4()),
+                agent_id="PERCEPT-PRICE",
+                timestamp=ts,
+                source_timestamp=ts,
+                version=_hash(payload),
+                entity=ticker,
+                data_type=DataType.PRICE_OHLCV,
+                schema_version="1.0.0",
                 source_hash=_hash({"source": "polygon", "ticker": ticker}),
-                validation_status=ValidationStatus.VALID, payload=payload,
+                validation_status=ValidationStatus.VALID,
+                payload=payload,
             )
             store.append(frag)
             count += 1
@@ -116,12 +151,17 @@ def _seed_fragments(state) -> int:
                 "article_count": random.randint(3, 15),
             }
             frag2 = MarketStateFragment(
-                fragment_id=str(uuid4()), agent_id="PERCEPT-NEWS",
-                timestamp=ts, source_timestamp=ts,
-                version=_hash(news_payload), entity=ticker,
-                data_type=DataType.SENTIMENT_NEWS, schema_version="1.0.0",
+                fragment_id=str(uuid4()),
+                agent_id="PERCEPT-NEWS",
+                timestamp=ts,
+                source_timestamp=ts,
+                version=_hash(news_payload),
+                entity=ticker,
+                data_type=DataType.SENTIMENT_NEWS,
+                schema_version="1.0.0",
                 source_hash=_hash({"source": "news", "ticker": ticker}),
-                validation_status=ValidationStatus.VALID, payload=news_payload,
+                validation_status=ValidationStatus.VALID,
+                payload=news_payload,
             )
             store.append(frag2)
             count += 1
@@ -131,20 +171,37 @@ def _seed_fragments(state) -> int:
 
 def _seed_beliefs(state) -> int:
     """Seed BeliefObject records into BeliefStore."""
-    from providence.schemas.belief import BeliefObject, Belief, EvidenceRef, InvalidationCondition, BeliefMetadata
+    from providence.schemas.belief import (
+        BeliefObject,
+        Belief,
+        EvidenceRef,
+        InvalidationCondition,
+        BeliefMetadata,
+    )
     from providence.schemas.enums import Direction, Magnitude, ComparisonOperator, MarketCapBucket
 
     random.seed(42)
     store = state.belief_store
     count = 0
     now = datetime.now(timezone.utc)
-    directions = [Direction.LONG, Direction.SHORT, Direction.NEUTRAL, Direction.LONG, Direction.LONG]
+    directions = [
+        Direction.LONG,
+        Direction.SHORT,
+        Direction.NEUTRAL,
+        Direction.LONG,
+        Direction.LONG,
+    ]
     magnitudes = [Magnitude.SMALL, Magnitude.MODERATE, Magnitude.LARGE, Magnitude.MODERATE]
 
     cap_buckets = {
-        "AAPL": MarketCapBucket.MEGA, "MSFT": MarketCapBucket.MEGA, "GOOGL": MarketCapBucket.MEGA,
-        "AMZN": MarketCapBucket.MEGA, "NVDA": MarketCapBucket.MEGA, "TSLA": MarketCapBucket.LARGE,
-        "META": MarketCapBucket.MEGA, "JPM": MarketCapBucket.MEGA,
+        "AAPL": MarketCapBucket.MEGA,
+        "MSFT": MarketCapBucket.MEGA,
+        "GOOGL": MarketCapBucket.MEGA,
+        "AMZN": MarketCapBucket.MEGA,
+        "NVDA": MarketCapBucket.MEGA,
+        "TSLA": MarketCapBucket.LARGE,
+        "META": MarketCapBucket.MEGA,
+        "JPM": MarketCapBucket.MEGA,
     }
 
     for run_idx in range(NUM_RUNS):
@@ -160,7 +217,7 @@ def _seed_beliefs(state) -> int:
                     thesis_id=str(uuid4()),
                     ticker=ticker,
                     thesis_summary=f"{agent_id} analysis of {ticker}: "
-                                   f"{'bullish momentum' if direction == Direction.LONG else 'bearish signals' if direction == Direction.SHORT else 'neutral outlook'}",
+                    f"{'bullish momentum' if direction == Direction.LONG else 'bearish signals' if direction == Direction.SHORT else 'neutral outlook'}",
                     direction=direction,
                     magnitude=random.choice(magnitudes),
                     raw_confidence=round(random.uniform(0.3, 0.9), 2),
@@ -178,8 +235,12 @@ def _seed_beliefs(state) -> int:
                             description=f"{ticker} price crosses invalidation threshold",
                             data_source_agent="PERCEPT-PRICE",
                             metric=f"{ticker}_close",
-                            operator=ComparisonOperator.CROSSES_BELOW if direction == Direction.LONG else ComparisonOperator.CROSSES_ABOVE,
-                            threshold=round(PRICES[ticker] * (0.95 if direction == Direction.LONG else 1.05), 2),
+                            operator=ComparisonOperator.CROSSES_BELOW
+                            if direction == Direction.LONG
+                            else ComparisonOperator.CROSSES_ABOVE,
+                            threshold=round(
+                                PRICES[ticker] * (0.95 if direction == Direction.LONG else 1.05), 2
+                            ),
                         ),
                     ],
                     metadata=BeliefMetadata(
@@ -219,32 +280,57 @@ def _seed_runs(state) -> int:
         # MAIN loop
         stages = []
         agent_ids = [
-            "COGNIT-FUNDAMENTAL", "COGNIT-TECHNICAL", "COGNIT-MACRO",
-            "COGNIT-EVENT", "COGNIT-NARRATIVE", "COGNIT-CROSSSEC",
-            "REGIME-STAT", "REGIME-SECTOR", "REGIME-NARR", "REGIME-MISMATCH",
-            "DECIDE-SYNTH", "DECIDE-OPTIM",
-            "EXEC-VALIDATE", "EXEC-ROUTER", "EXEC-GUARDIAN", "EXEC-CAPTURE",
+            "COGNIT-FUNDAMENTAL",
+            "COGNIT-TECHNICAL",
+            "COGNIT-MACRO",
+            "COGNIT-EVENT",
+            "COGNIT-NARRATIVE",
+            "COGNIT-CROSSSEC",
+            "REGIME-STAT",
+            "REGIME-SECTOR",
+            "REGIME-NARR",
+            "REGIME-MISMATCH",
+            "DECIDE-SYNTH",
+            "DECIDE-OPTIM",
+            "EXEC-VALIDATE",
+            "EXEC-ROUTER",
+            "EXEC-GUARDIAN",
+            "EXEC-CAPTURE",
         ]
         failed = random.randint(0, 3)
         failed_agents = set(random.sample(agent_ids, k=failed))
         for aid in agent_ids:
             status = StageStatus.FAILED if aid in failed_agents else StageStatus.SUCCEEDED
-            stage_dur = random.uniform(0.1, 30000) if status == StageStatus.SUCCEEDED else random.uniform(0.1, 5000)
-            stages.append(StageResult(
-                stage_name=aid, agent_id=aid, status=status,
-                started_at=ts, finished_at=ts + timedelta(milliseconds=stage_dur),
-                duration_ms=stage_dur,
-                error=f"Agent error in {aid}" if status == StageStatus.FAILED else None,
-            ))
+            stage_dur = (
+                random.uniform(0.1, 30000)
+                if status == StageStatus.SUCCEEDED
+                else random.uniform(0.1, 5000)
+            )
+            stages.append(
+                StageResult(
+                    stage_name=aid,
+                    agent_id=aid,
+                    status=status,
+                    started_at=ts,
+                    finished_at=ts + timedelta(milliseconds=stage_dur),
+                    duration_ms=stage_dur,
+                    error=f"Agent error in {aid}" if status == StageStatus.FAILED else None,
+                )
+            )
 
         succeeded = len(agent_ids) - failed
         run_status = RunStatus.SUCCEEDED if failed == 0 else RunStatus.PARTIAL_FAILURE
 
         run = PipelineRun(
-            run_id=str(uuid4()), loop_type="MAIN", status=run_status,
-            started_at=ts, finished_at=ts + timedelta(seconds=duration),
-            stage_results=stages, succeeded_count=succeeded,
-            failed_count=failed, skipped_count=0,
+            run_id=str(uuid4()),
+            loop_type="MAIN",
+            status=run_status,
+            started_at=ts,
+            finished_at=ts + timedelta(seconds=duration),
+            stage_results=stages,
+            succeeded_count=succeeded,
+            failed_count=failed,
+            skipped_count=0,
             total_duration_ms=duration * 1000,
             content_hash=_hash({"run": run_idx}),
         )
@@ -253,11 +339,16 @@ def _seed_runs(state) -> int:
 
         # EXIT loop
         exit_run = PipelineRun(
-            run_id=str(uuid4()), loop_type="EXIT", status=RunStatus.SUCCEEDED,
+            run_id=str(uuid4()),
+            loop_type="EXIT",
+            status=RunStatus.SUCCEEDED,
             started_at=ts + timedelta(seconds=duration),
             finished_at=ts + timedelta(seconds=duration + 5),
-            stage_results=[], succeeded_count=5, failed_count=0,
-            skipped_count=0, total_duration_ms=5000,
+            stage_results=[],
+            succeeded_count=5,
+            failed_count=0,
+            skipped_count=0,
+            total_duration_ms=5000,
             content_hash=_hash({"exit_run": run_idx}),
         )
         store.append(exit_run)
@@ -265,11 +356,16 @@ def _seed_runs(state) -> int:
 
         # GOVERNANCE loop
         gov_run = PipelineRun(
-            run_id=str(uuid4()), loop_type="GOVERNANCE", status=RunStatus.SUCCEEDED,
+            run_id=str(uuid4()),
+            loop_type="GOVERNANCE",
+            status=RunStatus.SUCCEEDED,
             started_at=ts + timedelta(seconds=duration + 5),
             finished_at=ts + timedelta(seconds=duration + 6),
-            stage_results=[], succeeded_count=4, failed_count=0,
-            skipped_count=0, total_duration_ms=1000,
+            stage_results=[],
+            succeeded_count=4,
+            failed_count=0,
+            skipped_count=0,
+            total_duration_ms=1000,
             content_hash=_hash({"gov_run": run_idx}),
         )
         store.append(gov_run)
@@ -310,8 +406,10 @@ def _seed_shadow_signals(state) -> int:
             ret_20d = round(random.uniform(-0.10, 0.15), 4) if run_idx < NUM_RUNS - 5 else None
 
             signal = ShadowSignal(
-                signal_id=uuid4(), run_id=run_id,
-                timestamp=ts, ticker=ticker,
+                signal_id=uuid4(),
+                run_id=run_id,
+                timestamp=ts,
+                ticker=ticker,
                 action=Action.OPEN_LONG if direction == Direction.LONG else Action.OPEN_SHORT,
                 direction=direction,
                 target_weight=target_wt,
@@ -342,7 +440,8 @@ def _seed_shadow_signals(state) -> int:
         long_count = sum(1 for s in signals_in_run if s.direction == Direction.LONG)
         short_count = len(signals_in_run) - long_count
         summary = ShadowRunSummary(
-            run_id=run_id, timestamp=ts,
+            run_id=run_id,
+            timestamp=ts,
             total_signals=len(signals_in_run),
             approved_signals=approved_count,
             rejected_signals=rejected_count,
@@ -434,7 +533,11 @@ async def reset_all_stores():
             frag._fragments.clear()
             frag._by_data_type.clear()
             frag._by_entity.clear()
-            if hasattr(frag, "_persist_path") and frag._persist_path and frag._persist_path.exists():
+            if (
+                hasattr(frag, "_persist_path")
+                and frag._persist_path
+                and frag._persist_path.exists()
+            ):
                 frag._persist_path.write_text("")
 
         # Clear BeliefStore
@@ -451,7 +554,11 @@ async def reset_all_stores():
         if runs is not None:
             runs._runs.clear()
             runs._by_loop_type.clear()
-            if hasattr(runs, "_persist_path") and runs._persist_path and runs._persist_path.exists():
+            if (
+                hasattr(runs, "_persist_path")
+                and runs._persist_path
+                and runs._persist_path.exists()
+            ):
                 runs._persist_path.write_text("")
 
         # Clear ShadowSignalStore
@@ -464,9 +571,17 @@ async def reset_all_stores():
             shadow._by_ticker.clear()
             if hasattr(shadow, "_summaries"):
                 shadow._summaries.clear()
-            if hasattr(shadow, "_persist_path") and shadow._persist_path and shadow._persist_path.exists():
+            if (
+                hasattr(shadow, "_persist_path")
+                and shadow._persist_path
+                and shadow._persist_path.exists()
+            ):
                 shadow._persist_path.write_text("")
-            if hasattr(shadow, "_summaries_path") and shadow._summaries_path and shadow._summaries_path.exists():
+            if (
+                hasattr(shadow, "_summaries_path")
+                and shadow._summaries_path
+                and shadow._summaries_path.exists()
+            ):
                 shadow._summaries_path.write_text("")
 
         # Clear portfolio tracker

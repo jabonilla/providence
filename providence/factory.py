@@ -296,9 +296,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(polygon_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -320,9 +318,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(edgar_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -344,9 +340,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(fred_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -368,9 +362,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(yfinance_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -392,9 +384,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(alphavantage_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -416,9 +406,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(famafrench_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -440,9 +428,7 @@ def build_agent_registry(
                 continue
             try:
                 registry[agent_id] = agent_cls(plaid_client)
-                logger.debug(
-                    "Agent instantiated", agent_id=agent_id, type="perception"
-                )
+                logger.debug("Agent instantiated", agent_id=agent_id, type="perception")
             except Exception as exc:
                 logger.error(
                     "Failed to instantiate perception agent",
@@ -538,6 +524,7 @@ def build_agent_registry_from_env(
     if not skip_adaptive:
         if os.environ.get("ANTHROPIC_API_KEY"):
             from providence.infra.llm_client import AnthropicClient
+
             llm_client = AnthropicClient()
             logger.info("AnthropicClient initialized from environment")
 

@@ -10,17 +10,16 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, HTTPException, Query
 
-logger = structlog.get_logger(__name__)
-
 from providence.api.deps import get_state
 from providence.api.schemas import (
     PipelineRunResponse,
     RunStoreStatsResponse,
     RunTriggerRequest,
-    RunTriggerResponse,
     StageResultResponse,
 )
 from providence.orchestration.models import RunStatus
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
 
@@ -58,6 +57,7 @@ def _run_to_response(run) -> PipelineRunResponse:
 
 
 # ── Trigger endpoints ───────────────────────────────────────────────
+
 
 async def _run_pipeline_background(run_exit: bool, run_governance: bool) -> None:
     """Execute the pipeline in the background so the API stays responsive."""
@@ -108,9 +108,7 @@ async def trigger_run(request: RunTriggerRequest | None = None) -> dict:
     req = request or RunTriggerRequest()
 
     # Launch in background — returns immediately
-    asyncio.create_task(
-        _run_pipeline_background(req.run_exit, req.run_governance)
-    )
+    asyncio.create_task(_run_pipeline_background(req.run_exit, req.run_governance))
 
     return {
         "status": "started",
@@ -134,7 +132,9 @@ async def pipeline_status() -> dict:
             "finished_at": latest.finished_at.isoformat() if latest.finished_at else None,
             "succeeded": latest.succeeded_count,
             "failed": latest.failed_count,
-        } if latest else None,
+        }
+        if latest
+        else None,
     }
 
 
@@ -159,9 +159,12 @@ async def trigger_learning() -> PipelineRunResponse:
 
 # ── Run history ─────────────────────────────────────────────────────
 
+
 @router.get("/runs", response_model=list[PipelineRunResponse])
 async def list_runs(
-    loop_type: Optional[str] = Query(None, description="Filter by loop type: MAIN, EXIT, LEARNING, GOVERNANCE"),
+    loop_type: Optional[str] = Query(
+        None, description="Filter by loop type: MAIN, EXIT, LEARNING, GOVERNANCE"
+    ),
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(20, ge=1, le=200),
 ) -> list[PipelineRunResponse]:
@@ -209,6 +212,7 @@ async def get_run(run_id: UUID) -> PipelineRunResponse:
 
 
 # ── Statistics ──────────────────────────────────────────────────────
+
 
 @router.get("/stats", response_model=RunStoreStatsResponse)
 async def get_pipeline_stats() -> RunStoreStatsResponse:

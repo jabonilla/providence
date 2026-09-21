@@ -1,6 +1,5 @@
 """Tests for shadow mode API endpoints."""
 
-from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -22,23 +21,38 @@ def shadow_store():
     run_id = uuid4()
 
     s1 = ShadowSignal(
-        run_id=run_id, ticker="AAPL", action=Action.OPEN_LONG,
-        direction=Direction.LONG, target_weight=0.05,
-        confidence=0.75, approved=True, adjusted_weight=0.05,
+        run_id=run_id,
+        ticker="AAPL",
+        action=Action.OPEN_LONG,
+        direction=Direction.LONG,
+        target_weight=0.05,
+        confidence=0.75,
+        approved=True,
+        adjusted_weight=0.05,
         price_at_signal=180.0,
-        simulated_entry_price=180.0, simulated_fill_qty=27,
+        simulated_entry_price=180.0,
+        simulated_fill_qty=27,
         simulated_notional=5000.0,
     )
     s2 = ShadowSignal(
-        run_id=run_id, ticker="MSFT", action=Action.OPEN_LONG,
-        direction=Direction.LONG, target_weight=0.04,
-        confidence=0.60, approved=True, adjusted_weight=0.04,
+        run_id=run_id,
+        ticker="MSFT",
+        action=Action.OPEN_LONG,
+        direction=Direction.LONG,
+        target_weight=0.04,
+        confidence=0.60,
+        approved=True,
+        adjusted_weight=0.04,
         price_at_signal=400.0,
     )
     s3 = ShadowSignal(
-        run_id=run_id, ticker="TSLA", action=Action.OPEN_SHORT,
-        direction=Direction.SHORT, target_weight=0.03,
-        confidence=0.30, approved=False,
+        run_id=run_id,
+        ticker="TSLA",
+        action=Action.OPEN_SHORT,
+        direction=Direction.SHORT,
+        target_weight=0.03,
+        confidence=0.30,
+        approved=False,
         rejection_reasons=["Confidence below minimum"],
     )
     store.append(s1)

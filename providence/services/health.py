@@ -6,7 +6,7 @@ and produces a structured health report for monitoring and governance.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
@@ -88,7 +88,9 @@ class HealthService:
             try:
                 health = agent.get_health()
                 agent_health[agent_id] = health
-                status = AgentStatus(health.status) if isinstance(health.status, str) else health.status
+                status = (
+                    AgentStatus(health.status) if isinstance(health.status, str) else health.status
+                )
                 counts[status] = counts.get(status, 0) + 1
             except Exception as exc:
                 logger.warning("Agent health check failed", agent_id=agent_id, error=str(exc))

@@ -5,14 +5,14 @@ Validates fragment creation, payload normalization, validation status handling,
 momentum fallback behavior, and error handling.
 """
 
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock
 
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.perception.factors import PerceptFactors
-from providence.exceptions import AgentProcessingError, ExternalAPIError
+from providence.exceptions import ExternalAPIError
 from providence.infra.famafrench_client import FamaFrenchClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
@@ -106,9 +106,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.01,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.0}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.0}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -132,9 +130,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.01,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.0}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.0}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -158,9 +154,7 @@ class TestPerceptFactorsProcess:
                 "rf": 0.02,
             }
         ]
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-01", "mom": 1.5}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-01", "mom": 1.5}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()
@@ -230,9 +224,7 @@ class TestPerceptFactorsProcess:
             }
         ]
         # No momentum data for 2026-02-01
-        mock_client.get_momentum_daily.return_value = [
-            {"date": "2026-02-02", "mom": 2.1}
-        ]
+        mock_client.get_momentum_daily.return_value = [{"date": "2026-02-02", "mom": 2.1}]
 
         agent = PerceptFactors(mock_client)
         context = _make_context()

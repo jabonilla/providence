@@ -31,7 +31,9 @@ class MarketStateFragment(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    fragment_id: UUID = Field(default_factory=uuid4, description="Unique identifier for this fragment")
+    fragment_id: UUID = Field(
+        default_factory=uuid4, description="Unique identifier for this fragment"
+    )
     agent_id: str = Field(..., description="ID of the Perception agent that produced this fragment")
     timestamp: datetime = Field(..., description="Ingestion time (must include timezone)")
     source_timestamp: datetime = Field(..., description="Original data publication time")

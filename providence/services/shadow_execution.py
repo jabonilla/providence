@@ -17,10 +17,9 @@ from __future__ import annotations
 
 import json
 import threading
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import structlog
 
@@ -328,7 +327,9 @@ class ShadowExecutionService:
                 shadow_equity = float(metadata.get("shadow_equity", 100_000.0))
                 simulated_notional = shadow_equity * adjusted_weight
                 simulated_entry = price_at_signal
-                simulated_qty = int(simulated_notional / price_at_signal) if price_at_signal > 0 else 0
+                simulated_qty = (
+                    int(simulated_notional / price_at_signal) if price_at_signal > 0 else 0
+                )
 
             signal = ShadowSignal(
                 run_id=run_id,
