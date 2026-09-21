@@ -9,6 +9,8 @@ from providence.agents.base import AgentContext
 from providence.agents.execution.validate import ExecValidate
 from providence.schemas.enums import SystemMode
 
+from tests.conftest import make_agent_context
+
 
 def _make_context(
     positions: list[dict],
@@ -17,10 +19,9 @@ def _make_context(
     system_mode: str = "SHADOW",
 ) -> AgentContext:
     """Build an AgentContext with proposal and regime in metadata."""
-    return AgentContext(
-        agent_id="EXEC-VALIDATE",
+    return make_agent_context(
+        "EXEC-VALIDATE",
         context_window_hash="test-hash",
-        fragments=[],
         metadata={
             "proposal": {
                 "proposals": positions,

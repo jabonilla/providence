@@ -19,6 +19,7 @@ from providence.schemas.enums import (
     MarketCapBucket,
     ValidationStatus,
 )
+from providence.agents.base import AgentContext
 from providence.schemas.market_state import MarketStateFragment
 from providence.schemas.belief import (
     Belief,
@@ -186,3 +187,37 @@ def sample_belief_object(sample_belief: Belief) -> BeliefObject:
         context_window_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         beliefs=[sample_belief],
     )
+
+
+# ---------------------------------------------------------------------------
+# AgentContext factory
+# ---------------------------------------------------------------------------
+def make_agent_context(
+    agent_id: str = "TEST-AGENT",
+    *,
+    trigger: str = "schedule",
+    fragments: list[MarketStateFragment] | None = None,
+    context_window_hash: str = "test_hash",
+    timestamp: datetime | None = None,
+    metadata: dict | None = None,
+) -> AgentContext:
+    """Build an AgentContext with sensible defaults for every required field.
+
+    AgentContext requires agent_id, trigger, context_window_hash and
+    timestamp. Tests usually only care about fragments and metadata, so this
+    factory fills the rest in and keeps construction in one place.
+    """
+    return AgentContext(
+        agent_id=agent_id,
+        trigger=trigger,
+        fragments=fragments if fragments is not None else [],
+        context_window_hash=context_window_hash,
+        timestamp=timestamp if timestamp is not None else datetime.now(timezone.utc),
+        metadata=metadata if metadata is not None else {},
+    )
+
+
+@pytest.fixture
+def agent_context_factory():
+    """Fixture exposing :func:`make_agent_context` to tests."""
+    return make_agent_context

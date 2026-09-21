@@ -18,21 +18,20 @@ from providence.infra.famafrench_client import FamaFrenchClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 
+from tests.conftest import make_agent_context
+
 
 def _make_context(
     date: str = "2026-02-09",
     history_days: int = 7,
 ) -> AgentContext:
     """Helper to create AgentContext with factor data expectations."""
-    return AgentContext(
-        run_id=uuid4(),
-        timestamp=datetime.now(timezone.utc),
+    return make_agent_context(
+        "PERCEPT-FACTORS",
         metadata={
             "date": date,
             "history_days": history_days,
         },
-        fragments=[],
-        beliefs=[],
     )
 
 
@@ -372,12 +371,9 @@ class TestPerceptFactorsProcess:
         mock_client.get_momentum_daily.return_value = []
 
         agent = PerceptFactors(mock_client)
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FACTORS",
             metadata={"history_days": 1},  # No date key
-            fragments=[],
-            beliefs=[],
         )
 
         await agent.process(context)

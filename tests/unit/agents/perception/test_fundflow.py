@@ -19,6 +19,8 @@ from providence.infra.plaid_client import PlaidClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 
+from tests.conftest import make_agent_context
+
 
 def _make_context(
     access_tokens: list[str] | None = None,
@@ -29,16 +31,13 @@ def _make_context(
     if access_tokens is None:
         access_tokens = ["test_token_1", "test_token_2"]
 
-    return AgentContext(
-        run_id=uuid4(),
-        timestamp=datetime.now(timezone.utc),
+    return make_agent_context(
+        "PERCEPT-FUNDFLOW",
         metadata={
             "access_tokens": access_tokens,
             "date": date,
             "history_days": history_days,
         },
-        fragments=[],
-        beliefs=[],
     )
 
 
@@ -68,12 +67,9 @@ class TestPerceptFundFlowProcess:
         mock_client = AsyncMock(spec=PlaidClient)
         agent = PerceptFundFlow(mock_client)
 
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FUNDFLOW",
             metadata={"date": "2026-02-09"},  # No access_tokens
-            fragments=[],
-            beliefs=[],
         )
 
         with pytest.raises(AgentProcessingError) as exc_info:
@@ -466,16 +462,13 @@ class TestPerceptFundFlowProcess:
         }
 
         agent = PerceptFundFlow(mock_client)
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FUNDFLOW",
             metadata={
                 "access_tokens": ["token1"],
                 # No date key
                 "history_days": 30,
             },
-            fragments=[],
-            beliefs=[],
         )
 
         await agent.process(context)
