@@ -27,6 +27,7 @@ Research Agent Common Loop (FROZEN variant):
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import structlog
@@ -49,6 +50,9 @@ from providence.schemas.enums import (
     MarketCapBucket,
 )
 from providence.schemas.market_state import MarketStateFragment
+
+if TYPE_CHECKING:
+    from providence.services.kronos_service import ForecastResult, KronosService
 
 logger = structlog.get_logger()
 
@@ -461,8 +465,6 @@ class CognitKronos(BaseAgent[BeliefObject]):
         ohlcv_records: list[dict],
     ) -> Belief:
         """Generate a neutral low-confidence belief when Kronos is unavailable."""
-        current_close = ohlcv_records[-1]["close"] if ohlcv_records else 0.0
-
         evidence_refs = []
         for frag_id in fragment_ids[:3]:
             evidence_refs.append(

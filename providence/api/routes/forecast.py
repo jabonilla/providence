@@ -6,7 +6,7 @@ GET  /api/v1/forecast           — Get forecasts for all watchlist tickers
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query

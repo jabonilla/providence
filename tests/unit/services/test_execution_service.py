@@ -160,7 +160,7 @@ class TestPollOrderStatus:
             "time_horizon_days": 90,
             "max_slippage_bps": 50,
         }
-        order = mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
+        mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
         mocked_service._orders.mark_submitted(order_id, "broker-order-123")
 
         # Mock broker response
@@ -250,7 +250,7 @@ class TestEmergencyHalt:
             "time_horizon_days": 90,
             "max_slippage_bps": 50,
         }
-        order = mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
+        mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
         mocked_service._orders.mark_submitted(order_id, "broker-order-123")
 
         mocked_service._broker.cancel_all_orders.return_value = True
@@ -290,7 +290,7 @@ class TestRetryFailedOrders:
             "time_horizon_days": 90,
             "max_slippage_bps": 50,
         }
-        order = mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
+        mocked_service._orders.create_from_routed_order(routed, Decimal("100000"))
         mocked_service._orders.mark_submitted(order_id, "broker-order-123")
         mocked_service._orders.mark_failed(order_id, "Timeout error")
 

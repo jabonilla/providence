@@ -40,6 +40,12 @@ select = ["E4", "E7", "E9", "F"]
 [tool.ruff.lint.per-file-ignores]
 # Re-exports are the point of a package __init__.
 "__init__.py" = ["F401"]
+# load_dotenv() must run before the providence imports, since config modules
+# read the environment at import time.
+"providence/__main__.py" = ["E402"]
+# pytest.importorskip("fastapi") has to precede the fastapi imports it guards.
+"tests/unit/api/conftest.py" = ["E402"]
+"tests/unit/api/test_shadow.py" = ["E402"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

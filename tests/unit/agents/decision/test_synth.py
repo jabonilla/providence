@@ -491,12 +491,6 @@ class TestDecideSynth:
         )
         await agent.process(ctx)
         assert llm.complete.call_count == 1
-        call_kwargs = llm.complete.call_args
-        user_prompt = (
-            call_kwargs.kwargs.get("user_prompt", "") or call_kwargs[1]
-            if len(call_kwargs) > 1
-            else ""
-        )
         # The LLM was called — that's the key check
         assert llm.complete.called
 

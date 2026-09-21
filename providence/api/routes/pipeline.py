@@ -10,8 +10,6 @@ from uuid import UUID
 import structlog
 from fastapi import APIRouter, HTTPException, Query
 
-logger = structlog.get_logger(__name__)
-
 from providence.api.deps import get_state
 from providence.api.schemas import (
     PipelineRunResponse,
@@ -20,6 +18,8 @@ from providence.api.schemas import (
     StageResultResponse,
 )
 from providence.orchestration.models import RunStatus
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
 

@@ -152,7 +152,6 @@ class EdgarClient:
         Returns:
             CIK as a string, or None if not found.
         """
-        url = f"{self.XBRL_BASE_URL}/api/xbrl/companyfacts.json"
         try:
             # SEC provides a ticker→CIK mapping at the company_tickers endpoint
             tickers_url = "https://www.sec.gov/files/company_tickers.json"

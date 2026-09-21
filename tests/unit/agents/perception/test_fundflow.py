@@ -463,7 +463,7 @@ class TestPerceptFundFlowProcess:
         agent = PerceptFundFlow(mock_client)
         context = _make_context(access_tokens=["token1", "token2", "token3"])
 
-        fragments = await agent.process(context)
+        await agent.process(context)
 
         # Should have called get_investment_transactions once per token
         assert mock_client.get_investment_transactions.call_count == 3

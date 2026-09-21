@@ -433,7 +433,7 @@ class TestPerceptAlphaVantageErrorHandling:
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL", "MSFT"])
-        fragments = await agent.process(context)
+        await agent.process(context)
 
         assert agent._error_count_24h == 2
 

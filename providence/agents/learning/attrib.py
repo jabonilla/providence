@@ -272,7 +272,6 @@ class LearnAttrib(BaseAgent[AttributionOutput]):
 
             closed_positions = context.metadata.get("closed_positions", [])
             belief_history = context.metadata.get("belief_history", [])
-            regime_history = context.metadata.get("regime_history", [])
             eval_start_str = context.metadata.get("evaluation_start", "")
             eval_end_str = context.metadata.get("evaluation_end", "")
 

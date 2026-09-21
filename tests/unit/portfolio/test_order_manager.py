@@ -353,7 +353,7 @@ class TestOrderManagerSubmit:
             "time_horizon_days": 90,
             "max_slippage_bps": 50,
         }
-        order = manager.create_from_routed_order(routed, Decimal("100000"))
+        manager.create_from_routed_order(routed, Decimal("100000"))
 
         manager.mark_submitted(order_id, "broker-order-123")
 

@@ -79,12 +79,11 @@ def compute_belief_health(
             continue
 
         is_breached = cond.get("is_breached", False)
-        breach_magnitude = float(cond.get("breach_magnitude", 0.0))
 
         if is_breached:
             breached += 1
         else:
-            # Check if approaching (breach_magnitude < 0.10 means close)
+            # Approaching = current value within 10% of the threshold
             threshold = cond.get("threshold", 0)
             current = cond.get("current_value")
             if current is not None and abs(threshold) > 1e-9:

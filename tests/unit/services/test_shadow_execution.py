@@ -317,7 +317,7 @@ class TestShadowExecutionService:
             "shadow_equity": 100_000.0,
         }
 
-        summary = svc.record_signals(run_id, proposal, metadata=metadata)
+        svc.record_signals(run_id, proposal, metadata=metadata)
         signals = store.get_by_ticker("AAPL")
         assert len(signals) == 1
         assert signals[0].price_at_signal == 185.50
