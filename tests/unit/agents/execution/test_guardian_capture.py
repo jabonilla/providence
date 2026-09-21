@@ -20,18 +20,13 @@ from providence.agents.execution.guardian import (
 )
 from providence.agents.execution.capture import (
     ExecCapture,
-    MAX_TRIM_STAGES,
     TRAIL_PARAMS,
     compute_trailing_stop,
     evaluate_position,
 )
-from providence.exceptions import AgentProcessingError
 from providence.schemas.execution import (
-    CaptureDecision,
     CaptureOutput,
-    GuardianCheck,
     GuardianVerdict,
-    TrailingStopState,
 )
 
 NOW = datetime.now(timezone.utc)

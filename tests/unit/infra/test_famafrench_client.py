@@ -6,7 +6,7 @@ All tests mock pandas_datareader — NO real API calls.
 import asyncio
 import sys
 from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

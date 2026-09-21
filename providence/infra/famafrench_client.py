@@ -13,7 +13,6 @@ Usage:
 
 import asyncio
 import time
-from datetime import datetime
 from typing import Any
 
 import structlog

@@ -191,7 +191,7 @@ async def get_forecast(
             "candles": candles,
         }
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Forecast generation failed")
 
 

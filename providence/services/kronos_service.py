@@ -309,7 +309,6 @@ class KronosService:
         horizon: int,
     ) -> ForecastResult:
         """Convert raw model output to structured ForecastResult."""
-        import numpy as np
 
         candles = []
 

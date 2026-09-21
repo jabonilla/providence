@@ -11,12 +11,6 @@ import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.governance.oversight import (
-    DEGRADED_THRESHOLD,
-    ERROR_THRESHOLD_24H,
-    GROSS_EXPOSURE_WARNING,
-    RETRAIN_QUEUE_WARNING,
-    SHADOW_DIVERGENCE_WARNING,
-    UNHEALTHY_THRESHOLD,
     GovernOversight,
     aggregate_health,
     detect_incidents,

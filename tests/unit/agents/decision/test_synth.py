@@ -8,9 +8,9 @@ DECIDE-SYNTH is ADAPTIVE: uses Claude Sonnet 4 for belief synthesis.
 """
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 

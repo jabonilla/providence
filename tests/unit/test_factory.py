@@ -1,6 +1,5 @@
 """Tests for the agent factory — bootstrap and registry building."""
 
-import pytest
 
 from providence.agents.base import BaseAgent
 from providence.factory import (

@@ -11,8 +11,7 @@ Tests cover:
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Optional
-from unittest.mock import AsyncMock
+from typing import Any
 
 import pytest
 

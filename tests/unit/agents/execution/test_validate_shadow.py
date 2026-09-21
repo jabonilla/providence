@@ -1,13 +1,11 @@
 """Tests for EXEC-VALIDATE shadow mode and capital tier enforcement."""
 
 import asyncio
-from uuid import uuid4
 
 import pytest
 
 from providence.agents.base import AgentContext
 from providence.agents.execution.validate import ExecValidate
-from providence.schemas.enums import SystemMode
 
 from tests.conftest import make_agent_context
 

@@ -6,7 +6,6 @@ data_type=USER_DOCUMENT and agent_id=USER-UPLOAD.
 
 from __future__ import annotations
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File
@@ -212,7 +211,6 @@ async def delete_document(fragment_id: UUID) -> dict:
         raise HTTPException(status_code=404, detail="Document not found")
 
     # Soft delete: create a replacement fragment with QUARANTINED status
-    from datetime import datetime, timezone
     from providence.schemas.market_state import MarketStateFragment
 
     quarantined = MarketStateFragment(

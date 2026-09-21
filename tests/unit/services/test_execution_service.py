@@ -1,7 +1,7 @@
 """Tests for ExecutionService at providence/services/execution_service.py."""
 
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest

@@ -12,15 +12,12 @@ Uses mocked LLM (no real API calls) with realistic sample responses.
 Spec Reference: Technical Spec v2.3, Phase 1 (Sessions 1-7)
 """
 
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock
-from uuid import UUID
 
 import pytest
 
 from providence.agents.base import AgentContext
 from providence.agents.cognition.fundamental import CognitFundamental
-from providence.agents.cognition.response_parser import parse_llm_response
 from providence.config.agent_config import AgentConfigRegistry
 from providence.schemas.belief import BeliefObject
 from providence.schemas.enums import (
@@ -32,13 +29,11 @@ from providence.schemas.enums import (
 )
 from providence.schemas.market_state import MarketStateFragment
 from providence.services.context_svc import ContextService
-from providence.utils.hashing import compute_context_window_hash
 
 from tests.fixtures.sample_beliefs import BELIEF_RESPONSES_BY_TICKER
 from tests.fixtures.sample_fragments import (
     ALL_FRAGMENTS,
     FRAGMENTS_BY_TICKER,
-    FRAGMENT_ID_MAP,
 )
 
 

@@ -3,10 +3,8 @@
 All tests mock httpx — NO real HTTP calls.
 """
 
-import asyncio
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
 import httpx
 import pytest

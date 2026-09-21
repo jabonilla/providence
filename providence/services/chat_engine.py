@@ -7,7 +7,6 @@ No LLM calls. Fast and free.
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -277,7 +276,7 @@ class ChatEngine:
         top_5 = sorted_positions[:5]
 
         lines = [
-            f"**Portfolio Overview**",
+            "**Portfolio Overview**",
             f"- Total equity: ${equity:,.2f}",
             f"- Positions: {len(positions)} ({long_count} long, {short_count} short)",
             f"- Unrealized P&L: ${total_unrealized:,.2f}",
@@ -410,7 +409,7 @@ class ChatEngine:
         all_tickers = sorted(belief_store.all_tickers())
 
         lines = [
-            f"**Belief Store Summary**",
+            "**Belief Store Summary**",
             f"- Total belief objects: {total}",
             f"- Active agents: {len(agents)} ({', '.join(agents[:6])}{'...' if len(agents) > 6 else ''})",
             f"- Tickers covered: {len(all_tickers)} ({', '.join(all_tickers[:8])}{'...' if len(all_tickers) > 8 else ''})",
@@ -552,7 +551,7 @@ class ChatEngine:
         latest = run_store.get_latest()
 
         lines = [
-            f"**Pipeline Summary**",
+            "**Pipeline Summary**",
             f"- Total runs: {total}",
             f"- Overall success rate: {rate:.0%}",
         ]
@@ -570,7 +569,7 @@ class ChatEngine:
             lines.extend(
                 [
                     "",
-                    f"**Latest Run:**",
+                    "**Latest Run:**",
                     f"- ID: {latest.run_id}",
                     f"- Loop: {latest.loop_type}",
                     f"- Status: {status}",
@@ -624,7 +623,7 @@ class ChatEngine:
         has_5d = [s for s in signals if s.realized_return_5d is not None]
 
         lines = [
-            f"**Shadow Mode Summary**",
+            "**Shadow Mode Summary**",
             f"- Total signals: {total}",
             f"- Approved: {approved} | Rejected: {rejected}",
             f"- Pipeline runs: {len(summaries)}",

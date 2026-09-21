@@ -327,7 +327,7 @@ class CognitTechnical(BaseAgent[BeliefObject]):
                 EvidenceRef(
                     source_fragment_id=frag_id,
                     field_path="close",
-                    observation=f"Price data used in technical analysis",
+                    observation="Price data used in technical analysis",
                     weight=weight,
                 )
             )

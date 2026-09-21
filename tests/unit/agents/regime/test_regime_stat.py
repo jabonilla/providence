@@ -7,7 +7,6 @@ risk mode derivation, and error handling.
 REGIME-STAT is FROZEN: zero LLM calls. Pure computation.
 """
 
-import math
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
@@ -16,7 +15,6 @@ import pytest
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.regime.hmm_model import (
     DEFAULT_HMM_PARAMS,
-    REGIME_STATES,
     classify_regime,
     derive_risk_mode,
     features_to_composite_score,
@@ -27,11 +25,9 @@ from providence.agents.regime.regime_features import (
     RegimeFeatures,
     compute_drawdown,
     compute_realized_vol,
-    compute_vol_of_vol,
     extract_regime_features,
 )
 from providence.agents.regime.regime_stat import RegimeStat
-from providence.exceptions import AgentProcessingError
 from providence.schemas.enums import (
     DataType,
     StatisticalRegime,

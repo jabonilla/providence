@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone, date
 from uuid import uuid4
 
-import pytest
 
 from providence.schemas.enums import Action, Direction
 from providence.schemas.shadow import ShadowSignal

@@ -3,7 +3,6 @@
 All tests mock yfinance and asyncio.to_thread — NO real API calls.
 """
 
-import asyncio
 import sys
 import time
 from unittest.mock import AsyncMock, MagicMock, patch

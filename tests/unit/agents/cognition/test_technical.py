@@ -7,7 +7,6 @@ invalidation condition machine-evaluability, and error handling.
 COGNIT-TECHNICAL is FROZEN: zero LLM calls, pure computation.
 """
 
-import math
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
@@ -15,7 +14,6 @@ import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.cognition.technical import CognitTechnical
-from providence.agents.cognition.technical_indicators import TechnicalSignals
 from providence.exceptions import AgentProcessingError
 from providence.schemas.belief import BeliefObject
 from providence.schemas.enums import (

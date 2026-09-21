@@ -16,7 +16,7 @@ Output: GuardianVerdict with per-order approval/halt decisions.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID, uuid4
 
 import structlog

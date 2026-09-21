@@ -23,11 +23,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
-from providence.schemas.enums import Direction
 from providence.schemas.shadow import ShadowSignal
 from providence.services.shadow_execution import ShadowSignalStore
 

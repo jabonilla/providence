@@ -23,8 +23,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from typing import Any, Optional
-from uuid import UUID
+from typing import Any
 
 import structlog
 
@@ -33,7 +32,6 @@ from providence.infra.alpaca_client import AlpacaClient
 from providence.orchestration.models import PipelineRun, StageStatus
 from providence.portfolio.order_manager import OrderManager, OrderStatus, ManagedOrder
 from providence.portfolio.tracker import PortfolioTracker
-from providence.schemas.enums import Action, Direction, SystemMode
 from providence.services.shadow_execution import ShadowExecutionService, ShadowSignalStore
 
 logger = structlog.get_logger()

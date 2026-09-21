@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from providence.config.settings import ProvidenceSettings, get_settings
+from providence.config.settings import get_settings
 
 
 class TestDefaults:

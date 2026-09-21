@@ -5,19 +5,12 @@ Tests cover:
   - LEARN-BACKTEST: Period metrics, profit factor, sub-period partitioning
 """
 
-import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.learning.retrain import (
-    ADAPTIVE_AGENTS,
-    CRITICAL_BRIER,
-    CRITICAL_HIT_RATE,
-    HIGH_DEGRADATION_PCT,
-    LOW_DEGRADATION_PCT,
-    MEDIUM_CAL_ERROR,
     LearnRetrain,
     compute_degradation,
     determine_priority,
@@ -25,7 +18,6 @@ from providence.agents.learning.retrain import (
     suggest_changes,
 )
 from providence.agents.learning.backtest import (
-    DEFAULT_PERIOD_DAYS,
     TRADING_DAYS_PER_YEAR,
     LearnBacktest,
     compute_period_metrics,

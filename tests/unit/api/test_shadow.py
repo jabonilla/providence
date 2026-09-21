@@ -1,6 +1,5 @@
 """Tests for shadow mode API endpoints."""
 
-from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest

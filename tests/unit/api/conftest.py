@@ -6,10 +6,8 @@ then builds a FastAPI TestClient.
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timezone
-from typing import Any, Optional
-from unittest.mock import MagicMock
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -21,7 +19,7 @@ from fastapi.testclient import TestClient
 
 from providence.agents.base import AgentStatus, BaseAgent, HealthStatus
 from providence.api.app import create_app
-from providence.api.deps import AppState, set_state
+from providence.api.deps import AppState
 from providence.orchestration.models import PipelineRun, RunStatus, StageResult, StageStatus
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment

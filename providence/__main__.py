@@ -501,7 +501,7 @@ async def _cmd_backfill(args: argparse.Namespace) -> int:
 
     result = await backfill.run(max_signals=args.max_signals)
 
-    print(f"\nBackfill complete:")
+    print("\nBackfill complete:")
     print(f"  Processed:      {result['processed']}")
     print(f"  Updated:        {result['updated']}")
     print(f"  Skipped:        {result['skipped']}")

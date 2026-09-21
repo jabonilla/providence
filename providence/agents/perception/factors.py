@@ -25,7 +25,6 @@ from uuid import uuid4
 import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
-from providence.exceptions import AgentProcessingError
 from providence.infra.famafrench_client import FamaFrenchClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment

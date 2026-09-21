@@ -1,7 +1,6 @@
 """Tests for ShadowExecutionService and ShadowSignalStore."""
 
 import json
-import tempfile
 from pathlib import Path
 from uuid import uuid4
 

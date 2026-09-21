@@ -18,7 +18,7 @@ import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.agents.perception.filing_parser import parse_event_filing, parse_financial_filing
-from providence.exceptions import AgentProcessingError, DataIngestionError
+from providence.exceptions import AgentProcessingError
 from providence.infra.edgar_client import EdgarClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment

@@ -34,7 +34,6 @@ from providence.agents.regime.hmm_model import (
     features_to_composite_score,
 )
 from providence.agents.regime.regime_features import (
-    RegimeFeatures,
     extract_regime_features,
 )
 from providence.exceptions import AgentProcessingError

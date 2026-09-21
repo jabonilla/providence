@@ -7,14 +7,11 @@ Tests cover:
 """
 
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.exit.thesis_renew import (
-    RENEWAL_WINDOW_DAYS,
-    MIN_HEALTH_FOR_RENEWAL,
     ThesisRenew,
     compute_asymmetry_score,
     compute_confidence_decay,
@@ -27,11 +24,8 @@ from providence.agents.exit.shadow_exit import (
     compute_exit_probability,
 )
 from providence.agents.exit.renew_mon import (
-    DEGRADED_THRESHOLD,
-    HEALTHY_THRESHOLD,
     RenewMon,
     compute_belief_health,
-    compute_confidence_decay as renew_compute_decay,
     determine_renewal_urgency,
 )
 from providence.schemas.exit import (

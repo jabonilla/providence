@@ -17,7 +17,6 @@ from providence.api.schemas import (
     PipelineRunResponse,
     RunStoreStatsResponse,
     RunTriggerRequest,
-    RunTriggerResponse,
     StageResultResponse,
 )
 from providence.orchestration.models import RunStatus

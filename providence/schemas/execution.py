@@ -8,12 +8,11 @@ Spec Reference: Technical Spec v2.3, Sections 2.6-2.9
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from providence.schemas.enums import Action, Direction, SystemRiskMode, ExecutionStatus
+from providence.schemas.enums import Action, Direction, ExecutionStatus
 
 
 # ---------------------------------------------------------------------------

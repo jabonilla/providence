@@ -9,7 +9,7 @@ Spec Reference: Technical Spec v2.3, Sections 2.1 and 4.1
 
 from datetime import date
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 

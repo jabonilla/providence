@@ -15,7 +15,6 @@ Input: AgentContext with position intents and regime data in metadata:
 Output: PositionProposal containing ProposedPositions + portfolio metadata.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID, uuid4
@@ -24,7 +23,7 @@ import structlog
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.agents.regime.sector_features import get_sector
-from providence.exceptions import AgentProcessingError, ConstraintViolationError
+from providence.exceptions import AgentProcessingError
 from providence.schemas.decision import (
     PortfolioMetadata,
     PositionProposal,

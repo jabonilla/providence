@@ -12,7 +12,7 @@ import os
 import re
 import time
 from collections import defaultdict
-from typing import Callable, Optional
+from typing import Callable
 
 import structlog
 from fastapi import HTTPException, Request, status

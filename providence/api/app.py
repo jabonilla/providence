@@ -17,14 +17,14 @@ import asyncio
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from providence.api.deps import AppState, get_state, set_state
 from providence.api.routes import (

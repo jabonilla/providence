@@ -11,21 +11,12 @@ import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.governance.capital import (
-    TIER_CONSTRAINTS,
-    TIER_THRESHOLDS,
     GovernCapital,
     classify_tier,
     compute_headroom,
     get_tier_constraints,
 )
 from providence.agents.governance.maturity import (
-    LIMITED_MAX_BRIER,
-    LIMITED_MIN_DAYS,
-    LIMITED_MIN_HIT_RATE,
-    SHADOW_MAX_BRIER,
-    SHADOW_MIN_DAYS,
-    SHADOW_MIN_HIT_RATE,
-    STAGE_WEIGHTS,
     GovernMaturity,
     evaluate_promotion,
 )

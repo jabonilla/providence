@@ -29,7 +29,7 @@ async def get_fragment_stats() -> FragmentStoreStatsResponse:
     state = get_state()
     store = state.fragment_store
 
-    from providence.schemas.enums import DataType, ValidationStatus
+    from providence.schemas.enums import DataType
 
     # Count by data type using the index
     by_type = {}

@@ -6,7 +6,6 @@ and order lifecycle during trading operations.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 

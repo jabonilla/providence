@@ -24,7 +24,6 @@ Input: AgentContext with metadata:
 Output: CalibrationOutput with per-agent calibration profiles.
 """
 
-import math
 from datetime import datetime, timezone
 from typing import Any, Optional
 

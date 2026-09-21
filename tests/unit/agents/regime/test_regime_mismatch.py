@@ -22,7 +22,6 @@ from providence.agents.regime.regime_mismatch import (
 )
 from providence.schemas.enums import StatisticalRegime, SystemRiskMode
 from providence.schemas.regime import (
-    NarrativeRegimeOverlay,
     RegimeStateObject,
     SectorRegimeOverlay,
 )

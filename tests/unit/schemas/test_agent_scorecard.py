@@ -7,7 +7,7 @@ and AgentRecommendation enum values.
 import pytest
 from pydantic import ValidationError
 
-from providence.schemas.enums import AgentRecommendation, StatisticalRegime
+from providence.schemas.enums import AgentRecommendation
 from providence.schemas.learning import (
     AgentScorecard,
     ScorecardCalibration,

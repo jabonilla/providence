@@ -26,7 +26,6 @@ Research Agent Common Loop (FROZEN variant):
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -335,7 +334,7 @@ class CognitKronos(BaseAgent[BeliefObject]):
                 EvidenceRef(
                     source_fragment_id=frag_id,
                     field_path="payload",
-                    observation=f"OHLCV data used in Kronos model inference",
+                    observation="OHLCV data used in Kronos model inference",
                     weight=weight,
                 )
             )

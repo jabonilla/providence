@@ -6,7 +6,7 @@ and edge cases.
 
 from datetime import datetime, timezone
 
-from providence.schemas.enums import DataType, ValidationStatus
+from providence.schemas.enums import DataType
 from providence.schemas.market_state import MarketStateFragment
 from providence.utils.hashing import compute_content_hash, compute_context_window_hash
 

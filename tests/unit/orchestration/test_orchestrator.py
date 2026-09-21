@@ -8,9 +8,7 @@ Tests cover:
   - PipelineRun tracking and content hash
 """
 
-import asyncio
 from datetime import datetime, timezone
-from typing import Any, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,7 +16,7 @@ import pytest
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.config.agent_config import AgentConfigRegistry
 from providence.exceptions import AgentProcessingError
-from providence.orchestration.models import PipelineRun, RunStatus, StageStatus
+from providence.orchestration.models import RunStatus, StageStatus
 from providence.orchestration.orchestrator import (
     COGNITION_AGENTS,
     EXECUTION_AGENTS,

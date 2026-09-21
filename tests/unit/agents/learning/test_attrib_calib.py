@@ -5,9 +5,7 @@ Tests cover:
   - LEARN-CALIB: Brier score, bucket calibration, overconfidence detection
 """
 
-import math
 from datetime import datetime, timezone
-from uuid import uuid4
 
 import pytest
 
@@ -18,7 +16,6 @@ from providence.agents.learning.attrib import (
     attribute_ticker,
     compute_hit_rate,
     compute_information_ratio,
-    compute_sharpe_contribution,
 )
 from providence.agents.learning.calib import (
     LearnCalib,
@@ -28,11 +25,9 @@ from providence.agents.learning.calib import (
 )
 from providence.schemas.learning import (
     AgentAttribution,
-    AgentCalibration,
     AttributionOutput,
     CalibrationBucket,
     CalibrationOutput,
-    TickerAttribution,
 )
 
 NOW = datetime.now(timezone.utc)

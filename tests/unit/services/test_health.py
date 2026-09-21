@@ -2,11 +2,10 @@
 
 from datetime import datetime, timezone
 
-import pytest
 
 from providence.agents.base import AgentContext, AgentStatus, BaseAgent, HealthStatus
 from providence.orchestration.models import PipelineRun, RunStatus, StageResult, StageStatus
-from providence.services.health import HealthService, SystemHealth
+from providence.services.health import HealthService
 from providence.storage.run_store import RunStore
 
 

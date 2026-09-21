@@ -7,7 +7,7 @@ and tracking order fills. All state changes are logged immutably.
 from __future__ import annotations
 import json
 import threading
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum

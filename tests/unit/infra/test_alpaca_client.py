@@ -3,16 +3,14 @@
 All tests mock httpx — NO real HTTP calls.
 """
 
-import asyncio
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
 import httpx
 import pytest
 
 from providence.infra.alpaca_client import AlpacaClient
-from providence.exceptions import ExternalAPIError, DataIngestionError
+from providence.exceptions import ExternalAPIError
 
 
 class TestAlpacaClientInit:

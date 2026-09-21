@@ -6,14 +6,14 @@ FETCH → VALIDATE → NORMALIZE → VERSION → STORE/ALERT
 All tests run without real API calls.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import pytest
 
 from providence.agents.base import AgentContext, AgentStatus
 from providence.agents.perception.price import PerceptPrice
-from providence.exceptions import AgentProcessingError, DataIngestionError
+from providence.exceptions import AgentProcessingError
 from providence.infra.polygon_client import PolygonClient
 from providence.schemas.enums import DataType, ValidationStatus
 from tests.conftest import make_agent_context
@@ -23,7 +23,6 @@ from tests.fixtures.polygon_responses import (
     daily_bars_missing_fields,
     daily_bars_no_ohlcv,
     daily_bars_nvda,
-    intraday_bars_aapl,
 )
 
 

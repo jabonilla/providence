@@ -9,7 +9,6 @@ import math
 import pytest
 
 from providence.agents.cognition.technical_indicators import (
-    TechnicalSignals,
     compute_all_signals,
     compute_bollinger_bands,
     compute_ema,

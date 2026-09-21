@@ -13,12 +13,11 @@ Critical Rules:
 import hashlib
 import json
 from datetime import datetime
-from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from providence.schemas.enums import StatisticalRegime, AgentRecommendation
+from providence.schemas.enums import AgentRecommendation
 
 
 # ---------------------------------------------------------------------------

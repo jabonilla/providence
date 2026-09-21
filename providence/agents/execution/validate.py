@@ -16,7 +16,7 @@ Output: ValidatedProposal with per-position approval/rejection.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID, uuid4
 
 import structlog
