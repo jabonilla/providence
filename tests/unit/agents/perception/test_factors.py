@@ -7,7 +7,6 @@ momentum fallback behavior, and error handling.
 
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
-from uuid import uuid4
 
 import pytest
 

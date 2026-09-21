@@ -8,7 +8,6 @@ pagination handling, and error handling.
 import hashlib
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
-from uuid import uuid4
 
 import pytest
 
