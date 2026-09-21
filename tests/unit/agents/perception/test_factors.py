@@ -317,10 +317,10 @@ class TestPerceptFactorsProcess:
         assert fragments[0].validation_status == ValidationStatus.VALID
 
     @pytest.mark.asyncio
-    async def test_validation_status_partial_missing_optional(self):
-        """Fragment should be PARTIAL when optional factors missing."""
+    async def test_validation_status_valid_missing_optional(self):
+        """Fragment stays VALID when only optional factors are missing."""
         mock_client = AsyncMock(spec=FamaFrenchClient)
-        # Missing RMW and CMA (not strictly required)
+        # Missing RMW and CMA — optional, so not part of required_keys
         mock_client.get_five_factors_daily.return_value = [
             {
                 "date": "2026-02-01",
@@ -328,6 +328,31 @@ class TestPerceptFactorsProcess:
                 "smb": 0.1,
                 "hml": 0.2,
                 # Missing rmw, cma
+                "rf": 0.01,
+            }
+        ]
+        mock_client.get_momentum_daily.return_value = []
+
+        agent = PerceptFactors(mock_client)
+        context = _make_context()
+
+        fragments = await agent.process(context)
+
+        assert fragments[0].validation_status == ValidationStatus.VALID
+
+    @pytest.mark.asyncio
+    async def test_validation_status_partial_missing_required(self):
+        """Fragment should be PARTIAL when a required factor is missing."""
+        mock_client = AsyncMock(spec=FamaFrenchClient)
+        # Missing SMB — required, but mkt_rf present so not quarantined
+        mock_client.get_five_factors_daily.return_value = [
+            {
+                "date": "2026-02-01",
+                "mkt_rf": 1.0,
+                # Missing smb
+                "hml": 0.2,
+                "rmw": 0.05,
+                "cma": 0.03,
                 "rf": 0.01,
             }
         ]

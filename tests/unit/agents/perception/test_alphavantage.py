@@ -272,8 +272,8 @@ class TestPerceptAlphaVantageValidation:
         assert fragments[0].entity == "AAPL"
 
     @pytest.mark.asyncio
-    async def test_missing_fiscal_date_ending_produces_quarantined(self) -> None:
-        """Quarter missing fiscalDateEnding produces QUARANTINED status."""
+    async def test_missing_fiscal_date_ending_produces_partial(self) -> None:
+        """Quarter missing fiscalDateEnding (but with reportedEPS) is PARTIAL."""
         mock_client = AsyncMock(spec=AlphaVantageClient)
         mock_client.get_earnings.return_value = {
             "quarterlyEarnings": [
@@ -290,17 +290,17 @@ class TestPerceptAlphaVantageValidation:
         fragments = await agent.process(context)
 
         assert len(fragments) == 1
-        assert fragments[0].validation_status == ValidationStatus.QUARANTINED
+        assert fragments[0].validation_status == ValidationStatus.PARTIAL
 
     @pytest.mark.asyncio
-    async def test_missing_reported_eps_produces_quarantined(self) -> None:
-        """Quarter missing reportedEPS produces QUARANTINED status."""
+    async def test_no_required_fields_produces_quarantined(self) -> None:
+        """Quarter with neither required field produces QUARANTINED status."""
         mock_client = AsyncMock(spec=AlphaVantageClient)
         mock_client.get_earnings.return_value = {
             "quarterlyEarnings": [
                 {
-                    "fiscalDateEnding": "2025-03-31",
-                    # Missing reportedEPS
+                    # Neither fiscalDateEnding nor reportedEPS
+                    "surprisePercentage": "1.2",
                 }
             ]
         }

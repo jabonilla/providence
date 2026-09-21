@@ -42,6 +42,15 @@ def _make_context(
     )
 
 
+def _articles(response: dict) -> list[dict]:
+    """PolygonClient.get_ticker_news returns only the 'results' array.
+
+    The fixtures model the full Polygon API envelope, so unwrap it to match
+    what the client actually hands the agent.
+    """
+    return response["results"]
+
+
 def _make_agent(mock_client: AsyncMock) -> PerceptNews:
     """Create a PerceptNews agent with a mocked Polygon client."""
     # We pass the mock directly — it quacks like a PolygonClient
@@ -58,7 +67,7 @@ class TestPerceptNewsValidData:
     async def test_valid_news_produces_fragment(self) -> None:
         """Valid AAPL data should produce a VALID MarketStateFragment."""
         mock_client = AsyncMock(spec=PolygonClient)
-        mock_client.get_ticker_news.return_value = news_aapl()
+        mock_client.get_ticker_news.return_value = _articles(news_aapl())
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])
@@ -76,7 +85,7 @@ class TestPerceptNewsValidData:
     async def test_payload_has_articles(self) -> None:
         """Payload should contain articles, article_count, and avg_sentiment."""
         mock_client = AsyncMock(spec=PolygonClient)
-        mock_client.get_ticker_news.return_value = news_aapl()
+        mock_client.get_ticker_news.return_value = _articles(news_aapl())
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])
@@ -96,8 +105,8 @@ class TestPerceptNewsValidData:
         """Multiple tickers should produce one fragment each."""
         mock_client = AsyncMock(spec=PolygonClient)
         mock_client.get_ticker_news.side_effect = [
-            news_aapl(),
-            news_multi_ticker(),
+            _articles(news_aapl()),
+            _articles(news_multi_ticker()),
         ]
         agent = _make_agent(mock_client)
 
@@ -120,7 +129,7 @@ class TestPerceptNewsValidation:
     async def test_empty_results_quarantined(self) -> None:
         """Empty results (e.g., newly listed ticker) should be QUARANTINED."""
         mock_client = AsyncMock(spec=PolygonClient)
-        mock_client.get_ticker_news.return_value = news_empty()
+        mock_client.get_ticker_news.return_value = _articles(news_empty())
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])
@@ -133,7 +142,7 @@ class TestPerceptNewsValidation:
     async def test_no_insights_partial(self) -> None:
         """Articles lacking sentiment insights should be PARTIAL."""
         mock_client = AsyncMock(spec=PolygonClient)
-        mock_client.get_ticker_news.return_value = news_no_insights()
+        mock_client.get_ticker_news.return_value = _articles(news_no_insights())
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])
@@ -178,7 +187,7 @@ class TestPerceptNewsErrorHandling:
         """One ticker failing shouldn't prevent others from succeeding."""
         mock_client = AsyncMock(spec=PolygonClient)
         mock_client.get_ticker_news.side_effect = [
-            news_aapl(),                      # AAPL succeeds
+            _articles(news_aapl()),                      # AAPL succeeds
             Exception("Timeout"),             # MSFT fails
         ]
         agent = _make_agent(mock_client)
@@ -210,7 +219,7 @@ class TestPerceptNewsHealth:
     async def test_healthy_after_success(self) -> None:
         """Agent should report HEALTHY after successful processing."""
         mock_client = AsyncMock(spec=PolygonClient)
-        mock_client.get_ticker_news.return_value = news_aapl()
+        mock_client.get_ticker_news.return_value = _articles(news_aapl())
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])

@@ -4,6 +4,7 @@ All tests mock yfinance and asyncio.to_thread — NO real API calls.
 """
 
 import asyncio
+import sys
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -41,31 +42,32 @@ class TestYFinanceClientImport:
     def test_ensure_yfinance_imports_module(self) -> None:
         """_ensure_yfinance should lazy-import yfinance."""
         client = YFinanceClient()
-        with patch("providence.infra.yfinance_client.yfinance") as mock_yf:
-            # First call should import
+        mock_yf = MagicMock()
+        # The import happens inside _ensure_yfinance, so stub sys.modules.
+        with patch.dict(sys.modules, {"yfinance": mock_yf}):
             result = client._ensure_yfinance()
-            assert result is mock_yf
+        assert result is mock_yf
 
     def test_ensure_yfinance_caches_module(self) -> None:
         """_ensure_yfinance should cache the module."""
         client = YFinanceClient()
-        with patch("providence.infra.yfinance_client.yfinance") as mock_yf:
+        mock_yf = MagicMock()
+        with patch.dict(sys.modules, {"yfinance": mock_yf}):
             result1 = client._ensure_yfinance()
-            result2 = client._ensure_yfinance()
-            # Should return same cached instance
-            assert result1 is result2
+        # Second call must not need the import again
+        result2 = client._ensure_yfinance()
+        assert result1 is result2 is mock_yf
+        assert client._yf is mock_yf
 
     def test_ensure_yfinance_raises_on_missing_import(self) -> None:
         """_ensure_yfinance should raise ExternalAPIError if import fails."""
         client = YFinanceClient()
-        with patch(
-            "providence.infra.yfinance_client.yfinance",
-            side_effect=ImportError("No module named 'yfinance'"),
-        ):
+        # A None entry in sys.modules makes `import yfinance` raise ImportError.
+        with patch.dict(sys.modules, {"yfinance": None}):
             with pytest.raises(ExternalAPIError) as exc_info:
                 client._ensure_yfinance()
-            assert "yfinance library required" in str(exc_info.value)
-            assert "pip install yfinance" in str(exc_info.value)
+        assert "yfinance library required" in str(exc_info.value)
+        assert "pip install yfinance" in str(exc_info.value)
 
 
 class TestYFinanceClientRateLimit:
@@ -204,9 +206,8 @@ class TestYFinanceClientGetPriceHistory:
         mock_yf = MagicMock()
         mock_ticker = MagicMock()
 
-        # Create a mock DataFrame
-        import pandas as pd
-        from datetime import datetime
+        # Create a mock DataFrame (pandas ships with yfinance — optional here)
+        pd = pytest.importorskip("pandas")
         dates = pd.date_range("2025-02-01", periods=3)
         df = pd.DataFrame({
             "Open": [185.0, 186.0, 187.0],
@@ -320,7 +321,7 @@ class TestYFinanceClientGetInstitutionalHolders:
         mock_yf = MagicMock()
         mock_ticker = MagicMock()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
         df = pd.DataFrame({
             "Holder": ["BlackRock Inc.", "Vanguard Group"],
             "Shares": [1_000_000, 900_000],

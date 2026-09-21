@@ -474,8 +474,9 @@ class TestPerceptFundFlowProcess:
         await agent.process(context)
 
         # Should have called with today's date
+        # PlaidClient.get_investment_transactions(access_token, start_date, end_date, ...)
         call_args = mock_client.get_investment_transactions.call_args
-        end_date = call_args[1]["end_date"]
+        end_date = call_args[0][2]
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         assert end_date == today
 

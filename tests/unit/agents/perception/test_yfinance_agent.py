@@ -441,22 +441,22 @@ class TestPerceptYFinanceHealth:
         assert health.last_success is not None
 
     @pytest.mark.asyncio
-    async def test_health_degraded_after_3_errors(self) -> None:
-        """Health status should be DEGRADED after 3+ errors."""
+    async def test_health_degraded_after_repeated_errors(self) -> None:
+        """Health status should be DEGRADED once errors exceed the threshold."""
         mock_client = AsyncMock(spec=YFinanceClient)
         mock_client.get_fundamentals.side_effect = DataIngestionError(
             message="API error"
         )
         agent = _make_agent(mock_client)
 
-        # Trigger 3 errors
-        for _ in range(3):
+        # DEGRADED kicks in above 3 errors in 24h
+        for _ in range(4):
             context = _make_context(["AAPL"])
             await agent.process(context)
 
         health = agent.get_health()
         assert health.status == AgentStatus.DEGRADED
-        assert health.error_count_24h == 3
+        assert health.error_count_24h == 4
 
     @pytest.mark.asyncio
     async def test_health_unhealthy_after_10_errors(self) -> None:
@@ -558,9 +558,11 @@ class TestPerceptYFinanceFragmentMetadata:
 
     @pytest.mark.asyncio
     async def test_quarantined_fragment_has_error_payload(self) -> None:
-        """Quarantined fragments should have error message in payload."""
+        """Fragments quarantined by a fetch failure carry the error message."""
         mock_client = AsyncMock(spec=YFinanceClient)
-        mock_client.get_fundamentals.return_value = {}
+        mock_client.get_fundamentals.side_effect = DataIngestionError(
+            message="yfinance unavailable"
+        )
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"])
@@ -570,3 +572,17 @@ class TestPerceptYFinanceFragmentMetadata:
         assert frag.validation_status == ValidationStatus.QUARANTINED
         assert "error" in frag.payload
         assert frag.payload["ticker"] == "AAPL"
+
+    @pytest.mark.asyncio
+    async def test_empty_fundamentals_quarantined_without_error_payload(self) -> None:
+        """Empty fundamentals still normalize, so the payload has no error key."""
+        mock_client = AsyncMock(spec=YFinanceClient)
+        mock_client.get_fundamentals.return_value = {}
+        agent = _make_agent(mock_client)
+
+        context = _make_context(["AAPL"])
+        fragments = await agent.process(context)
+
+        frag = fragments[0]
+        assert frag.validation_status == ValidationStatus.QUARANTINED
+        assert "error" not in frag.payload

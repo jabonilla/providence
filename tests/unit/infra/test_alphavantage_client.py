@@ -425,12 +425,14 @@ class TestAlphaVantageClientClose:
 
         # Access _get_client to create the client
         with patch.object(client, "_get_client", new_callable=AsyncMock):
-            client._client = AsyncMock(spec=httpx.AsyncClient)
-            client._client.is_closed = False
+            mock_http = AsyncMock(spec=httpx.AsyncClient)
+            mock_http.is_closed = False
+            client._client = mock_http
 
             await client.close()
 
-            client._client.aclose.assert_called_once()
+            # close() drops its reference, so assert against the local one.
+            mock_http.aclose.assert_called_once()
             assert client._client is None
 
     @pytest.mark.asyncio
