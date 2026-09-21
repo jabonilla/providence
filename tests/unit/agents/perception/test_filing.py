@@ -52,7 +52,11 @@ def _make_context(
 
 
 def _make_agent(mock_client: AsyncMock) -> PerceptFiling:
-    """Create a PerceptFiling agent with a mocked EDGAR client."""
+    """Create a PerceptFiling agent with a mocked EDGAR client.
+
+    For 10-K/10-Q the agent pulls XBRL facts separately via
+    EdgarClient.get_company_facts(cik), so that call must be mocked too.
+    """
     return PerceptFiling(edgar_client=mock_client)
 
 
@@ -67,6 +71,7 @@ class TestPerceptFiling10Q:
         """Valid 10-Q should produce a VALID MarketStateFragment."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])
@@ -84,6 +89,7 @@ class TestPerceptFiling10Q:
         """10-Q payload should contain extracted financial metrics."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])
@@ -102,6 +108,7 @@ class TestPerceptFiling10Q:
         """10-Q should compute key financial ratios when data is available."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])
@@ -123,6 +130,7 @@ class TestPerceptFiling10K:
         """Valid 10-K should produce a FILING_10K fragment."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10k_aapl()]
+        mock_client.get_company_facts.return_value = filing_10k_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-K"])
@@ -182,6 +190,7 @@ class TestPerceptFilingValidation:
         """Filing with metadata but no XBRL tags → PARTIAL."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_missing_xbrl()]
+        mock_client.get_company_facts.return_value = filing_missing_xbrl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])
@@ -227,12 +236,14 @@ class TestPerceptFilingContentHash:
         """Same filing data should produce the same content hash."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])
         f1 = await agent.process(context)
 
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         f2 = await agent.process(context)
 
         assert f1[0].version == f2[0].version
@@ -275,6 +286,7 @@ class TestPerceptFilingErrors:
             [filing_10q_aapl()],
             [filing_8k_aapl()],
         ]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q", "8-K"])
@@ -304,6 +316,7 @@ class TestPerceptFilingHealth:
         """Agent should report HEALTHY after success."""
         mock_client = AsyncMock(spec=EdgarClient)
         mock_client.get_recent_filings.return_value = [filing_10q_aapl()]
+        mock_client.get_company_facts.return_value = filing_10q_aapl()["xbrl_data"]
         agent = _make_agent(mock_client)
 
         context = _make_context(["AAPL"], ["10-Q"])

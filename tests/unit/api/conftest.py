@@ -40,6 +40,16 @@ class MockAgent(BaseAgent):
     async def process(self, context: Any) -> dict:
         return {"status": "ok"}
 
+    def get_health(self) -> HealthStatus:
+        return HealthStatus(
+            agent_id=self.agent_id,
+            status=AgentStatus.HEALTHY,
+            last_run=None,
+            last_success=None,
+            error_count_24h=0,
+            avg_latency_ms=0.0,
+        )
+
 
 def _make_fragment(
     entity: str = "AAPL",

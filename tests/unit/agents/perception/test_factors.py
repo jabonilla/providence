@@ -7,7 +7,6 @@ momentum fallback behavior, and error handling.
 
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -18,21 +17,20 @@ from providence.infra.famafrench_client import FamaFrenchClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
 
+from tests.conftest import make_agent_context
+
 
 def _make_context(
     date: str = "2026-02-09",
     history_days: int = 7,
 ) -> AgentContext:
     """Helper to create AgentContext with factor data expectations."""
-    return AgentContext(
-        run_id=uuid4(),
-        timestamp=datetime.now(timezone.utc),
+    return make_agent_context(
+        "PERCEPT-FACTORS",
         metadata={
             "date": date,
             "history_days": history_days,
         },
-        fragments=[],
-        beliefs=[],
     )
 
 
@@ -318,10 +316,10 @@ class TestPerceptFactorsProcess:
         assert fragments[0].validation_status == ValidationStatus.VALID
 
     @pytest.mark.asyncio
-    async def test_validation_status_partial_missing_optional(self):
-        """Fragment should be PARTIAL when optional factors missing."""
+    async def test_validation_status_valid_missing_optional(self):
+        """Fragment stays VALID when only optional factors are missing."""
         mock_client = AsyncMock(spec=FamaFrenchClient)
-        # Missing RMW and CMA (not strictly required)
+        # Missing RMW and CMA — optional, so not part of required_keys
         mock_client.get_five_factors_daily.return_value = [
             {
                 "date": "2026-02-01",
@@ -329,6 +327,31 @@ class TestPerceptFactorsProcess:
                 "smb": 0.1,
                 "hml": 0.2,
                 # Missing rmw, cma
+                "rf": 0.01,
+            }
+        ]
+        mock_client.get_momentum_daily.return_value = []
+
+        agent = PerceptFactors(mock_client)
+        context = _make_context()
+
+        fragments = await agent.process(context)
+
+        assert fragments[0].validation_status == ValidationStatus.VALID
+
+    @pytest.mark.asyncio
+    async def test_validation_status_partial_missing_required(self):
+        """Fragment should be PARTIAL when a required factor is missing."""
+        mock_client = AsyncMock(spec=FamaFrenchClient)
+        # Missing SMB — required, but mkt_rf present so not quarantined
+        mock_client.get_five_factors_daily.return_value = [
+            {
+                "date": "2026-02-01",
+                "mkt_rf": 1.0,
+                # Missing smb
+                "hml": 0.2,
+                "rmw": 0.05,
+                "cma": 0.03,
                 "rf": 0.01,
             }
         ]
@@ -372,12 +395,9 @@ class TestPerceptFactorsProcess:
         mock_client.get_momentum_daily.return_value = []
 
         agent = PerceptFactors(mock_client)
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FACTORS",
             metadata={"history_days": 1},  # No date key
-            fragments=[],
-            beliefs=[],
         )
 
         await agent.process(context)

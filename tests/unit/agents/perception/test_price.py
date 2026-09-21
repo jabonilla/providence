@@ -6,7 +6,6 @@ FETCH → VALIDATE → NORMALIZE → VERSION → STORE/ALERT
 All tests run without real API calls.
 """
 
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
@@ -17,6 +16,7 @@ from providence.agents.perception.price import PerceptPrice
 from providence.exceptions import AgentProcessingError, DataIngestionError
 from providence.infra.polygon_client import PolygonClient
 from providence.schemas.enums import DataType, ValidationStatus
+from tests.conftest import make_agent_context
 from tests.fixtures.polygon_responses import (
     daily_bars_aapl,
     daily_bars_empty,
@@ -34,14 +34,22 @@ def _make_context(
     tickers: list[str],
     date: str = "2026-02-09",
     timeframe: str = "1D",
+    history_days: int = 1,
 ) -> AgentContext:
-    """Create an AgentContext for PERCEPT-PRICE testing."""
-    return AgentContext(
-        agent_id="PERCEPT-PRICE",
-        trigger="schedule",
-        context_window_hash="test_hash",
-        timestamp=datetime.now(timezone.utc),
-        metadata={"tickers": tickers, "date": date, "timeframe": timeframe},
+    """Create an AgentContext for PERCEPT-PRICE testing.
+
+    history_days defaults to 1 so the agent takes the single-date
+    ``get_daily_bars`` path. history_days > 1 routes to the historical
+    range path backed by ``get_daily_bars_range`` instead.
+    """
+    return make_agent_context(
+        "PERCEPT-PRICE",
+        metadata={
+            "tickers": tickers,
+            "date": date,
+            "timeframe": timeframe,
+            "history_days": history_days,
+        },
     )
 
 
@@ -247,11 +255,8 @@ class TestPerceptPriceErrorHandling:
         mock_client = AsyncMock(spec=PolygonClient)
         agent = _make_agent(mock_client)
 
-        context = AgentContext(
-            agent_id="PERCEPT-PRICE",
-            trigger="schedule",
-            context_window_hash="test",
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-PRICE",
             metadata={"tickers": ["AAPL"]},
         )
         with pytest.raises(AgentProcessingError, match="No date"):

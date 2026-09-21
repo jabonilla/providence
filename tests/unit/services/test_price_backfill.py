@@ -1,6 +1,5 @@
 """Tests for PriceBackfillService — realized return computation."""
 
-import asyncio
 from datetime import datetime, timedelta, timezone, date
 from uuid import uuid4
 
@@ -179,9 +178,6 @@ class TestSignalStoreUpdate:
 class TestPriceBackfillService:
     """Tests for PriceBackfillService.run()."""
 
-    def _run(self, coro):
-        return asyncio.get_event_loop().run_until_complete(coro)
-
     def _make_signal(
         self,
         ticker: str = "AAPL",
@@ -205,7 +201,7 @@ class TestPriceBackfillService:
             **kwargs,
         )
 
-    def test_backfill_basic(self):
+    async def test_backfill_basic(self):
         """Signals get realized returns after backfill."""
         store = ShadowSignalStore()
         signal = self._make_signal(ticker="AAPL", price=180.0)
@@ -224,7 +220,7 @@ class TestPriceBackfillService:
         client = MockPriceClient(prices)
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["updated"] == 1
         assert result["errors"] == 0
 
@@ -233,7 +229,7 @@ class TestPriceBackfillService:
         assert updated_signal.realized_return_1d is not None
         assert abs(updated_signal.realized_return_1d - (182.0 - 180.0) / 180.0) < 1e-6
 
-    def test_backfill_skips_unapproved(self):
+    async def test_backfill_skips_unapproved(self):
         """Unapproved signals are not backfilled."""
         store = ShadowSignalStore()
         signal = self._make_signal(approved=False)
@@ -242,10 +238,10 @@ class TestPriceBackfillService:
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["processed"] == 0
 
-    def test_backfill_skips_no_entry_price(self):
+    async def test_backfill_skips_no_entry_price(self):
         """Signals without entry price are skipped."""
         store = ShadowSignalStore()
         signal = self._make_signal(price=None)
@@ -254,10 +250,10 @@ class TestPriceBackfillService:
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["processed"] == 0
 
-    def test_backfill_skips_already_computed(self):
+    async def test_backfill_skips_already_computed(self):
         """Signals with all returns already computed are skipped."""
         store = ShadowSignalStore()
         signal = self._make_signal(
@@ -270,10 +266,10 @@ class TestPriceBackfillService:
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["processed"] == 0
 
-    def test_backfill_skips_too_recent(self):
+    async def test_backfill_skips_too_recent(self):
         """Signals less than 2 days old are skipped."""
         store = ShadowSignalStore()
         signal = self._make_signal(age_days=0)  # Just created
@@ -282,10 +278,10 @@ class TestPriceBackfillService:
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["processed"] == 0
 
-    def test_backfill_partial_prices(self):
+    async def test_backfill_partial_prices(self):
         """If only some horizons have prices, only those are filled."""
         store = ShadowSignalStore()
         signal = self._make_signal(ticker="AAPL", price=180.0, age_days=5)
@@ -298,14 +294,14 @@ class TestPriceBackfillService:
         client = MockPriceClient(prices)
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["updated"] == 1
 
         updated = store.get_by_ticker("AAPL")[0]
         assert updated.realized_return_1d is not None
         # 5d and 20d may or may not be filled depending on date availability
 
-    def test_backfill_multiple_tickers(self):
+    async def test_backfill_multiple_tickers(self):
         """Backfill works across multiple tickers."""
         store = ShadowSignalStore()
         s1 = self._make_signal(ticker="AAPL", price=180.0)
@@ -327,10 +323,10 @@ class TestPriceBackfillService:
         client = MockPriceClient(prices)
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["updated"] == 2
 
-    def test_backfill_max_signals_limit(self):
+    async def test_backfill_max_signals_limit(self):
         """max_signals parameter limits processing."""
         store = ShadowSignalStore()
         for i in range(10):
@@ -339,15 +335,15 @@ class TestPriceBackfillService:
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run(max_signals=3))
+        result = await svc.run(max_signals=3)
         assert result["processed"] == 3
 
-    def test_backfill_empty_store(self):
+    async def test_backfill_empty_store(self):
         """Empty store produces zero results."""
         store = ShadowSignalStore()
         client = MockPriceClient({})
         svc = PriceBackfillService(store, client, inter_request_delay=0)
 
-        result = self._run(svc.run())
+        result = await svc.run()
         assert result["processed"] == 0
         assert result["updated"] == 0

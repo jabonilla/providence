@@ -97,7 +97,7 @@ class TestPlaidClientGetClient:
 
         assert isinstance(http_client, httpx.AsyncClient)
         assert http_client.base_url == "https://sandbox.plaid.com"
-        assert http_client.timeout == PlaidClient.DEFAULT_TIMEOUT
+        assert http_client.timeout == httpx.Timeout(PlaidClient.DEFAULT_TIMEOUT)
 
         await client.close()
 
@@ -242,6 +242,9 @@ class TestPlaidClientRequest:
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_response.text = "Internal server error"
+        # _request parses the JSON body before checking the status code,
+        # because Plaid reports errors in the body via error_type.
+        mock_response.json.return_value = {}
 
         with patch.object(client, "_get_client") as mock_get:
             mock_http_client = AsyncMock()

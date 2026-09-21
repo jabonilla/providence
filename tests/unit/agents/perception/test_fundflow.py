@@ -8,7 +8,6 @@ pagination handling, and error handling.
 import hashlib
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -18,6 +17,8 @@ from providence.exceptions import AgentProcessingError, ExternalAPIError
 from providence.infra.plaid_client import PlaidClient
 from providence.schemas.enums import DataType, ValidationStatus
 from providence.schemas.market_state import MarketStateFragment
+
+from tests.conftest import make_agent_context
 
 
 def _make_context(
@@ -29,16 +30,13 @@ def _make_context(
     if access_tokens is None:
         access_tokens = ["test_token_1", "test_token_2"]
 
-    return AgentContext(
-        run_id=uuid4(),
-        timestamp=datetime.now(timezone.utc),
+    return make_agent_context(
+        "PERCEPT-FUNDFLOW",
         metadata={
             "access_tokens": access_tokens,
             "date": date,
             "history_days": history_days,
         },
-        fragments=[],
-        beliefs=[],
     )
 
 
@@ -68,12 +66,9 @@ class TestPerceptFundFlowProcess:
         mock_client = AsyncMock(spec=PlaidClient)
         agent = PerceptFundFlow(mock_client)
 
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FUNDFLOW",
             metadata={"date": "2026-02-09"},  # No access_tokens
-            fragments=[],
-            beliefs=[],
         )
 
         with pytest.raises(AgentProcessingError) as exc_info:
@@ -466,23 +461,21 @@ class TestPerceptFundFlowProcess:
         }
 
         agent = PerceptFundFlow(mock_client)
-        context = AgentContext(
-            run_id=uuid4(),
-            timestamp=datetime.now(timezone.utc),
+        context = make_agent_context(
+            "PERCEPT-FUNDFLOW",
             metadata={
                 "access_tokens": ["token1"],
                 # No date key
                 "history_days": 30,
             },
-            fragments=[],
-            beliefs=[],
         )
 
         await agent.process(context)
 
         # Should have called with today's date
+        # PlaidClient.get_investment_transactions(access_token, start_date, end_date, ...)
         call_args = mock_client.get_investment_transactions.call_args
-        end_date = call_args[1]["end_date"]
+        end_date = call_args[0][2]
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         assert end_date == today
 

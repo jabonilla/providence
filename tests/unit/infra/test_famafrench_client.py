@@ -4,12 +4,30 @@ All tests mock pandas_datareader — NO real API calls.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+import sys
+from contextlib import contextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from providence.exceptions import DataIngestionError, ExternalAPIError
 from providence.infra.famafrench_client import FamaFrenchClient
+
+
+@contextmanager
+def _stub_datareader():
+    """Make `import pandas_datareader.data` succeed without the real package.
+
+    pandas_datareader is an optional dependency. The client only needs the
+    module to import — every actual fetch goes through asyncio.to_thread,
+    which these tests patch.
+    """
+    stub = MagicMock()
+    with patch.dict(
+        sys.modules,
+        {"pandas_datareader": stub, "pandas_datareader.data": stub.data},
+    ):
+        yield stub
 
 
 class TestFamaFrenchClientInit:
@@ -77,12 +95,12 @@ class TestGetFiveFactorsDaily:
             "RF": [0.02, 0.02],
         }
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         df = pd.DataFrame(mock_df)
         df.index = pd.date_range("2026-02-01", periods=2)
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = df
 
             result = await client.get_five_factors_daily("2026-02-01", "2026-02-03")
@@ -101,7 +119,7 @@ class TestGetFiveFactorsDaily:
         """Should unpack tuple response (df, description)."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         df = pd.DataFrame({
             "Mkt-RF": [1.0],
@@ -116,7 +134,7 @@ class TestGetFiveFactorsDaily:
         # DataReader returns tuple (df, description)
         tuple_response = (df, "Some description")
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = tuple_response
 
             result = await client.get_five_factors_daily("2026-02-01", "2026-02-03")
@@ -129,11 +147,11 @@ class TestGetFiveFactorsDaily:
         """Should raise DataIngestionError when data is empty."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         empty_df = pd.DataFrame()
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = empty_df
 
             with pytest.raises(DataIngestionError) as exc_info:
@@ -146,7 +164,7 @@ class TestGetFiveFactorsDaily:
         """Should raise DataIngestionError when data is None."""
         client = FamaFrenchClient()
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = None
 
             with pytest.raises(DataIngestionError):
@@ -157,12 +175,12 @@ class TestGetFiveFactorsDaily:
         """Should raise ExternalAPIError when pandas_datareader not available."""
         client = FamaFrenchClient()
 
-        with patch.dict("sys.modules", {"pandas_datareader.data": None}):
-            with patch("providence.infra.famafrench_client.web", side_effect=ImportError("No module")):
-                with pytest.raises(ExternalAPIError) as exc_info:
-                    await client.get_five_factors_daily("2026-02-01", "2026-02-03")
+        # A None entry makes `import pandas_datareader.data` raise ImportError.
+        with patch.dict(sys.modules, {"pandas_datareader.data": None}):
+            with pytest.raises(ExternalAPIError) as exc_info:
+                await client.get_five_factors_daily("2026-02-01", "2026-02-03")
 
-                assert "pandas_datareader" in str(exc_info.value)
+        assert "pandas_datareader" in str(exc_info.value)
 
 
 class TestGetMomentumDaily:
@@ -173,13 +191,13 @@ class TestGetMomentumDaily:
         """Should return list of dicts with mom field."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         # Note: FF dataset has trailing spaces in column name
         df = pd.DataFrame({"Mom   ": [1.5, 2.1]})
         df.index = pd.date_range("2026-02-01", periods=2)
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = df
 
             result = await client.get_momentum_daily("2026-02-01", "2026-02-03")
@@ -195,14 +213,14 @@ class TestGetMomentumDaily:
         """Should unpack tuple response (df, description)."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         df = pd.DataFrame({"Mom   ": [1.0]})
         df.index = pd.date_range("2026-02-01", periods=1)
 
         tuple_response = (df, "Momentum description")
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = tuple_response
 
             result = await client.get_momentum_daily("2026-02-01", "2026-02-03")
@@ -215,11 +233,11 @@ class TestGetMomentumDaily:
         """Should raise DataIngestionError when data is empty."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
 
         empty_df = pd.DataFrame()
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = empty_df
 
             with pytest.raises(DataIngestionError) as exc_info:
@@ -232,7 +250,7 @@ class TestGetMomentumDaily:
         """Should raise DataIngestionError when data is None."""
         client = FamaFrenchClient()
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = None
 
             with pytest.raises(DataIngestionError):
@@ -243,14 +261,15 @@ class TestGetMomentumDaily:
         """Should raise ExternalAPIError on API failures."""
         client = FamaFrenchClient()
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.side_effect = RuntimeError("Data source error")
 
             with pytest.raises(ExternalAPIError) as exc_info:
                 await client.get_momentum_daily("2026-02-01", "2026-02-03")
 
             assert "Failed to fetch momentum data" in str(exc_info.value)
-            assert "fama_french" in str(exc_info.value)
+            # The service name is an attribute, not part of the message.
+            assert exc_info.value.service == "fama_french"
 
 
 class TestRateLimitingBehavior:
@@ -261,7 +280,7 @@ class TestRateLimitingBehavior:
         """Rate limiting should be shared across different methods."""
         client = FamaFrenchClient()
 
-        import pandas as pd
+        pd = pytest.importorskip("pandas")
         import time
 
         df = pd.DataFrame({
@@ -275,7 +294,7 @@ class TestRateLimitingBehavior:
         })
         df.index = pd.date_range("2026-02-01", periods=1)
 
-        with patch("asyncio.to_thread") as mock_thread:
+        with _stub_datareader(), patch("asyncio.to_thread") as mock_thread:
             mock_thread.return_value = df
 
             # First call

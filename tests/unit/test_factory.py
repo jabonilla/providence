@@ -7,11 +7,32 @@ from providence.factory import (
     ALL_AGENT_IDS,
     _ADAPTIVE_LLM,
     _FROZEN_NO_ARGS,
+    _PERCEPTION_ALPHAVANTAGE,
     _PERCEPTION_EDGAR,
+    _PERCEPTION_FAMAFRENCH,
     _PERCEPTION_FRED,
+    _PERCEPTION_PLAID,
     _PERCEPTION_POLYGON,
+    _PERCEPTION_YFINANCE,
     build_agent_registry,
 )
+
+
+# All perception groups, keyed by the client they need.
+_PERCEPTION_GROUPS = (
+    _PERCEPTION_POLYGON,
+    _PERCEPTION_EDGAR,
+    _PERCEPTION_FRED,
+    _PERCEPTION_YFINANCE,
+    _PERCEPTION_ALPHAVANTAGE,
+    _PERCEPTION_FAMAFRENCH,
+    _PERCEPTION_PLAID,
+)
+
+
+def _perception_ids() -> set[str]:
+    """Every perception agent ID across all source-specific groups."""
+    return {aid for group in _PERCEPTION_GROUPS for aid in group}
 
 
 # ===========================================================================
@@ -21,32 +42,30 @@ from providence.factory import (
 
 class TestAgentIDCompleteness:
     def test_total_agent_count(self):
-        """All 35 agents should be accounted for."""
+        """Every agent group is accounted for in ALL_AGENT_IDS."""
         total = (
             len(_FROZEN_NO_ARGS)
             + len(_ADAPTIVE_LLM)
-            + len(_PERCEPTION_POLYGON)
-            + len(_PERCEPTION_EDGAR)
-            + len(_PERCEPTION_FRED)
+            + len(_perception_ids())
         )
-        assert total == 35
+        assert total == len(ALL_AGENT_IDS)
 
     def test_all_agent_ids_sorted(self):
         assert ALL_AGENT_IDS == sorted(ALL_AGENT_IDS)
-        assert len(ALL_AGENT_IDS) == 35
+        assert len(ALL_AGENT_IDS) == len(set(ALL_AGENT_IDS))
+        assert set(ALL_AGENT_IDS) == (
+            set(_FROZEN_NO_ARGS) | set(_ADAPTIVE_LLM) | _perception_ids()
+        )
 
     def test_no_duplicate_ids(self):
         all_ids = (
             list(_FROZEN_NO_ARGS)
             + list(_ADAPTIVE_LLM)
-            + list(_PERCEPTION_POLYGON)
-            + list(_PERCEPTION_EDGAR)
-            + list(_PERCEPTION_FRED)
+            + [aid for group in _PERCEPTION_GROUPS for aid in group]
         )
         assert len(all_ids) == len(set(all_ids))
 
     def test_perception_agents_present(self):
-        perception = set(_PERCEPTION_POLYGON) | set(_PERCEPTION_EDGAR) | set(_PERCEPTION_FRED)
         expected = {
             "PERCEPT-PRICE",
             "PERCEPT-FILING",
@@ -54,8 +73,12 @@ class TestAgentIDCompleteness:
             "PERCEPT-OPTIONS",
             "PERCEPT-CDS",
             "PERCEPT-MACRO",
+            "PERCEPT-YFINANCE",
+            "PERCEPT-ALPHAVANTAGE",
+            "PERCEPT-FACTORS",
+            "PERCEPT-FUNDFLOW",
         }
-        assert perception == expected
+        assert _perception_ids() == expected
 
     def test_adaptive_agents_present(self):
         expected = {
@@ -71,8 +94,10 @@ class TestAgentIDCompleteness:
         assert set(_ADAPTIVE_LLM) == expected
 
     def test_frozen_no_args_count(self):
-        # 35 total - 8 adaptive - 6 perception = 21 frozen no-args
-        assert len(_FROZEN_NO_ARGS) == 21
+        """Frozen no-arg agents are everything that is neither adaptive
+        nor perception."""
+        expected = len(ALL_AGENT_IDS) - len(_ADAPTIVE_LLM) - len(_perception_ids())
+        assert len(_FROZEN_NO_ARGS) == expected
 
 
 # ===========================================================================
@@ -233,7 +258,7 @@ class TestFullBootstrap:
             skip_adaptive=False,
         )
         expected_count = len(_FROZEN_NO_ARGS) + len(_ADAPTIVE_LLM)
-        assert len(registry) == expected_count  # 17 + 8 = 25
+        assert len(registry) == expected_count
 
     def test_all_agents_are_base_agent(self):
         registry = build_agent_registry(
