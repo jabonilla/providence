@@ -508,6 +508,13 @@ Portal Forecast page (providence-portal/src/app/(portal)/forecast/page.tsx):
 - All prompts version-controlled in providence/prompts/
 - Tests mirror source structure in tests/
 
+## UI / Design Work
+Follow the global design rule (design skills loaded before any UI change; check the result at desktop and mobile widths). Providence's UI surfaces and their sources of truth:
+- Portal (separate repo, ../providence-portal, Next.js + Tailwind): NEXUS-LOFI design system. Tokens in tailwind.config.ts and src/styles/globals.css (cobalt/ink/paper palette, 2px radius, 140ms transitions). Refine within it; use `impeccable` for changes, not `design-taste-frontend`.
+- Shadow dashboard (dashboard/shadow_dashboard.html, served at /dashboard): self-contained dark trading-terminal look with Chart.js. Keep it dependency-light and consistent with itself.
+- Marketing UI kit (ui_kits/marketing/): marketing surface; `design-taste-frontend` fits new marketing pages.
+Data-dense surfaces (positions, signals, P&L, regime) are Operate-mode: scanability and precision over decoration.
+
 ## Critical Rules (Non-Negotiable)
 1. Frozen = zero LLM calls. No exceptions.
 2. Agent independence. Research agents never see each other's beliefs.
